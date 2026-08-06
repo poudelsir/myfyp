@@ -1,0 +1,76 @@
+@{
+    var initials = "?";
+    var fullName = "Guest";
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        fullName = User.GetFullName() ?? User.Identity.Name ?? "User";
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        initials = parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
+            : fullName.Length > 0 ? fullName[0].ToString().ToUpperInvariant() : "?";
+    }
+}
+<header class="app-navbar">
+    <button type="button" class="btn-icon" id="sidebarToggleBtn" aria-label="Toggle sidebar">
+        <i data-lucide="menu"></i>
+    </button>
+
+    <form class="navbar-search d-none d-md-flex" role="search" aria-label="Site search">
+        <i data-lucide="search" class="navbar-search-icon"></i>
+        <input type="search" class="form-control" placeholder="Search…" aria-label="Search" disabled
+               title="Search is coming soon" />
+    </form>
+
+    <div class="navbar-spacer"></div>
+
+    <div class="navbar-actions">
+        <button type="button" class="btn-icon" id="darkModeToggleBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
+            <i data-lucide="moon" id="darkModeIcon"></i>
+        </button>
+
+        <div class="dropdown">
+            <button type="button" class="btn-icon position-relative" id="notificationsDropdown"
+                    data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" title="Notifications">
+                <i data-lucide="bell"></i>
+                <span class="notification-dot d-none" id="notificationDot"></span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notification-panel" aria-labelledby="notificationsDropdown">
+                <div class="notification-panel-header">
+                    <span>Notifications</span>
+                </div>
+                <div class="notification-panel-empty">
+                    <i data-lucide="bell-off"></i>
+                    <p class="mb-0">You're all caught up. New notifications will appear here in real time.</p>
+                </div>
+            </div>
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="dropdown">
+                <button type="button" class="btn-profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="avatar-initials">@initials</span>
+                    <span class="d-none d-lg-inline">@fullName</span>
+                    <i data-lucide="chevron-down"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li><h6 class="dropdown-header">@fullName</h6></li>
+                    <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
+                    <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i data-lucide="log-out" class="me-2"></i>Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-sm">Sign In</a>
+        }
+    </div>
+</header>

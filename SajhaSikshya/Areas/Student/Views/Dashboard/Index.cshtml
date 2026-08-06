@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Welcome back@(User.GetFullName() is { } name ? $", {name.Split(' ')[0]}" : "")</h1>
+        <p class="text-secondary mb-0">Here's what's happening with your learning.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="book-open"></i></div>
+            <div>
+                <p class="stat-card-label">Enrolled Courses</p>
+                <p class="stat-card-value">&mdash;</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
+            <div>
+                <p class="stat-card-label">Completed</p>
+                <p class="stat-card-value">&mdash;</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="clock"></i></div>
+            <div>
+                <p class="stat-card-label">In Progress</p>
+                <p class="stat-card-value">&mdash;</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i data-lucide="construction" class="mb-3" style="width:40px;height:40px;color:var(--bs-secondary-color)"></i>
+        <h2 class="h6 fw-semibold">Your courses will appear here</h2>
+        <p class="text-secondary mb-0">Course enrollment and content are coming in a later phase.</p>
+    </div>
+</div>

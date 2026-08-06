@@ -1,0 +1,28 @@
+# Claude Code local tool settings (machine-specific, not project source)
+.claude/settings.local.json
+
+# .NET build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider
+.idea/
+
+# EF Core local database files (should never be committed)
+*.mdf
+*.ldf
+*.ndf
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

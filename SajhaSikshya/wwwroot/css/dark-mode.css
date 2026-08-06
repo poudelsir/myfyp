@@ -1,0 +1,28 @@
+/* ==========================================================================
+   SajhaSikshya — Dark mode overrides
+   Bootstrap 5.3 recolors its own components automatically via [data-bs-theme].
+   This file only adjusts the custom, non-Bootstrap surfaces in site.css /
+   dashboard.css that don't already ride on Bootstrap's CSS variables.
+   ========================================================================== */
+
+[data-bs-theme="dark"] {
+  --sajha-primary: #6366f1;
+  --sajha-primary-hover: #818cf8;
+}
+
+[data-bs-theme="dark"] .auth-body {
+  background-color: var(--bs-dark-bg-subtle, #16171d);
+}
+
+[data-bs-theme="dark"] .auth-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-bs-theme="dark"] .app-sidebar,
+[data-bs-theme="dark"] .app-navbar {
+  background-color: var(--bs-body-bg);
+}
+
+[data-bs-theme="dark"] #darkModeIcon {
+  color: #fbbf24;
+}

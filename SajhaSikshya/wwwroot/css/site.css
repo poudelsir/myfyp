@@ -1,0 +1,129 @@
+/* ==========================================================================
+   SajhaSikshya — Base styles
+   Design tokens, typography, resets and elements shared across every page
+   (dashboard shell and the minimal auth/marketing layout alike).
+   ========================================================================== */
+
+:root {
+  --sajha-primary: #4f46e5;
+  --sajha-primary-hover: #4338ca;
+  --sajha-radius: 0.65rem;
+  --sajha-radius-lg: 1rem;
+  --sajha-sidebar-width: 260px;
+  --sajha-sidebar-width-collapsed: 76px;
+  --sajha-navbar-height: 64px;
+  --sajha-transition: 180ms ease;
+}
+
+html {
+  font-size: 15px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+}
+
+.btn-primary {
+  background-color: var(--sajha-primary);
+  border-color: var(--sajha-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--sajha-primary-hover);
+  border-color: var(--sajha-primary-hover);
+}
+
+a {
+  color: var(--sajha-primary);
+}
+
+.card {
+  border-radius: var(--sajha-radius-lg);
+  border: 1px solid var(--bs-border-color);
+}
+
+/* Brand mark used in the sidebar, navbar and auth screens. */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 0.5rem;
+  background: var(--sajha-primary);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.brand-mark-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 1.5rem;
+  display: flex;
+}
+
+.brand-text {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--bs-body-color);
+}
+
+/* ==========================================================================
+   Minimal centered layout used for Login / Register / Error / landing pages.
+   ========================================================================== */
+
+.auth-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bs-tertiary-bg);
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 420px;
+  padding: 1.5rem;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-card {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.auth-footer-note {
+  text-align: center;
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
+}

@@ -1,0 +1,23 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+
+## Visual Studio / Rider
+.vs/
+.idea/
+*.userosscache
+*.sln.docstates
+
+## EF Core
+*.mdf
+*.ldf
+*.ndf
+
+## Logs
+*.log
+
+## OS
+.DS_Store
+Thumbs.db

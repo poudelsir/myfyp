@@ -1,0 +1,78 @@
+@{
+    var isAdmin = User.IsInRole(SajhaSikshya.Data.Constants.Roles.Admin);
+    var dashboardArea = isAdmin ? "Admin" : "Student";
+}
+<aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand">
+        <a asp-area="" asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+            <span class="brand-mark">S</span>
+            <span class="brand-text">SajhaSikshya</span>
+        </a>
+        <button type="button" class="btn-icon d-lg-none" id="sidebarCloseBtn" aria-label="Close sidebar">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <p class="sidebar-section-title">Main</p>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" asp-area="@dashboardArea" asp-controller="Dashboard" asp-action="Index">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            @if (isAdmin)
+            {
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                        <i data-lucide="users"></i>
+                        <span>Manage Users</span>
+                        <span class="badge text-bg-secondary ms-auto">Soon</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                        <i data-lucide="book-open"></i>
+                        <span>Manage Courses</span>
+                        <span class="badge text-bg-secondary ms-auto">Soon</span>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                        <i data-lucide="book-open"></i>
+                        <span>My Courses</span>
+                        <span class="badge text-bg-secondary ms-auto">Soon</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                        <i data-lucide="graduation-cap"></i>
+                        <span>My Progress</span>
+                        <span class="badge text-bg-secondary ms-auto">Soon</span>
+                    </a>
+                </li>
+            }
+        </ul>
+
+        <p class="sidebar-section-title">Account</p>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                    <i data-lucide="user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>

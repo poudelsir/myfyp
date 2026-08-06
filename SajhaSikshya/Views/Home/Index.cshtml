@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="text-center py-4">
+    <span class="brand-mark brand-mark-lg mx-auto mb-3">S</span>
+    <h1 class="h3 fw-bold mb-2">Welcome to SajhaSikshya</h1>
+    <p class="text-secondary mb-4">Shared learning, built for everyone. Sign in to reach your dashboard.</p>
+
+    <div class="d-grid gap-2 col-10 mx-auto">
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Sign In</a>
+        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">Create a Student Account</a>
+    </div>
+</div>
