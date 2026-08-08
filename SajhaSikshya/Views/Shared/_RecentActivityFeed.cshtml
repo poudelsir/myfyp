@@ -1,0 +1,36 @@
+@using SajhaSikshya.DTOs.Dashboard
+@model IReadOnlyList<RecentActivityItemDto>
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Recent Activity</h2>
+        @if (!Model.Any())
+        {
+            <div class="dashboard-empty-state">
+                <i data-lucide="activity"></i>
+                <p class="text-secondary mb-0">Nothing to show yet.</p>
+            </div>
+        }
+        else
+        {
+            <ul class="recent-activity-list list-unstyled mb-0">
+                @foreach (var item in Model)
+                {
+                    <li class="recent-activity-item">
+                        <span class="recent-activity-icon"><i data-lucide="@item.Icon"></i></span>
+                        <span class="recent-activity-body">
+                            @if (item.Url is not null)
+                            {
+                                <a href="@item.Url">@item.Description</a>
+                            }
+                            else
+                            {
+                                @item.Description
+                            }
+                            <span class="recent-activity-time text-secondary small">@item.TimestampUtc.ToLocalTime().ToString("MMM d, h:mm tt")</span>
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</div>

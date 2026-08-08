@@ -2,35 +2,35 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Extensions;
-using SajhaSikshya.Services.Interfaces.Reviews;
-using SajhaSikshya.Services.Interfaces.Verification;
+using SajhaSikshya.Services.Interfaces.Dashboard;
+using SajhaSikshya.ViewModels.Student.Dashboard;
 
 namespace SajhaSikshya.Areas.Student.Controllers;
 
 /// <summary>
-/// Student landing dashboard. Restricted to the Student role; course/marketplace
-/// content is added in a later phase — this establishes the routed, authorized
-/// shell they'll plug into. Verification status is the one piece of real data
-/// wired in so far, shown as the "Verified Student" badge next to the greeting.
+/// Student landing dashboard — real listing/order/saved/compare/message/notification
+/// stats, verification status, reputation, recommendations, and recent activity, all
+/// gathered by <see cref="IDashboardQueryService.GetStudentDashboardAsync"/>.
 /// </summary>
 [Area("Student")]
 [Authorize(Roles = Roles.Student)]
 public class DashboardController : Controller
 {
-    private readonly IVerificationQueryService _verificationQueryService;
-    private readonly IReviewQueryService _reviewQueryService;
+    private readonly IDashboardQueryService _dashboardQueryService;
 
-    public DashboardController(IVerificationQueryService verificationQueryService, IReviewQueryService reviewQueryService)
+    public DashboardController(IDashboardQueryService dashboardQueryService)
     {
-        _verificationQueryService = verificationQueryService;
-        _reviewQueryService = reviewQueryService;
+        _dashboardQueryService = dashboardQueryService;
     }
 
     public async Task<IActionResult> Index()
     {
         var userId = User.GetUserId()!;
-        ViewData["IsVerified"] = await _verificationQueryService.IsUserVerifiedAsync(userId);
-        ViewData["Reputation"] = await _reviewQueryService.GetReputationAsync(userId);
-        return View();
+        var model = new StudentDashboardViewModel
+        {
+            Stats = await _dashboardQueryService.GetStudentDashboardAsync(userId),
+        };
+
+        return View(model);
     }
 }

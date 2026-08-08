@@ -1,37 +1,33 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SajhaSikshya.Data.Constants;
-using SajhaSikshya.Services.Interfaces.Marketplace;
-using SajhaSikshya.Services.Interfaces.Reviews;
-using SajhaSikshya.Services.Interfaces.Verification;
+using SajhaSikshya.Services.Interfaces.Dashboard;
 using SajhaSikshya.ViewModels.Admin.Shared;
 
 namespace SajhaSikshya.Areas.Admin.Controllers;
 
-/// <summary>Administrator landing dashboard — moderation-queue and verification-queue stats at a glance.</summary>
+/// <summary>
+/// Administrator landing dashboard — the broad operational overview (Users, Listings,
+/// Orders, Revenue, Donations, Verification, Reviews, Chat, AI usage, recent activity)
+/// gathered by <see cref="IDashboardQueryService.GetAdminDashboardAsync"/>. Distinct
+/// from <c>Areas/Admin/Insights</c>, which stays the deep AI-narrated analytics page.
+/// </summary>
 [Area("Admin")]
 [Authorize(Roles = Roles.Admin)]
 public class DashboardController : Controller
 {
-    private readonly IListingQueryService _listingQueryService;
-    private readonly IVerificationQueryService _verificationQueryService;
-    private readonly IReviewQueryService _reviewQueryService;
+    private readonly IDashboardQueryService _dashboardQueryService;
 
-    public DashboardController(IListingQueryService listingQueryService, IVerificationQueryService verificationQueryService, IReviewQueryService reviewQueryService)
+    public DashboardController(IDashboardQueryService dashboardQueryService)
     {
-        _listingQueryService = listingQueryService;
-        _verificationQueryService = verificationQueryService;
-        _reviewQueryService = reviewQueryService;
+        _dashboardQueryService = dashboardQueryService;
     }
 
     public async Task<IActionResult> Index()
     {
-        var reportedReviews = await _reviewQueryService.GetAdminQueueAsync(reportedOnly: true, pageNumber: 1, pageSize: 1);
         var model = new AdminDashboardViewModel
         {
-            ListingStats = await _listingQueryService.GetModerationStatsAsync(),
-            VerificationStats = await _verificationQueryService.GetStatisticsAsync(),
-            ReportedReviewCount = reportedReviews.TotalCount,
+            Stats = await _dashboardQueryService.GetAdminDashboardAsync(),
         };
 
         return View(model);

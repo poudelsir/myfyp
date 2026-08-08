@@ -1,0 +1,167 @@
+@using System.Text.Json
+@using SajhaSikshya.ViewModels.Admin.AI
+@model AdminInsightsViewModel
+@{
+    ViewData["Title"] = "AI Insights";
+    var stats = Model.Stats;
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <h1 class="h4 fw-bold mb-1 d-flex align-items-center gap-2">
+            <i data-lucide="sparkles"></i>
+            AI Insights
+        </h1>
+        <p class="text-secondary mb-0">Marketplace activity at a glance, with an AI-generated narrative on top.</p>
+    </div>
+    <button type="button" id="insightsRefreshBtn" class="btn btn-outline-primary btn-sm">
+        <i data-lucide="refresh-cw" class="me-1"></i>Refresh AI Summary
+    </button>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div id="insightsLoading" class="d-flex align-items-center gap-2 text-secondary">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Generating AI summary…
+        </div>
+        <div id="insightsError" class="alert alert-warning d-none mb-0" role="alert"></div>
+        <div id="insightsContent" class="d-none">
+            <p id="insightsSummary" class="mb-3 fw-semibold"></p>
+            <ul id="insightsList" class="mb-0"></ul>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
+            <div>
+                <p class="stat-card-label">Total Listings</p>
+                <p class="stat-card-value">@stats.TotalListings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
+            <div>
+                <p class="stat-card-label">Active Listings</p>
+                <p class="stat-card-value">@stats.ActiveListings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
+            <div>
+                <p class="stat-card-label">Donation Listings</p>
+                <p class="stat-card-value">@stats.DonationListings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+            <div>
+                <p class="stat-card-label">Pending Approval</p>
+                <p class="stat-card-value">@stats.PendingListings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="package"></i></div>
+            <div>
+                <p class="stat-card-label">Total Orders</p>
+                <p class="stat-card-value">@stats.TotalOrders</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="badge-check"></i></div>
+            <div>
+                <p class="stat-card-label">Verification Approval Rate</p>
+                <p class="stat-card-value">@stats.VerificationApprovalRatePercent.ToString("0.#")%</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="star"></i></div>
+            <div>
+                <p class="stat-card-label">Average Review Rating</p>
+                <p class="stat-card-value">@stats.AverageRating.ToString("0.0")/5</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="bot"></i></div>
+            <div>
+                <p class="stat-card-label">AI Calls (Total)</p>
+                <p class="stat-card-value">@stats.TotalAICalls</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Top Categories (Active Listings)</h2>
+                <canvas id="topCategoriesChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Top Universities (Active Listings)</h2>
+                <canvas id="topUniversitiesChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="h6 fw-semibold mb-1">Listing Growth</h3>
+                <p class="mb-0">@stats.ListingsThisMonth <span class="text-secondary small">this month</span> vs @stats.ListingsLastMonth <span class="text-secondary small">last month</span></p>
+                <p class="mb-0 mt-2">@stats.DonationsThisMonth <span class="text-secondary small">donations this month</span> vs @stats.DonationsLastMonth <span class="text-secondary small">last month</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="h6 fw-semibold mb-1">Order Growth</h3>
+                <p class="mb-0">@stats.OrdersThisMonth <span class="text-secondary small">this month</span> vs @stats.OrdersLastMonth <span class="text-secondary small">last month</span></p>
+                <p class="mb-0 mt-2">@stats.CompletedOrders <span class="text-secondary small">completed all-time</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="h6 fw-semibold mb-1">Platform Activity</h3>
+                <p class="mb-0">@stats.TotalReviews <span class="text-secondary small">reviews</span> (@stats.ReportedReviews <span class="text-secondary small">reported</span>)</p>
+                <p class="mb-0 mt-2">@stats.TotalNotifications <span class="text-secondary small">notifications sent</span> (@stats.NotificationsThisMonth <span class="text-secondary small">this month</span>)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="insightsCategoryData" type="application/json">@Html.Raw(JsonSerializer.Serialize(stats.TopCategories, jsonOptions))</script>
+<script id="insightsUniversityData" type="application/json">@Html.Raw(JsonSerializer.Serialize(stats.TopUniversities, jsonOptions))</script>
+
+@section Scripts {
+    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
+    <script src="~/js/admin-insights.js" asp-append-version="true"></script>
+}

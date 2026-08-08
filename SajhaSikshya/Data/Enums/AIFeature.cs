@@ -20,4 +20,7 @@ public enum AIFeature
 
     [Display(Name = "Marketplace Assistant", Description = "Conversational Q&A about buying, selling, donating, and using SajhaSikshya.")]
     MarketplaceAssistant = 2,
+
+    [Display(Name = "Admin Insights", Description = "AI-generated narrative summary of marketplace, order, verification, review, and platform activity for administrators.")]
+    AdminInsights = 3,
 }

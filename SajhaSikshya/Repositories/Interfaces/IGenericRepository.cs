@@ -51,6 +51,14 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null);
 
     /// <summary>
+    /// SQL-side <c>SUM(...)</c> over matching rows — for money/quantity aggregates (e.g.
+    /// completed order revenue) where <see cref="FindProjectedAsync{TResult}"/>'s bounded
+    /// row cap would silently under-count on a large dataset. Returns 0 for an empty
+    /// result set, matching <c>Enumerable.Sum</c>'s own semantics.
+    /// </summary>
+    Task<decimal> SumAsync(Expression<Func<TEntity, bool>>? filter, Expression<Func<TEntity, decimal>> selector);
+
+    /// <summary>
     /// Returns one page of results. <paramref name="include"/> lets callers eager-load
     /// navigation properties (e.g. Subject.AcademicLevel) without leaking IQueryable
     /// out of the repository; <paramref name="orderBy"/> must be supplied since paging

@@ -80,6 +80,18 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         return await query.CountAsync();
     }
 
+    public async Task<decimal> SumAsync(Expression<Func<TEntity, bool>>? filter, Expression<Func<TEntity, decimal>> selector)
+    {
+        IQueryable<TEntity> query = DbSet.Where(e => !e.IsDeleted);
+
+        if (filter is not null)
+        {
+            query = query.Where(filter);
+        }
+
+        return await query.SumAsync(selector);
+    }
+
     public async Task<PagedResult<TEntity>> GetPagedAsync(
         int pageNumber,
         int pageSize,

@@ -1,64 +1,152 @@
-@using SajhaSikshya.DTOs.Reviews
+@using System.Text.Json
+@using SajhaSikshya.ViewModels.Student.Dashboard
+@model StudentDashboardViewModel
 @{
     ViewData["Title"] = "Student Dashboard";
-    var reputation = ViewData["Reputation"] as ReputationDto ?? new ReputationDto();
+    var stats = Model.Stats;
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h4 fw-bold mb-1 d-flex align-items-center gap-2">
             Welcome back@(User.GetFullName() is { } name ? $", {name.Split(' ')[0]}" : "")
-            <partial name="_VerifiedStudentBadge" model='(bool)(ViewData["IsVerified"] ?? false)' />
+            <partial name="_VerifiedStudentBadge" model="stats.IsVerified" />
         </h1>
-        <p class="text-secondary mb-0">Here's what's happening with your learning.</p>
+        <p class="text-secondary mb-0">Here's what's happening with your listings, orders, and activity.</p>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="book-open"></i></div>
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
             <div>
-                <p class="stat-card-label">Enrolled Courses</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Active Listings</p>
+                <p class="stat-card-value">@stats.ListingStats.Active</p>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
             <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
             <div>
-                <p class="stat-card-label">Completed</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Sold Books</p>
+                <p class="stat-card-value">@stats.ListingStats.Sold</p>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="clock"></i></div>
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
             <div>
-                <p class="stat-card-label">In Progress</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Donated Books</p>
+                <p class="stat-card-value">@stats.ListingStats.Donated</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+            <div>
+                <p class="stat-card-label">Pending Approval</p>
+                <p class="stat-card-value">@stats.ListingStats.PendingApproval</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i data-lucide="construction" class="mb-3" style="width:40px;height:40px;color:var(--bs-secondary-color)"></i>
-        <h2 class="h6 fw-semibold">Your courses will appear here</h2>
-        <p class="text-secondary mb-0">Course enrollment and content are coming in a later phase.</p>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="heart"></i></div>
+            <div>
+                <p class="stat-card-label">Saved Listings</p>
+                <p class="stat-card-value">@stats.SavedListingsCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="git-compare"></i></div>
+            <div>
+                <p class="stat-card-label">Compare</p>
+                <p class="stat-card-value">@stats.CompareCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="message-circle"></i></div>
+            <div>
+                <p class="stat-card-label">Unread Messages</p>
+                <p class="stat-card-value">@stats.UnreadMessagesCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="bell"></i></div>
+            <div>
+                <p class="stat-card-label">Unread Notifications</p>
+                <p class="stat-card-value">@stats.UnreadNotificationsCount</p>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card mt-3">
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">My Orders</h2>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <p class="text-secondary small mb-1">As Buyer</p>
+                        <p class="h5 fw-bold mb-0">@stats.BuyerOrderStats.TotalCount</p>
+                        <p class="text-secondary small mb-0">@stats.BuyerOrderStats.CompletedCount completed</p>
+                    </div>
+                    <div class="col-6">
+                        <p class="text-secondary small mb-1">As Seller</p>
+                        <p class="h5 fw-bold mb-0">@stats.SellerOrderStats.TotalCount</p>
+                        <p class="text-secondary small mb-0">@stats.SellerOrderStats.CompletedCount completed</p>
+                    </div>
+                </div>
+                <a asp-controller="Orders" asp-action="Index" class="small text-decoration-none">View My Orders</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h6 fw-semibold mb-0">Verification Status</h2>
+                    <a asp-controller="Verification" asp-action="Index" class="small text-decoration-none">Manage</a>
+                </div>
+                @if (stats.Verification is null)
+                {
+                    <p class="text-secondary small mb-0">You haven't submitted a verification request yet.</p>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <partial name="_VerificationStatusBadge" model="stats.Verification.Status" />
+                        <span class="small text-secondary">@stats.Verification.UniversityName</span>
+                    </div>
+                    <p class="text-secondary small mb-0">Submitted @stats.Verification.SubmittedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h2 class="h6 fw-semibold mb-0">My Reputation</h2>
             <a asp-controller="Reviews" asp-action="Index" class="small text-decoration-none">View My Reviews</a>
         </div>
-        @if (reputation.SellerReviewCount == 0 && reputation.BuyerReviewCount == 0)
+        @if (stats.Reputation.SellerReviewCount == 0 && stats.Reputation.BuyerReviewCount == 0)
         {
             <p class="text-secondary small mb-0">No reviews yet. Reviews appear after you complete an order.</p>
         }
@@ -68,18 +156,56 @@
                 <div class="col-sm-6">
                     <p class="text-secondary small mb-1">As Seller</p>
                     <div class="d-flex align-items-center gap-2">
-                        <partial name="_StarRatingDisplay" model="reputation.SellerAverageRating" />
-                        <span class="small text-secondary">@reputation.SellerAverageRating.ToString("0.0") (@reputation.SellerReviewCount)</span>
+                        <partial name="_StarRatingDisplay" model="stats.Reputation.SellerAverageRating" />
+                        <span class="small text-secondary">@stats.Reputation.SellerAverageRating.ToString("0.0") (@stats.Reputation.SellerReviewCount)</span>
                     </div>
                 </div>
                 <div class="col-sm-6">
                     <p class="text-secondary small mb-1">As Buyer</p>
                     <div class="d-flex align-items-center gap-2">
-                        <partial name="_StarRatingDisplay" model="reputation.BuyerAverageRating" />
-                        <span class="small text-secondary">@reputation.BuyerAverageRating.ToString("0.0") (@reputation.BuyerReviewCount)</span>
+                        <partial name="_StarRatingDisplay" model="stats.Reputation.BuyerAverageRating" />
+                        <span class="small text-secondary">@stats.Reputation.BuyerAverageRating.ToString("0.0") (@stats.Reputation.BuyerReviewCount)</span>
                     </div>
                 </div>
             </div>
         }
     </div>
 </div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card chart-card h-100">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">My Listings by Status</h2>
+                <canvas id="myListingStatusChart" height="220"></canvas>
+                <p id="myListingStatusEmpty" class="dashboard-empty-state d-none mb-0">No listings yet.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card chart-card h-100">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">My Orders: Buyer vs Seller</h2>
+                <canvas id="myOrdersChart" height="220"></canvas>
+                <p id="myOrdersEmpty" class="dashboard-empty-state d-none mb-0">No orders yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 fw-bold mb-0">Recommended For You</h2>
+        <a asp-area="" asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">Browse Marketplace</a>
+    </div>
+    <partial name="_ListingCardGrid" model="stats.RecommendedListings" view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = "No recommendations yet — browse the marketplace to get started." }' />
+</div>
+
+<partial name="_RecentActivityFeed" model="stats.RecentActivity" />
+
+@section Scripts {
+    <script type="application/json" id="myListingStatusData">@Html.Raw(JsonSerializer.Serialize(stats.ListingStats, jsonOptions))</script>
+    <script type="application/json" id="myOrdersData">@Html.Raw(JsonSerializer.Serialize(new { buyer = stats.BuyerOrderStats, seller = stats.SellerOrderStats }, jsonOptions))</script>
+    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
+    <script src="~/js/student-dashboard.js"></script>
+}

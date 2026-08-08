@@ -13,9 +13,11 @@ using SajhaSikshya.Services.AI;
 using SajhaSikshya.Services.Catalog;
 using SajhaSikshya.Services.Chat;
 using SajhaSikshya.Services.Interfaces;
+using SajhaSikshya.Services.Dashboard;
 using SajhaSikshya.Services.Interfaces.AI;
 using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Chat;
+using SajhaSikshya.Services.Interfaces.Dashboard;
 using SajhaSikshya.Services.Interfaces.Marketplace;
 using SajhaSikshya.Services.Interfaces.Notifications;
 using SajhaSikshya.Services.Interfaces.Orders;
@@ -137,6 +139,9 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<IAIService, GeminiAIService>();
         services.AddScoped<IListingAIService, ListingAIService>();
         services.AddScoped<IMarketplaceAssistantService, MarketplaceAssistantService>();
+        services.AddScoped<IAdminInsightsService, AdminInsightsService>();
+
+        services.AddScoped<IDashboardQueryService, DashboardQueryService>();
 
         return services;
     }
