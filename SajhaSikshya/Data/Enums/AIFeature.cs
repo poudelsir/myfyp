@@ -14,4 +14,7 @@ public enum AIFeature
 {
     [Display(Name = "Listing Description Generator", Description = "AI-generated title, description, and keywords for a new or edited listing.")]
     ListingDescriptionGenerator = 0,
+
+    [Display(Name = "Price Recommendation", Description = "AI-suggested selling price, price range, and confidence for a listing.")]
+    PriceRecommendation = 1,
 }

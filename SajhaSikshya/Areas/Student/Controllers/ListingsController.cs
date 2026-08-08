@@ -8,6 +8,7 @@ using SajhaSikshya.Data.Enums;
 using SajhaSikshya.DTOs.Marketplace;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Helpers;
+using SajhaSikshya.Services.AI;
 using SajhaSikshya.Services.AI.Prompts;
 using SajhaSikshya.Services.Interfaces.AI;
 using SajhaSikshya.Services.Interfaces.Catalog;
@@ -284,6 +285,45 @@ public class ListingsController : Controller
         if (!result.Succeeded || result.Data is null)
         {
             return BadRequest(result.Errors.FirstOrDefault() ?? "Could not generate a description right now.");
+        }
+
+        return Json(result.Data);
+    }
+
+    /// <summary>
+    /// Called via fetch() from the "AI Price Recommendation" button. <paramref name="id"/>
+    /// is 0 on Create (nothing to exclude) or the listing's own id on Edit (excluded from
+    /// its own comparable-listings query — see <see cref="IListingAIService.RecommendPriceAsync"/>).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RecommendPrice(int id, string title, string description, BookCondition condition, int categoryId, int subjectId, bool isDonation)
+    {
+        var category = await _categoryService.GetByIdAsync(categoryId);
+        var subject = await _subjectService.GetByIdAsync(subjectId);
+        if (category is null || subject is null)
+        {
+            return BadRequest("Please select a category and subject first.");
+        }
+
+        var request = new ListingPriceRecommendationRequest(
+            title,
+            description,
+            condition,
+            categoryId,
+            category.Name,
+            subjectId,
+            subject.Name,
+            subject.AcademicLevelId,
+            subject.AcademicLevelName,
+            subject.UniversityName,
+            isDonation,
+            id == 0 ? null : id);
+
+        var result = await _listingAIService.RecommendPriceAsync(User.GetUserId()!, request);
+        if (!result.Succeeded || result.Data is null)
+        {
+            return BadRequest(result.Errors.FirstOrDefault() ?? "Could not generate a price recommendation right now.");
         }
 
         return Json(result.Data);

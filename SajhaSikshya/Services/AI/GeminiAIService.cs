@@ -109,7 +109,13 @@ public class GeminiAIService : IAIService
             }
 
             var wireResponse = await httpResponse.Content.ReadFromJsonAsync<GeminiGenerateContentResponse>(JsonOptions, cts.Token);
-            var text = wireResponse?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+
+            // gemini-flash-latest is a "thinking" model — a longer structured-JSON answer
+            // can come back as more than one Part, so every Part's Text must be
+            // concatenated in order. Taking only the first Part risks silently truncating
+            // valid JSON into something that fails to parse downstream.
+            var parts = wireResponse?.Candidates?.FirstOrDefault()?.Content?.Parts;
+            var text = parts is null ? null : string.Concat(parts.Select(p => p.Text));
 
             if (string.IsNullOrWhiteSpace(text))
             {

@@ -19,4 +19,13 @@ public static class AIConstants
 
     /// <summary>Error text stored on <see cref="Data.Entities.AI.AIUsageLog"/> is truncated to this length — enough for triage, never a full stack trace.</summary>
     public const int MaxErrorMessageLength = 500;
+
+    /// <summary>Below this many comparable listings, the price prompt falls back to Gemini reasoning alone instead of citing marketplace data as a reference point.</summary>
+    public const int MinComparableListingsForPricing = 3;
+
+    /// <summary>Upper bound on how many comparable listing prices are pulled into the pricing prompt — enough signal without an unbounded prompt.</summary>
+    public const int MaxComparableListingsSample = 20;
+
+    /// <summary>Price recommendations aren't meaningful below this amount of description text — same 20-character floor <see cref="ListingConstants"/> already requires elsewhere for a listing's own Description field.</summary>
+    public const int MinDescriptionLengthForPricing = 20;
 }

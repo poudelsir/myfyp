@@ -1,4 +1,5 @@
 using SajhaSikshya.DTOs.AI;
+using SajhaSikshya.Services.AI;
 using SajhaSikshya.Services.AI.Prompts;
 
 namespace SajhaSikshya.Services.Interfaces.AI;
@@ -7,4 +8,6 @@ namespace SajhaSikshya.Services.Interfaces.AI;
 public interface IListingAIService
 {
     Task<ServiceResult<ListingDescriptionSuggestionDto>> GenerateDescriptionAsync(string userId, ListingDescriptionPromptInput input);
+
+    Task<ServiceResult<ListingPriceRecommendationDto>> RecommendPriceAsync(string userId, ListingPriceRecommendationRequest request);
 }
