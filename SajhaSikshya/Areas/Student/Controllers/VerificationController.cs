@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
+using SajhaSikshya.Data.Entities;
 using SajhaSikshya.Data.Enums;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Helpers;
-using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.ViewModels.Verification;
 
@@ -28,16 +28,16 @@ public class VerificationController : Controller
 
     private readonly IVerificationService _verificationService;
     private readonly IVerificationQueryService _verificationQueryService;
-    private readonly IUniversityService _universityService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public VerificationController(
         IVerificationService verificationService,
         IVerificationQueryService verificationQueryService,
-        IUniversityService universityService)
+        UserManager<ApplicationUser> userManager)
     {
         _verificationService = verificationService;
         _verificationQueryService = verificationQueryService;
-        _universityService = universityService;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -68,7 +68,7 @@ public class VerificationController : Controller
         }
 
         var model = new VerificationSubmissionViewModel();
-        await PopulateUniversitiesAsync(model);
+        await PopulateAccountInfoAsync(model);
         return View(model);
     }
 
@@ -78,7 +78,7 @@ public class VerificationController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await PopulateUniversitiesAsync(model);
+            await PopulateAccountInfoAsync(model);
             return View(model);
         }
 
@@ -91,7 +91,7 @@ public class VerificationController : Controller
                 ModelState.AddModelError(string.Empty, error);
             }
 
-            await PopulateUniversitiesAsync(model);
+            await PopulateAccountInfoAsync(model);
             return View(model);
         }
 
@@ -112,8 +112,8 @@ public class VerificationController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        var model = new VerificationSubmissionViewModel { UniversityId = current.UniversityId };
-        await PopulateUniversitiesAsync(model);
+        var model = new VerificationSubmissionViewModel();
+        await PopulateAccountInfoAsync(model);
         ViewData["PreviousRejectionReason"] = current.RejectionReason;
         return View(model);
     }
@@ -124,7 +124,7 @@ public class VerificationController : Controller
     {
         if (!ModelState.IsValid)
         {
-            await PopulateUniversitiesAsync(model);
+            await PopulateAccountInfoAsync(model);
             return View(model);
         }
 
@@ -137,7 +137,7 @@ public class VerificationController : Controller
                 ModelState.AddModelError(string.Empty, error);
             }
 
-            await PopulateUniversitiesAsync(model);
+            await PopulateAccountInfoAsync(model);
             return View(model);
         }
 
@@ -145,11 +145,17 @@ public class VerificationController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private async Task PopulateUniversitiesAsync(VerificationSubmissionViewModel model)
+    /// <summary>Fills the form's read-only account-info display — never bound from the submitted form, so it must be repopulated every time the form is (re)displayed, including after a failed POST.</summary>
+    private async Task PopulateAccountInfoAsync(VerificationSubmissionViewModel model)
     {
-        var universities = await _universityService.GetAllActiveAsync();
-        model.UniversityOptions = universities
-            .Select(u => new SelectListItem(u.Name, u.Id.ToString()) { Selected = u.Id == model.UniversityId })
-            .ToList();
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+        {
+            return;
+        }
+
+        model.AccountFullName = user.FullName;
+        model.AccountEmail = user.Email ?? string.Empty;
+        model.AccountPhoneNumber = user.PhoneNumber;
     }
 }

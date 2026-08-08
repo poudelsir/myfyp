@@ -16,11 +16,32 @@ public class VerificationDto
 
     public string StudentName { get; set; } = string.Empty;
 
-    public int UniversityId { get; set; }
+    /// <summary>Null for every submission made after the Seller Verification refinement — University was dropped from the application form. Only populated on legacy pre-refinement rows.</summary>
+    public int? UniversityId { get; set; }
 
-    public string UniversityName { get; set; } = string.Empty;
+    public string? UniversityName { get; set; }
 
-    public string StudentNumber { get; set; } = string.Empty;
+    /// <summary>Null for every submission made after the Seller Verification refinement — dropped from the application form. Only populated on legacy pre-refinement rows.</summary>
+    public string? StudentNumber { get; set; }
+
+    public SellerType? SellerType { get; set; }
+
+    public string? SellerTypeDisplay { get; set; }
+
+    public GovernmentIdDocumentType? GovernmentIdDocumentType { get; set; }
+
+    public string? GovernmentIdDocumentTypeDisplay { get; set; }
+
+    public AcademicIdDocumentType? AcademicIdDocumentType { get; set; }
+
+    public string? AcademicIdDocumentTypeDisplay { get; set; }
+
+    public IReadOnlyList<SellingCategory> SellingCategories { get; set; } = Array.Empty<SellingCategory>();
+
+    public IReadOnlyList<string> SellingCategoryDisplays { get; set; } = Array.Empty<string>();
+
+    /// <summary>Whether an optional Academic Identity document was provided — the document itself is never exposed on this DTO, only through <see cref="Controllers.VerificationImagesController"/>.</summary>
+    public bool HasAcademicId { get; set; }
 
     public VerificationStatus Status { get; set; }
 

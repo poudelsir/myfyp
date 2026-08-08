@@ -4,7 +4,9 @@
 @{
     var v = Model.Verification;
     ViewData["Title"] = $"Review: {v.StudentName}";
-    var imageUrl = Url.Action("Image", "VerificationImages", new { id = v.Id, area = "" });
+    var governmentIdImageUrl = Url.Action("Image", "VerificationImages", new { id = v.Id, type = "government", area = "" });
+    var academicIdImageUrl = Url.Action("Image", "VerificationImages", new { id = v.Id, type = "academic", area = "" });
+    var profilePhotoImageUrl = Url.Action("Image", "VerificationImages", new { id = v.Id, type = "profile", area = "" });
 }
 
 <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -19,18 +21,43 @@
 
 <div class="row g-4">
     <div class="col-lg-6">
-        <h2 class="h6 fw-semibold mb-2">Student ID</h2>
-        <img src="@imageUrl" alt="Student ID for @v.StudentName" class="img-fluid rounded border" />
+        <h2 class="h6 fw-semibold mb-1">Government Identity Document</h2>
+        @if (!string.IsNullOrEmpty(v.GovernmentIdDocumentTypeDisplay))
+        {
+            <p class="text-secondary small mb-2">@v.GovernmentIdDocumentTypeDisplay</p>
+        }
+        <img src="@governmentIdImageUrl" alt="Government ID for @v.StudentName" class="img-fluid rounded border mb-4" />
+
+        <h2 class="h6 fw-semibold mb-1">Academic Identity</h2>
+        @if (v.HasAcademicId)
+        {
+            @if (!string.IsNullOrEmpty(v.AcademicIdDocumentTypeDisplay))
+            {
+                <p class="text-secondary small mb-2">@v.AcademicIdDocumentTypeDisplay</p>
+            }
+            <img src="@academicIdImageUrl" alt="Academic ID for @v.StudentName" class="img-fluid rounded border mb-4" />
+        }
+        else
+        {
+            <p class="text-secondary small mb-4">Not provided.</p>
+        }
+
+        <h2 class="h6 fw-semibold mb-2">Profile Photo</h2>
+        <img src="@profilePhotoImageUrl" alt="Profile photo for @v.StudentName" class="img-fluid rounded border" style="max-width: 240px;" />
     </div>
 
     <div class="col-lg-6">
         <dl class="row small text-secondary mb-3">
+            <dt class="col-4">Account Name</dt>
+            <dd class="col-8">@v.StudentName</dd>
             <dt class="col-4">Email</dt>
             <dd class="col-8">@v.StudentEmail</dd>
-            <dt class="col-4">University</dt>
-            <dd class="col-8">@v.UniversityName</dd>
-            <dt class="col-4">Student Number</dt>
-            <dd class="col-8">@v.StudentNumber</dd>
+            <dt class="col-4">Phone Number</dt>
+            <dd class="col-8">@(string.IsNullOrWhiteSpace(v.StudentPhoneNumber) ? "—" : v.StudentPhoneNumber)</dd>
+            <dt class="col-4">Seller Type</dt>
+            <dd class="col-8">@(v.SellerTypeDisplay ?? "—")</dd>
+            <dt class="col-4">Selling Categories</dt>
+            <dd class="col-8">@(v.SellingCategoryDisplays.Any() ? string.Join(", ", v.SellingCategoryDisplays) : "—")</dd>
             <dt class="col-4">Submitted</dt>
             <dd class="col-8">@v.SubmittedAtUtc.ToLocalTime().ToString("MMMM d, yyyy h:mm tt")</dd>
             @if (v.ReviewedAtUtc.HasValue)

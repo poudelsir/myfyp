@@ -5,11 +5,22 @@
 }
 
 <div class="mb-3">
-    <h1 class="h4 fw-bold mb-1">Submit Verification</h1>
-    <p class="text-secondary mb-0">Verified students can create listings, buy books, and request donations. This only takes a minute.</p>
+    <h1 class="h4 fw-bold mb-1">Become a Verified Seller</h1>
+    <p class="text-secondary mb-0">
+        To maintain a trusted academic marketplace, every seller must complete a one-time verification. This helps
+        protect buyers, reduce fraudulent activities, and improve marketplace safety.
+    </p>
 </div>
 
-<div class="card" style="max-width: 640px;">
+<div class="alert alert-info d-flex align-items-center gap-2" style="max-width: 720px;">
+    <i data-lucide="clock" style="width:18px;height:18px;flex-shrink:0;"></i>
+    <div>
+        <strong>Estimated review time: 24–48 hours.</strong>
+        You can keep browsing and purchasing on SajhaSikshya while your application is reviewed.
+    </div>
+</div>
+
+<div class="card" style="max-width: 720px;">
     <div class="card-body">
         <form asp-action="Submit" method="post" enctype="multipart/form-data" novalidate>
             @if (!ViewData.ModelState.IsValid)

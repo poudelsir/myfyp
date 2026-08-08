@@ -12,8 +12,12 @@ public class StudentVerificationConfiguration : IEntityTypeConfiguration<Student
         builder.HasQueryFilter(v => !v.IsDeleted);
 
         builder.Property(v => v.UserId).IsRequired();
-        builder.Property(v => v.StudentNumber).IsRequired().HasMaxLength(50);
-        builder.Property(v => v.StudentIdImagePath).IsRequired().HasMaxLength(300);
+        builder.Property(v => v.StudentNumber).HasMaxLength(50);
+        builder.Property(v => v.GovernmentIdImagePath).IsRequired().HasMaxLength(300);
+        builder.Property(v => v.AcademicIdImagePath).HasMaxLength(300);
+        builder.Property(v => v.ProfilePhotoImagePath).HasMaxLength(300);
+        builder.Property(v => v.SellingCategoriesCsv).IsRequired().HasMaxLength(200).HasDefaultValue(string.Empty);
+        builder.Property(v => v.DeclarationAccepted).IsRequired().HasDefaultValue(false);
         builder.Property(v => v.RejectionReason).HasMaxLength(500);
         builder.Property(v => v.AdminNotes).HasMaxLength(1000);
 
@@ -35,6 +39,7 @@ public class StudentVerificationConfiguration : IEntityTypeConfiguration<Student
         builder.HasOne(v => v.University)
             .WithMany()
             .HasForeignKey(v => v.UniversityId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(v => v.ReviewedByUser)

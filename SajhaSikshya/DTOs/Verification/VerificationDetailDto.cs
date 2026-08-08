@@ -11,6 +11,8 @@ public class VerificationDetailDto : VerificationDto
 {
     public string StudentEmail { get; set; } = string.Empty;
 
+    public string? StudentPhoneNumber { get; set; }
+
     /// <summary>Internal-only notes for other admins — never shown to the student. Only ever populated on this admin-facing DTO, never on the base <see cref="VerificationDto"/>.</summary>
     public string? AdminNotes { get; set; }
 }

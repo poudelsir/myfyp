@@ -33,14 +33,15 @@ public class VerificationImagesController : Controller
     }
 
     /// <summary>
-    /// Streams the student ID image for verification <paramref name="id"/>. Only the
-    /// verification's owner or an Administrator may view it; everyone else — including
-    /// another authenticated Student who isn't the owner — gets a 404, the same
-    /// response as a nonexistent id, so a probing request can't distinguish "this
-    /// verification doesn't exist" from "it exists but you can't see it".
+    /// Streams one of the (up to three) documents for verification <paramref name="id"/>
+    /// — <paramref name="type"/> selects which (<c>government</c>/<c>academic</c>/
+    /// <c>profile</c>). Only the verification's owner or an Administrator may view it;
+    /// everyone else — including another authenticated Student who isn't the owner —
+    /// gets a 404, the same response as a nonexistent id or missing document, so a
+    /// probing request can't distinguish "doesn't exist" from "exists but you can't see it".
     /// </summary>
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> Image(int id)
+    [HttpGet("{id:int}/{type}")]
+    public async Task<IActionResult> Image(int id, string type)
     {
         var access = await _verificationQueryService.GetImageAccessAsync(id);
         if (access is null)
@@ -55,7 +56,20 @@ public class VerificationImagesController : Controller
             return NotFound();
         }
 
-        var physicalPath = _imageStorageService.GetPrivatePhysicalPath(access.ImagePath);
+        var imagePath = type.ToLowerInvariant() switch
+        {
+            "government" => access.GovernmentIdImagePath,
+            "academic" => access.AcademicIdImagePath,
+            "profile" => access.ProfilePhotoImagePath,
+            _ => null,
+        };
+
+        if (string.IsNullOrEmpty(imagePath))
+        {
+            return NotFound();
+        }
+
+        var physicalPath = _imageStorageService.GetPrivatePhysicalPath(imagePath);
         if (physicalPath is null)
         {
             return NotFound();

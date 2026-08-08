@@ -15,7 +15,7 @@
     <div class="card-body">
         <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
             <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 280px;"
-                   placeholder="Search by name or student number…" aria-label="Search" />
+                   placeholder="Search by applicant name…" aria-label="Search" />
             <select name="status" class="form-select" style="max-width: 200px;" asp-items="EnumExtensions.GetSelectList<VerificationStatus>(Model.Status)">
                 <option value="">All Statuses</option>
             </select>
@@ -38,9 +38,8 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Student</th>
-                            <th>University</th>
-                            <th>Student Number</th>
+                            <th>Applicant</th>
+                            <th>Seller Type</th>
                             <th>Status</th>
                             <th>Submitted</th>
                             <th class="text-end">Actions</th>
@@ -51,8 +50,7 @@
                         {
                             <tr>
                                 <td>@item.StudentName</td>
-                                <td>@item.UniversityName</td>
-                                <td>@item.StudentNumber</td>
+                                <td>@(item.SellerTypeDisplay ?? "—")</td>
                                 <td><partial name="_VerificationStatusBadge" model="item.Status" /></td>
                                 <td>@item.SubmittedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
                                 <td class="text-end">

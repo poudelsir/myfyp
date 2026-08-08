@@ -61,7 +61,9 @@ public class VerificationQueryService : IVerificationQueryService
 
         Expression<Func<StudentVerification, bool>> filter = v =>
             (!status.HasValue || v.Status == status.Value)
-            && (!hasSearchTerm || v.StudentNumber.Contains(searchTerm!) || (v.User.FirstName + " " + v.User.LastName).Contains(searchTerm!));
+            && (!hasSearchTerm
+                || (v.StudentNumber != null && v.StudentNumber.Contains(searchTerm!))
+                || (v.User.FirstName + " " + v.User.LastName).Contains(searchTerm!));
 
         var page = await repository.GetPagedAsync(
             pageNumber,
@@ -128,13 +130,19 @@ public class VerificationQueryService : IVerificationQueryService
     {
         var repository = _unitOfWork.Repository<StudentVerification>();
 
-        // Projects straight to the two fields needed for the authorization check and
-        // file lookup — never loads the full entity just to read a path.
+        // Projects straight to the fields needed for the authorization check and file
+        // lookup — never loads the full entity just to read a path.
         var results = await repository.FindProjectedAsync(
             filter: v => v.Id == verificationId,
             orderBy: q => q.OrderBy(v => v.Id),
             take: 1,
-            selector: v => new VerificationImageAccessDto { UserId = v.UserId, ImagePath = v.StudentIdImagePath });
+            selector: v => new VerificationImageAccessDto
+            {
+                UserId = v.UserId,
+                GovernmentIdImagePath = v.GovernmentIdImagePath,
+                AcademicIdImagePath = v.AcademicIdImagePath,
+                ProfilePhotoImagePath = v.ProfilePhotoImagePath,
+            });
 
         return results.FirstOrDefault();
     }

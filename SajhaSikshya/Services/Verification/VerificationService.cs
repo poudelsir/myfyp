@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http;
 using SajhaSikshya.Constants;
-using SajhaSikshya.Data.Entities.Catalog;
 using SajhaSikshya.Data.Entities.Verification;
 using SajhaSikshya.Data.Enums;
 using SajhaSikshya.Repositories.Interfaces;
@@ -63,37 +62,82 @@ public class VerificationService : IVerificationService
             return ServiceResult<int>.Failure("You already have a verification request pending review.");
         }
 
-        var university = await _unitOfWork.Repository<University>().GetByIdAsync(model.UniversityId);
-        if (university is null || !university.IsActive)
+        if (model.GovernmentIdImage is null)
         {
-            return ServiceResult<int>.Failure("The selected university does not exist.");
+            return ServiceResult<int>.Failure("Please upload a government-issued identity document.");
         }
 
-        if (model.StudentIdImage is null)
+        if (model.ProfilePhoto is null)
         {
-            return ServiceResult<int>.Failure("Please upload a photo of your student ID.");
+            return ServiceResult<int>.Failure("Please upload a recent photo of yourself.");
         }
 
         // SavePrivateAsync (not SaveAsync) — verification documents are stored outside
         // wwwroot entirely, never reachable by a public URL. See IImageStorageService's
-        // remarks and VerificationImagesController for the authorized read path.
-        var saveResult = await _imageStorageService.SavePrivateAsync(
-            model.StudentIdImage,
+        // remarks and VerificationImagesController for the authorized read path. Every
+        // path saved this call is tracked so a later failure can roll all of them back,
+        // not just the first one.
+        var savedPaths = new List<string>();
+
+        var governmentIdResult = await _imageStorageService.SavePrivateAsync(
+            model.GovernmentIdImage,
+            VerificationConstants.ImageStorageSubfolder,
+            VerificationConstants.AllowedDocumentExtensions,
+            VerificationConstants.MaximumDocumentSizeMB,
+            VerificationConstants.AllowedDocumentMimeTypes);
+
+        if (!governmentIdResult.Succeeded)
+        {
+            return ServiceResult<int>.Failure(governmentIdResult.Errors.FirstOrDefault() ?? "The government ID document could not be uploaded.");
+        }
+
+        savedPaths.Add(governmentIdResult.Data!);
+
+        var profilePhotoResult = await _imageStorageService.SavePrivateAsync(
+            model.ProfilePhoto,
             VerificationConstants.ImageStorageSubfolder,
             VerificationConstants.AllowedImageExtensions,
             VerificationConstants.MaximumImageSizeMB);
 
-        if (!saveResult.Succeeded)
+        if (!profilePhotoResult.Succeeded)
         {
-            return ServiceResult<int>.Failure(saveResult.Errors.FirstOrDefault() ?? "The student ID photo could not be uploaded.");
+            await RollbackSavedFilesAsync(savedPaths);
+            return ServiceResult<int>.Failure(profilePhotoResult.Errors.FirstOrDefault() ?? "The profile photo could not be uploaded.");
+        }
+
+        savedPaths.Add(profilePhotoResult.Data!);
+
+        string? academicIdPath = null;
+        if (model.AcademicIdImage is not null)
+        {
+            var academicIdResult = await _imageStorageService.SavePrivateAsync(
+                model.AcademicIdImage,
+                VerificationConstants.ImageStorageSubfolder,
+                VerificationConstants.AllowedDocumentExtensions,
+                VerificationConstants.MaximumDocumentSizeMB,
+                VerificationConstants.AllowedDocumentMimeTypes);
+
+            if (!academicIdResult.Succeeded)
+            {
+                await RollbackSavedFilesAsync(savedPaths);
+                return ServiceResult<int>.Failure(academicIdResult.Errors.FirstOrDefault() ?? "The academic ID document could not be uploaded.");
+            }
+
+            academicIdPath = academicIdResult.Data!;
+            savedPaths.Add(academicIdPath);
         }
 
         var verification = new StudentVerification
         {
             UserId = userId,
-            UniversityId = model.UniversityId,
-            StudentNumber = model.StudentNumber.Trim(),
-            StudentIdImagePath = saveResult.Data!,
+            GovernmentIdImagePath = governmentIdResult.Data!,
+            GovernmentIdDocumentType = model.GovernmentIdDocumentType,
+            AcademicIdImagePath = academicIdPath,
+            AcademicIdDocumentType = model.AcademicIdDocumentType,
+            ProfilePhotoImagePath = profilePhotoResult.Data!,
+            SellerType = model.SellerType,
+            SellingCategoriesCsv = string.Join(",", model.SellingCategories.Select(c => (int)c)),
+            DeclarationAccepted = model.DeclarationAccepted,
             Status = VerificationStatus.Pending,
             SubmittedAtUtc = DateTime.UtcNow,
         };
@@ -105,11 +149,11 @@ public class VerificationService : IVerificationService
         }
         catch (Exception ex)
         {
-            // No database row was written — the uploaded file is now orphaned, so it's
-            // removed rather than left behind. Mirrors ListingService.UploadImagesAsync's
-            // save-then-rollback-on-failure shape.
+            // No database row was written — every uploaded file this call is now
+            // orphaned, so all of them are removed rather than left behind. Mirrors
+            // ListingService.UploadImagesAsync's save-then-rollback-on-failure shape.
             _logger.LogError(ex, "Failed to save verification submission for user {UserId}", userId);
-            await _imageStorageService.DeletePrivateAsync(saveResult.Data!);
+            await RollbackSavedFilesAsync(savedPaths);
             return ServiceResult<int>.Failure("Failed to submit your verification. Please try again.");
         }
 
@@ -117,6 +161,14 @@ public class VerificationService : IVerificationService
         await _notificationService.CreateAsync(userId, NotificationType.Verification, submittedTitle, submittedMessage, VerificationLink, createdBy: userId);
 
         return ServiceResult<int>.Success(verification.Id);
+    }
+
+    private async Task RollbackSavedFilesAsync(IReadOnlyList<string> savedPaths)
+    {
+        foreach (var path in savedPaths)
+        {
+            await _imageStorageService.DeletePrivateAsync(path);
+        }
     }
 
     public async Task<ServiceResult> ReviewAsync(int verificationId, VerificationAction action, string reviewerId, string? reason = null, string? adminNotes = null)
