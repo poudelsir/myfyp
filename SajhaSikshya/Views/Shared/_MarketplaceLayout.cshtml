@@ -10,7 +10,6 @@
 @using SajhaSikshya.Services.Interfaces.Verification
 @inject ICompareService CompareService
 @inject IVerificationQueryService VerificationQueryService
-@inject ICategoryService CategoryService
 @inject IUniversityService UniversityService
 @inject IChatQueryService ChatQueryService
 @inject INotificationQueryService NotificationQueryService
@@ -56,7 +55,6 @@
         recentNotifications = recentPage.Items.ToList();
     }
 
-    var categories = await CategoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
     var universities = await UniversityService.GetAllActiveAsync();
 
     string IconFor(NotificationType type) => type switch
@@ -96,10 +94,21 @@
     <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/marketplace.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/verification.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/assistant.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body data-authenticated="@(isAuthenticated ? "true" : "false")">
+    <div class="announcement-bar" id="announcementBar">
+        <div class="container-fluid d-flex align-items-center justify-content-center gap-2 flex-wrap">
+            <i data-lucide="sparkles"></i>
+            <span>Nepal's AI-powered academic marketplace — buy, sell, and donate books with fellow students.</span>
+            <a asp-controller="Marketplace" asp-action="Index" class="announcement-bar-link">Explore the marketplace</a>
+        </div>
+        <button type="button" class="announcement-bar-close" id="announcementBarClose" aria-label="Dismiss announcement">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
     @if (isAuthenticated)
     {
         <form id="notificationTokenForm" class="d-none">@Html.AntiForgeryToken()</form>
@@ -120,21 +129,6 @@
                 <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
                 <div class="dropdown">
                     <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        Categories <i data-lucide="chevron-down"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        @foreach (var category in categories)
-                        {
-                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-category="@category.Id">@category.Name</a></li>
-                        }
-                        @if (!categories.Any())
-                        {
-                            <li><span class="dropdown-item-text text-secondary small">No categories yet</span></li>
-                        }
-                    </ul>
-                </div>
-                <div class="dropdown">
-                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         Universities <i data-lucide="chevron-down"></i>
                     </button>
                     <ul class="dropdown-menu">
@@ -151,6 +145,10 @@
                 <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link d-flex align-items-center gap-1">
                     <i data-lucide="sparkles"></i> AI Assistant
                 </a>
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="marketplace-nav-link d-flex align-items-center gap-1">
+                    <i data-lucide="heart-handshake"></i> Donate
+                </a>
+                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About</a>
             </nav>
 
             <form class="navbar-search d-none d-md-flex ms-lg-2" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
@@ -214,10 +212,16 @@
                 </div>
             }
 
-            @if (isStudent)
+            @if (isStudent && isCurrentUserVerified)
             {
                 <a asp-area="Student" asp-controller="Listings" asp-action="Create" class="btn btn-primary btn-sm d-none d-sm-inline-flex">
-                    <i data-lucide="plus" class="me-1"></i>Become a Seller
+                    <i data-lucide="plus" class="me-1"></i>Create Listing
+                </a>
+            }
+            else if (isStudent)
+            {
+                <a asp-area="Student" asp-controller="Verification" asp-action="Submit" class="btn btn-primary btn-sm d-none d-sm-inline-flex">
+                    <i data-lucide="badge-check" class="me-1"></i>Become a Seller
                 </a>
             }
 
@@ -236,16 +240,24 @@
                                 <partial name="_VerifiedStudentBadge" model="isCurrentUserVerified" />
                             </h6>
                         </li>
+                        <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                         @if (isAdmin)
                         {
                             <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Admin Dashboard</a></li>
                         }
                         else
                         {
-                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Dashboard</a></li>
-                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Listings" asp-action="Index"><i data-lucide="tag" class="me-2"></i>My Listings</a></li>
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
+                            @if (isCurrentUserVerified)
+                            {
+                                <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="store" class="me-2"></i>Seller Dashboard</a></li>
+                            }
+                            else
+                            {
+                                <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Submit"><i data-lucide="badge-check" class="me-2"></i>Become a Verified Seller</a></li>
+                            }
                         }
+                        <li><a class="dropdown-item" href="/notifications/preferences"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
                         <li><hr class="dropdown-divider" /></li>
                         <li>
                             <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">
@@ -269,7 +281,12 @@
                 <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
                 <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
                 <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link">AI Assistant</a>
-                <a asp-area="Student" asp-controller="SavedListings" asp-action="Index" class="marketplace-nav-link">Wishlist</a>
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="marketplace-nav-link">Donate</a>
+                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About</a>
+                @if (isStudent)
+                {
+                    <a asp-area="Student" asp-controller="SavedListings" asp-action="Index" class="marketplace-nav-link">Wishlist</a>
+                }
             </div>
         </div>
     </header>
@@ -311,6 +328,7 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/dark-mode.js" asp-append-version="true"></script>
+    <script src="~/js/announcement-bar.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

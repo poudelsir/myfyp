@@ -22,4 +22,12 @@ public static class SecurityConstants
 
     /// <summary>Idle time before an authenticated session expires and the user must sign in again.</summary>
     public const int SessionTimeoutMinutes = 30;
+
+    /// <summary>
+    /// How long a password reset link stays valid, via Identity's built-in
+    /// <c>DataProtectionTokenProviderOptions.TokenLifespan</c> (default is 1 day —
+    /// shortened here since a reset link is a higher-stakes, short-lived flow than the
+    /// default token lifespan was designed for).
+    /// </summary>
+    public const int PasswordResetTokenLifespanHours = 2;
 }

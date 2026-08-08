@@ -1,0 +1,121 @@
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Chat
+@using SajhaSikshya.Services.Interfaces.Verification
+@inject IChatQueryService ChatQueryService
+@inject IVerificationQueryService VerificationQueryService
+@{
+    // Initial value only — chat.js overwrites this live via the "UnreadCountUpdated"
+    // SignalR event once connected, the same "server-rendered first paint, then
+    // real-time takes over" pattern the rest of Phase 7.2 uses.
+    var currentUserId = User.GetUserId();
+    var unreadChatCount = User.Identity?.IsAuthenticated == true
+        ? await ChatQueryService.GetUnreadCountAsync(currentUserId!)
+        : 0;
+    var isVerifiedSeller = User.Identity?.IsAuthenticated == true
+        ? await VerificationQueryService.IsUserVerifiedAsync(currentUserId!)
+        : false;
+}
+<aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand">
+        <a asp-area="" asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+            <span class="brand-mark">S</span>
+            <span class="brand-text">SajhaSikshya</span>
+        </a>
+        <button type="button" class="btn-icon d-lg-none" id="sidebarCloseBtn" aria-label="Close sidebar">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <p class="sidebar-section-title">@(isVerifiedSeller ? "Seller Center" : "My Account")</p>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="Dashboard" asp-action="Index">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="" asp-controller="Assistant" asp-action="Index">
+                    <i data-lucide="sparkles"></i>
+                    <span>AI Assistant</span>
+                </a>
+            </li>
+            @if (isVerifiedSeller)
+            {
+                <li class="nav-item">
+                    <a class="nav-link" asp-area="Student" asp-controller="Listings" asp-action="Index">
+                        <i data-lucide="tag"></i>
+                        <span>My Listings</span>
+                    </a>
+                </li>
+            }
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="Orders" asp-action="Index">
+                    <i data-lucide="package"></i>
+                    <span>My Orders</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="Chat" asp-action="Index">
+                    <i data-lucide="message-circle"></i>
+                    <span>Messages</span>
+                    <span id="chatUnreadBadge" class="badge text-bg-primary rounded-pill ms-auto @(unreadChatCount > 0 ? "" : "d-none")">@unreadChatCount</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="SavedListings" asp-action="Index">
+                    <i data-lucide="heart"></i>
+                    <span>Saved Listings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="Verification" asp-action="@(isVerifiedSeller ? "Index" : "Submit")">
+                    <i data-lucide="@(isVerifiedSeller ? "shield-check" : "badge-check")"></i>
+                    <span>@(isVerifiedSeller ? "My Verification" : "Become a Verified Seller")</span>
+                    @if (!isVerifiedSeller)
+                    {
+                        <span class="badge text-bg-primary rounded-pill ms-auto">New</span>
+                    }
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Student" asp-controller="Reviews" asp-action="Index">
+                    <i data-lucide="star"></i>
+                    <span>My Reviews</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                    <i data-lucide="book-open"></i>
+                    <span>My Courses</span>
+                    <span class="badge text-bg-secondary ms-auto">Soon</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                    <i data-lucide="graduation-cap"></i>
+                    <span>My Progress</span>
+                    <span class="badge text-bg-secondary ms-auto">Soon</span>
+                </a>
+            </li>
+        </ul>
+
+        <p class="sidebar-section-title">Account</p>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                    <i data-lucide="user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/notifications/preferences">
+                    <i data-lucide="bell-ring"></i>
+                    <span>Notification Preferences</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>

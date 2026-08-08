@@ -1,0 +1,82 @@
+@{
+    Layout = "_MarketplaceLayout";
+    ViewData["Title"] = "About";
+    ViewData["MetaDescription"] = "SajhaSikshya is Nepal's AI-powered academic marketplace, helping verified students buy, sell, and donate textbooks and study materials.";
+}
+
+<section class="home-hero">
+    <div class="home-hero-inner text-center fade-in-up">
+        <span class="status-chip status-chip-primary mb-3">
+            <i data-lucide="graduation-cap"></i> About SajhaSikshya
+        </span>
+        <h1 class="home-hero-title">
+            Nepal's AI-powered
+            <span class="text-gradient">academic marketplace</span>
+        </h1>
+        <p class="home-hero-subtitle">
+            SajhaSikshya ("shared learning") connects verified students across Nepal to buy, sell, and donate
+            secondhand textbooks and study materials — with AI helping every step of the way.
+        </p>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-primary-subtle text-primary"><i data-lucide="badge-check"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Verified Students Only</h3>
+                <p class="text-secondary small mb-0">
+                    Every seller is a verified student, reviewed and approved by our admin team before they can list an item.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-info-subtle text-info"><i data-lucide="sparkles"></i></div>
+                <h3 class="h6 fw-semibold mt-3">AI-Assisted Trading</h3>
+                <p class="text-secondary small mb-0">
+                    AI helps sellers write better listing descriptions, recommend fair prices, and guides buyers to the right book.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Community Giving</h3>
+                <p class="text-secondary small mb-0">
+                    Students can donate textbooks they no longer need, giving them a second life with a fellow student.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 fw-bold text-center mb-4">Our Mission</h2>
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <p class="text-secondary">
+                Textbooks are expensive, and every year usable copies end up unused after a semester ends. SajhaSikshya
+                gives students a trusted, campus-focused place to pass books on to the next student who needs them —
+                saving money, reducing waste, and building a stronger student community along the way.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="donation-banner fade-in-up">
+        <div class="donation-banner-content">
+            <span class="status-chip status-chip-warning mb-2"><i data-lucide="heart-handshake"></i> Get Involved</span>
+            <h2 class="h4 fw-bold mb-2">Ready to join the community?</h2>
+            <p class="mb-3">Browse what's available, or become a verified seller and start listing your own books.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary">
+                    <i data-lucide="store" class="me-1"></i>Browse Marketplace
+                </a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">Create an Account</a>
+            </div>
+        </div>
+    </div>
+</section>

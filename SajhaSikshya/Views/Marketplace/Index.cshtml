@@ -14,6 +14,14 @@
         : Model.IsFiltered
             ? $"Browsing: {Model.CategoryName ?? Model.SubjectName ?? Model.UniversityName ?? Model.AcademicLevelName ?? "Filtered Listings"}"
             : "All Listings";
+
+    // Same ParentCategoryId grouping technique previously used for the top-nav mega
+    // menu, now presented as a vertical browse list inside the Marketplace sidebar.
+    var topLevelCategories = Model.BrowseCategories.Where(c => c.ParentCategoryId is null).ToList();
+    var childrenByParent = Model.BrowseCategories
+        .Where(c => c.ParentCategoryId is not null)
+        .GroupBy(c => c.ParentCategoryId!.Value)
+        .ToDictionary(g => g.Key, g => g.ToList());
 }
 @functions {
     // Builds an "Index" URL carrying the current query string minus whichever keys are
@@ -30,6 +38,29 @@
             {
                 routeValues[kvp.Key] = kvp.Value.ToString();
             }
+        }
+
+        return Url.Action("Index", "Marketplace", routeValues) ?? Url.Action("Index", "Marketplace")!;
+    }
+
+    // Same idea as RemoveFilterUrl, but replaces (rather than just removes) the category
+    // filter — used by the category browse list, which navigates directly instead of
+    // going through the filter form's Apply button.
+    private string SetCategoryUrl(int? categoryId)
+    {
+        var routeValues = new Dictionary<string, string>();
+        foreach (var kvp in Context.Request.Query)
+        {
+            if (!string.Equals(kvp.Key, "category", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(kvp.Key, "pageNumber", StringComparison.OrdinalIgnoreCase))
+            {
+                routeValues[kvp.Key] = kvp.Value.ToString();
+            }
+        }
+
+        if (categoryId.HasValue)
+        {
+            routeValues["category"] = categoryId.Value.ToString();
         }
 
         return Url.Action("Index", "Marketplace", routeValues) ?? Url.Action("Index", "Marketplace")!;
@@ -70,12 +101,39 @@
                 <div class="marketplace-facet-card">
                     <h2 class="h6 fw-semibold mb-3 d-none d-lg-block">Filters</h2>
 
+                    <input type="hidden" name="category" value="@Model.Criteria.CategoryId" />
+
                     <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold" for="filterCategory">Category</label>
-                        <select id="filterCategory" name="category" class="form-select form-select-sm"
-                                asp-items='new SelectList(Model.BrowseCategories, "Id", "Name", Model.Criteria.CategoryId)'>
-                            <option value="">All Categories</option>
-                        </select>
+                        <label class="form-label small fw-semibold">Category</label>
+                        <div class="category-browse-list">
+                            <a href="@SetCategoryUrl(null)" class="category-browse-parent @(!Model.Criteria.CategoryId.HasValue ? "is-active" : "")">
+                                <span>All Categories</span>
+                            </a>
+                            @foreach (var parent in topLevelCategories)
+                            {
+                                var hasChildren = childrenByParent.TryGetValue(parent.Id, out var children) && children.Count > 0;
+                                <div class="category-browse-group">
+                                    <a href="@SetCategoryUrl(parent.Id)" class="category-browse-parent @(Model.Criteria.CategoryId == parent.Id ? "is-active" : "")">
+                                        <span>@parent.Name</span>
+                                        @if (hasChildren)
+                                        {
+                                            <i data-lucide="chevron-down"></i>
+                                        }
+                                    </a>
+                                    @if (hasChildren)
+                                    {
+                                        <ul class="category-browse-children">
+                                            @foreach (var child in children!)
+                                            {
+                                                <li>
+                                                    <a href="@SetCategoryUrl(child.Id)" class="category-browse-child @(Model.Criteria.CategoryId == child.Id ? "is-active" : "")">@child.Name</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
 
                     <div class="marketplace-filter-group">

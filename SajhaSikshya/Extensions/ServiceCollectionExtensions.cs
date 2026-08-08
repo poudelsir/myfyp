@@ -77,6 +77,14 @@ public static class ServiceCollectionExtensions
             .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
             .AddDefaultTokenProviders();
 
+        // Identity's default token provider (registered above) backs password reset
+        // tokens too — shorten its lifespan from the 1-day default for that
+        // higher-stakes flow, rather than hand-rolling a separate token mechanism.
+        services.Configure<DataProtectionTokenProviderOptions>(options =>
+        {
+            options.TokenLifespan = TimeSpan.FromHours(SecurityConstants.PasswordResetTokenLifespanHours);
+        });
+
         services.ConfigureApplicationCookie(options =>
         {
             options.LoginPath = "/Account/Login";

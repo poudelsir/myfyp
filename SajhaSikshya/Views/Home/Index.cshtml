@@ -1,10 +1,14 @@
+@using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Extensions
 @using SajhaSikshya.Services.Interfaces.AI
 @using SajhaSikshya.Services.Interfaces.Catalog
 @using SajhaSikshya.Services.Interfaces.Marketplace
+@using SajhaSikshya.Services.Interfaces.Verification
 @inject IAdminInsightsService AdminInsightsService
 @inject ICategoryService CategoryService
 @inject IUniversityService UniversityService
 @inject IListingQueryService ListingQueryService
+@inject IVerificationQueryService VerificationQueryService
 @{
     Layout = "_MarketplaceLayout";
     ViewData["Title"] = "Welcome";
@@ -17,80 +21,113 @@
     var recent = await ListingQueryService.GetRecentListingsAsync(8);
 
     var categoryIcons = new[] { "book-open", "calculator", "flask-conical", "landmark", "palette", "code", "globe", "music" };
+
+    // Hero CTAs adapt to the viewer instead of routing to a different page — a guest and
+    // an unverified Student both see "Become a Seller" (the auth redirect chain sends a
+    // guest through Login first, landing them right back on the Submit form as a Student),
+    // while an already-verified Seller sees their Dashboard instead.
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isStudent = User.IsInRole(Roles.Student);
+    var isVerifiedSeller = isAuthenticated && isStudent && await VerificationQueryService.IsUserVerifiedAsync(User.GetUserId()!);
 }
 
 <section class="home-hero">
-    <div class="home-hero-inner text-center fade-in-up">
-        <span class="status-chip status-chip-primary mb-3">
-            <i data-lucide="sparkles"></i> AI-Powered Student Marketplace
-        </span>
-        <h1 class="home-hero-title">
-            Buy, sell &amp; donate textbooks —
-            <span class="text-gradient">the smart way</span>
-        </h1>
-        <p class="home-hero-subtitle">
-            SajhaSikshya connects verified students to trade secondhand books and study materials,
-            with AI-assisted pricing, descriptions, and recommendations along the way.
-        </p>
+    <div class="home-hero-grid">
+        <div class="home-hero-copy fade-in-up">
+            <span class="status-chip status-chip-primary mb-3">
+                <i data-lucide="sparkles"></i> AI-Powered Student Marketplace
+            </span>
+            <h1 class="home-hero-title">
+                Buy, sell &amp; donate textbooks —
+                <span class="text-gradient">the smart way</span>
+            </h1>
+            <p class="home-hero-subtitle">
+                SajhaSikshya connects verified students to trade secondhand books and study materials,
+                with AI-assisted pricing, descriptions, and recommendations along the way.
+            </p>
 
-        <form class="home-hero-search" method="get" asp-controller="Marketplace" asp-action="Index">
-            <i data-lucide="search"></i>
-            <input type="search" name="search" class="form-control form-control-lg" placeholder="Search for textbooks, notes, subjects…" aria-label="Search the marketplace" />
-            <button type="submit" class="btn btn-primary btn-lg">Search</button>
-        </form>
+            <form class="home-hero-search" method="get" asp-controller="Marketplace" asp-action="Index">
+                <i data-lucide="search"></i>
+                <input type="search" name="search" class="form-control form-control-lg" placeholder="Search for textbooks, notes, subjects…" aria-label="Search the marketplace" />
+                <button type="submit" class="btn btn-primary btn-lg">Search</button>
+            </form>
 
-        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-            <a asp-controller="Assistant" asp-action="Index" class="btn btn-sm gradient-primary-soft text-primary d-inline-flex align-items-center gap-1">
-                <i data-lucide="sparkles"></i> Ask the AI Assistant
-            </a>
-            <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="btn btn-sm btn-outline-secondary">Browse Donations</a>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i data-lucide="store" class="me-1"></i>Browse Marketplace
+                </a>
+                @if (isVerifiedSeller)
+                {
+                    <a asp-area="Student" asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                        <i data-lucide="layout-dashboard" class="me-1"></i>Seller Dashboard
+                    </a>
+                }
+                else
+                {
+                    <a asp-area="Student" asp-controller="Verification" asp-action="Submit" class="btn btn-outline-secondary btn-lg">
+                        <i data-lucide="badge-check" class="me-1"></i>Become a Seller
+                    </a>
+                }
+            </div>
         </div>
 
-        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary">Create a Student Account</a>
-            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary">Sign In</a>
+        <div class="home-hero-visual fade-in-up">
+            <div class="home-hero-illustration">
+                <div class="home-hero-illustration-card home-hero-illustration-card-1">
+                    <span class="home-hero-illustration-icon bg-primary-subtle text-primary"><i data-lucide="book-open"></i></span>
+                    <div class="home-hero-illustration-lines">
+                        <span></span><span></span>
+                    </div>
+                </div>
+                <div class="home-hero-illustration-card home-hero-illustration-card-2">
+                    <span class="home-hero-illustration-icon bg-success-subtle text-success"><i data-lucide="badge-check"></i></span>
+                    <div class="home-hero-illustration-lines">
+                        <span></span><span></span>
+                    </div>
+                </div>
+                <div class="home-hero-illustration-card home-hero-illustration-card-3">
+                    <span class="home-hero-illustration-icon bg-warning-subtle text-warning"><i data-lucide="sparkles"></i></span>
+                    <div class="home-hero-illustration-lines">
+                        <span></span><span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="home-hero-stats">
+                <div class="home-hero-stat">
+                    <p class="home-hero-stat-value">@stats.ActiveListings</p>
+                    <p class="home-hero-stat-label">Active Listings</p>
+                </div>
+                <div class="home-hero-stat">
+                    <p class="home-hero-stat-value">@stats.ApprovedVerifications</p>
+                    <p class="home-hero-stat-label">Verified Students</p>
+                </div>
+                <div class="home-hero-stat">
+                    <p class="home-hero-stat-value">@stats.TotalReviews</p>
+                    <p class="home-hero-stat-label">Student Reviews</p>
+                </div>
+                <div class="home-hero-stat">
+                    <p class="home-hero-stat-value">@stats.DonationListings</p>
+                    <p class="home-hero-stat-label">Books Donated</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="mb-5 fade-in-up">
-    <div class="row g-3">
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
-                <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
-                <div>
-                    <p class="stat-card-label">Active Listings</p>
-                    <p class="stat-card-value">@stats.ActiveListings</p>
-                </div>
-            </div>
+<section class="mb-5">
+    <div class="ai-search-banner fade-in-up">
+        <div class="ai-search-banner-icon"><i data-lucide="sparkles"></i></div>
+        <div class="ai-search-banner-content">
+            <h2 class="h5 fw-bold mb-1">Not sure what you're looking for?</h2>
+            <p class="text-secondary small mb-0">
+                Ask the AI Assistant in plain language — "cheap calculus textbook for first year engineering" —
+                and get matched to real listings, pricing guidance, and study advice.
+            </p>
         </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
-                <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="badge-check"></i></div>
-                <div>
-                    <p class="stat-card-label">Verified Students</p>
-                    <p class="stat-card-value">@stats.ApprovedVerifications</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
-                <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="star"></i></div>
-                <div>
-                    <p class="stat-card-label">Student Reviews</p>
-                    <p class="stat-card-value">@stats.TotalReviews</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="stat-card">
-                <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="heart-handshake"></i></div>
-                <div>
-                    <p class="stat-card-label">Books Donated</p>
-                    <p class="stat-card-value">@stats.DonationListings</p>
-                </div>
-            </div>
-        </div>
+        <a asp-controller="Assistant" asp-action="Index" class="btn btn-primary flex-shrink-0">
+            <i data-lucide="sparkles" class="me-1"></i>Ask the AI Assistant
+        </a>
     </div>
 </section>
 
@@ -123,6 +160,67 @@
         <partial name="_ListingCardGrid" model="featured" />
     </section>
 }
+
+<section class="mb-5">
+    <h2 class="h4 fw-bold text-center mb-4">Why SajhaSikshya</h2>
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-primary-subtle text-primary"><i data-lucide="badge-check"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Verified Students Only</h3>
+                <p class="text-secondary small mb-0">Every seller is reviewed and approved before they can list an item.</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-info-subtle text-info"><i data-lucide="sparkles"></i></div>
+                <h3 class="h6 fw-semibold mt-3">AI-Powered Pricing</h3>
+                <p class="text-secondary small mb-0">Fair price suggestions based on real comparable listings.</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-success-subtle text-success"><i data-lucide="shield-check"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Safe Campus Exchange</h3>
+                <p class="text-secondary small mb-0">Chat directly with the seller and agree on a safe pickup on campus.</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Community Donations</h3>
+                <p class="text-secondary small mb-0">Pass old textbooks forward to students who need them most.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-5">
+    <h2 class="h4 fw-bold text-center mb-4">AI Built Into Every Step</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-primary-subtle text-primary"><i data-lucide="file-text"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Smart Descriptions</h3>
+                <p class="text-secondary small mb-0">Sellers get AI-generated listing descriptions from just a few details.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-success-subtle text-success"><i data-lucide="tag"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Price Recommendations</h3>
+                <p class="text-secondary small mb-0">AI suggests a fair price based on similar recent sales.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-card-icon bg-info-subtle text-info"><i data-lucide="message-circle"></i></div>
+                <h3 class="h6 fw-semibold mt-3">Marketplace Assistant</h3>
+                <p class="text-secondary small mb-0">Ask the AI Assistant to help you find exactly what you need.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 <section class="mb-5">
     <div class="donation-banner fade-in-up">

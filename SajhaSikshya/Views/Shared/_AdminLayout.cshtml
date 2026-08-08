@@ -1,0 +1,81 @@
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Marketplace
+@inject ICompareService CompareService
+@{
+    var appName = "SajhaSikshya";
+    var compareCount = User.Identity?.IsAuthenticated == true
+        ? (await CompareService.GetCompareListingIdsAsync(User.GetUserId()!)).Count
+        : Context.Session.GetCompareListingIds().Count;
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @appName</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/marketplace.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/verification.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reviews.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/assistant.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body data-authenticated="@(User.Identity?.IsAuthenticated == true ? "true" : "false")">
+    <div class="app-shell">
+        <partial name="_AdminSidebar" />
+
+        <div class="app-main">
+            <partial name="_Navbar" />
+
+            <main class="app-content" id="mainContent">
+                <div class="container-fluid py-4">
+                    @if (TempData[SajhaSikshya.Helpers.AlertHelper.SuccessKey] is string successMessage)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @successMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    @if (TempData[SajhaSikshya.Helpers.AlertHelper.ErrorKey] is string errorMessage)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @errorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @RenderBody()
+                </div>
+            </main>
+
+            <partial name="_Footer" />
+        </div>
+    </div>
+
+    @if (compareCount > 0)
+    {
+        <a asp-controller="Compare" asp-action="Index" asp-area="" class="marketplace-compare-fab">
+            <i data-lucide="git-compare"></i>
+            Compare
+            <span class="marketplace-compare-fab-count">@compareCount</span>
+        </a>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/dark-mode.js" asp-append-version="true"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

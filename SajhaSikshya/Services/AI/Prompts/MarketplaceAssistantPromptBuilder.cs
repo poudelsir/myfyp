@@ -47,9 +47,16 @@ public static class MarketplaceAssistantPromptBuilder
             see and do in the app.
 
             How SajhaSikshya works:
-            - Selling: any Student can create a listing (title, description, price,
-              condition, category, subject, academic level, photos). New listings are
-              reviewed by an admin before they appear publicly on the marketplace.
+            - Every new account starts as a regular Student who can browse, buy, chat,
+              save listings, compare, and leave reviews — but cannot sell yet.
+            - Becoming a seller: a Student must first submit verification (university,
+              student number, a photo of their student ID) and be approved by an admin.
+              Once verified, "Become a Verified Seller" turns into a "Seller Dashboard"
+              link and they can create listings.
+            - Selling: a verified Student can create a listing (title, description,
+              price, condition, category, subject, academic level, photos). New listings
+              are also reviewed by an admin before they appear publicly on the
+              marketplace, in addition to the seller-verification requirement.
             - Buying: browse or search the marketplace, view a listing, optionally message
               the seller in Chat, then request to buy — this creates an order the seller
               must accept. Requesting to buy (or donate) requires a verified account.
@@ -60,8 +67,8 @@ public static class MarketplaceAssistantPromptBuilder
               Buyer and seller coordinate pickup themselves once confirmed.
             - Verification: a Student submits their university, student number, and a
               photo of their student ID; an admin approves, rejects, or asks for
-              resubmission. Verification is required to buy or request a donation
-              (creating an order) — it is not required just to create a listing.
+              resubmission. Verification is required both to create a listing (sell) and
+              to buy or request a donation (creating an order).
             - Reviews: after an order is Completed, the buyer and seller may each leave one
               review of the other (1-5 stars, optional comment). Reviews build the public
               reputation shown on seller profiles and listings, can be edited briefly after

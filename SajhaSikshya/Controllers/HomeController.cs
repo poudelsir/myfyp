@@ -7,9 +7,13 @@ using SajhaSikshya.ViewModels.Shared;
 namespace SajhaSikshya.Controllers;
 
 /// <summary>
-/// Public landing page and the application's generic error/status-code page.
-/// Kept intentionally thin: routing authenticated users to their dashboard is the
-/// only "logic" here, and even that is a simple role check.
+/// The Home page — SajhaSikshya's landing page for every audience except Admin, not a
+/// pass-through redirect. It introduces the platform (hero, AI features, trust
+/// section, featured content) the same way for a guest and a logged-in User/Seller;
+/// the view itself adapts small pieces (hero CTA wording, "Become a Seller" vs
+/// "Seller Dashboard") based on auth/verification state rather than the controller
+/// branching to a different destination. Admins still redirect straight to the Admin
+/// Dashboard, since that IS their primary workspace, not a storefront they browse.
 /// </summary>
 public class HomeController : Controller
 {
@@ -22,13 +26,17 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated == true && User.IsInRole(Roles.Admin))
         {
-            return User.IsInRole(Roles.Admin)
-                ? RedirectToAction("Index", "Dashboard", new { area = "Admin" })
-                : RedirectToAction("Index", "Dashboard", new { area = "Student" });
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
         }
 
+        return View();
+    }
+
+    [AllowAnonymous]
+    public IActionResult About()
+    {
         return View();
     }
 

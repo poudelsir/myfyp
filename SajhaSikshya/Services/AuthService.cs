@@ -82,4 +82,34 @@ public class AuthService : IAuthService
     {
         await _signInManager.SignOutAsync();
     }
+
+    public async Task<(ApplicationUser User, string Token)?> GeneratePasswordResetTokenAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null || !user.IsActive)
+        {
+            return null;
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        return (user, token);
+    }
+
+    public async Task<IdentityResult> ResetPasswordAsync(string email, string token, string newPassword)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            // Same generic failure Identity itself returns for a bad/expired token —
+            // never a distinct "no such account" error, so this path can't be used to
+            // enumerate registered emails either.
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "InvalidToken",
+                Description = "This password reset link is invalid or has expired.",
+            });
+        }
+
+        return await _userManager.ResetPasswordAsync(user, token, newPassword);
+    }
 }

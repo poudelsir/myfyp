@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SajhaSikshya.Authorization;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Data.Enums;
@@ -26,6 +27,7 @@ namespace SajhaSikshya.Areas.Student.Controllers;
 /// </summary>
 [Area("Student")]
 [Authorize(Roles = Roles.Student)]
+[Authorize(Policy = AuthorizationPolicies.VerifiedStudent)]
 public class ListingsController : Controller
 {
     private const int PageSize = PaginationConstants.DefaultPageSize;
