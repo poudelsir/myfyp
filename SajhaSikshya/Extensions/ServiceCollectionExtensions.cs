@@ -136,6 +136,7 @@ public static class ServiceCollectionExtensions
         // conventions, rather than a `new HttpClient()` inside GeminiAIService itself.
         services.AddHttpClient<IAIService, GeminiAIService>();
         services.AddScoped<IListingAIService, ListingAIService>();
+        services.AddScoped<IMarketplaceAssistantService, MarketplaceAssistantService>();
 
         return services;
     }

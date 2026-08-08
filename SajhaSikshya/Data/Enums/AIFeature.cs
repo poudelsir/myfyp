@@ -17,4 +17,7 @@ public enum AIFeature
 
     [Display(Name = "Price Recommendation", Description = "AI-suggested selling price, price range, and confidence for a listing.")]
     PriceRecommendation = 1,
+
+    [Display(Name = "Marketplace Assistant", Description = "Conversational Q&A about buying, selling, donating, and using SajhaSikshya.")]
+    MarketplaceAssistant = 2,
 }

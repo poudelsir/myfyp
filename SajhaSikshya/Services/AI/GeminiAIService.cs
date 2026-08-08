@@ -115,7 +115,7 @@ public class GeminiAIService : IAIService
             // concatenated in order. Taking only the first Part risks silently truncating
             // valid JSON into something that fails to parse downstream.
             var parts = wireResponse?.Candidates?.FirstOrDefault()?.Content?.Parts;
-            var text = parts is null ? null : string.Concat(parts.Select(p => p.Text));
+            var text = parts is null ? null : StripMarkdownCodeFence(string.Concat(parts.Select(p => p.Text)));
 
             if (string.IsNullOrWhiteSpace(text))
             {
@@ -192,6 +192,37 @@ public class GeminiAIService : IAIService
 
     private static string Truncate(string value) =>
         value.Length <= AIConstants.MaxErrorMessageLength ? value : value[..AIConstants.MaxErrorMessageLength];
+
+    /// <summary>
+    /// Gemini's structured-JSON mode is usually clean, but a "thinking" model like
+    /// gemini-flash-latest occasionally still wraps its answer in a ```json ... ```
+    /// fence despite <c>responseMimeType: "application/json"</c> — observed live as an
+    /// intermittent JSON-deserialization failure downstream. Only strips a fence that
+    /// wraps the *entire* trimmed response, so a legitimate inline code block inside a
+    /// longer free-text answer (e.g. a Marketplace Assistant reply) is left untouched.
+    /// </summary>
+    private static string StripMarkdownCodeFence(string text)
+    {
+        var trimmed = text.Trim();
+        if (trimmed.Length < 6 || !trimmed.StartsWith("```", StringComparison.Ordinal) || !trimmed.EndsWith("```", StringComparison.Ordinal))
+        {
+            return text;
+        }
+
+        var inner = trimmed[3..^3];
+        var firstNewline = inner.IndexOf('\n');
+        if (firstNewline >= 0)
+        {
+            var firstLine = inner[..firstNewline].Trim();
+            if (firstLine.Length > 0 && !firstLine.Contains(' '))
+            {
+                // Looks like a language tag (e.g. "json") rather than actual content.
+                inner = inner[(firstNewline + 1)..];
+            }
+        }
+
+        return inner.Trim();
+    }
 
     private sealed record CachedAIResponse(string Text, int? TokenCount);
 }

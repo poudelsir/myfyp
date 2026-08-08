@@ -10,7 +10,16 @@ public static class AIConstants
     /// <summary>Upper bound on a built prompt's length before it's rejected without ever reaching Gemini — a cheap guard against runaway input.</summary>
     public const int MaxPromptLength = 6000;
 
-    public const int DefaultMaxOutputTokens = 1024;
+    /// <summary>
+    /// gemini-flash-latest is a "thinking" model whose internal reasoning tokens count
+    /// against this same budget before the visible answer is written — a low cap was
+    /// observed live to intermittently truncate a structured-JSON answer mid-object once
+    /// thinking consumed most of it (the API returns 400 INVALID_ARGUMENT if thinking is
+    /// explicitly disabled via thinkingConfig, so this model cannot opt out of thinking;
+    /// giving it headroom instead is the only available fix). 1024 was too tight; 4096
+    /// comfortably covers reasoning plus a full JSON or chat answer.
+    /// </summary>
+    public const int DefaultMaxOutputTokens = 4096;
 
     public const double DefaultTemperature = 0.6;
 
@@ -28,4 +37,10 @@ public static class AIConstants
 
     /// <summary>Price recommendations aren't meaningful below this amount of description text — same 20-character floor <see cref="ListingConstants"/> already requires elsewhere for a listing's own Description field.</summary>
     public const int MinDescriptionLengthForPricing = 20;
+
+    /// <summary>A chat question, not a document — keeps the Marketplace Assistant's input bounded well below <see cref="MaxPromptLength"/> even before grounding/history are added on top.</summary>
+    public const int MaxAssistantQuestionLength = 500;
+
+    /// <summary>"A short conversation history (last few exchanges only)" per Phase 10.3 — a rolling window, not an unbounded transcript. One exchange = one user message + one assistant reply.</summary>
+    public const int MaxAssistantHistoryExchanges = 4;
 }

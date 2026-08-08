@@ -1,5 +1,5 @@
-# Claude Code local tool settings (machine-specific, not project source)
-.claude/settings.local.json
+# Claude Code local tool settings and session state (machine-specific, not project source)
+.claude/
 
 # .NET build output
 bin/

@@ -1,0 +1,133 @@
+/* ---------------------------------------------------------------------- */
+/* Marketplace Assistant chat page                                        */
+/* ---------------------------------------------------------------------- */
+
+.assistant-card {
+  height: calc(100vh - 220px);
+  min-height: 420px;
+}
+
+.assistant-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.assistant-empty-state {
+  margin: auto;
+  text-align: center;
+  color: var(--bs-secondary-color);
+  max-width: 320px;
+}
+
+.assistant-empty-state svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.5rem;
+}
+
+.assistant-message {
+  display: flex;
+  max-width: 80%;
+}
+
+.assistant-message-user {
+  align-self: flex-end;
+}
+
+.assistant-message-assistant {
+  align-self: flex-start;
+}
+
+.assistant-message-bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.assistant-message-user .assistant-message-bubble {
+  background-color: var(--bs-primary);
+  color: #fff;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.assistant-message-assistant .assistant-message-bubble {
+  background-color: var(--bs-tertiary-bg);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.assistant-message-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message-bubble ul,
+.assistant-message-bubble ol {
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.assistant-message-bubble code {
+  background-color: rgba(127, 127, 127, 0.18);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+}
+
+.assistant-typing {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1rem 0.5rem;
+}
+
+.assistant-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--bs-secondary-color);
+  animation: assistant-typing-bounce 1.2s infinite ease-in-out;
+}
+
+.assistant-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.assistant-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes assistant-typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.assistant-suggestions {
+  border-top: 1px solid var(--bs-border-color);
+  padding-top: 0.75rem;
+}
+
+.assistant-suggestion-chip {
+  white-space: normal;
+  text-align: left;
+}
+
+.assistant-input-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.assistant-input-bar svg {
+  width: 18px;
+  height: 18px;
+}
