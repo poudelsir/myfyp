@@ -3,8 +3,11 @@
     ViewData["Title"] = "Sign In";
 }
 
-<h1 class="h4 fw-bold mb-1">Welcome back</h1>
-<p class="text-secondary mb-4">Sign in to continue to your dashboard.</p>
+<div class="text-center mb-4">
+    <span class="status-chip status-chip-primary mb-2"><i data-lucide="sparkles"></i> Welcome back</span>
+    <h1 class="h4 fw-bold mb-1">Sign in to SajhaSikshya</h1>
+    <p class="text-secondary mb-0">Continue to your dashboard.</p>
+</div>
 
 <form asp-controller="Account" asp-action="Login" method="post" novalidate>
     <input type="hidden" asp-for="ReturnUrl" />
@@ -15,13 +18,19 @@
 
     <div class="mb-3">
         <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+        <div class="input-icon-group">
+            <i data-lucide="mail"></i>
+            <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+        </div>
         <span asp-validation-for="Email" class="text-danger small"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+        <div class="input-icon-group">
+            <i data-lucide="lock"></i>
+            <input asp-for="Password" class="form-control" autocomplete="current-password" />
+        </div>
         <span asp-validation-for="Password" class="text-danger small"></span>
     </div>
 

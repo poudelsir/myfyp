@@ -56,10 +56,9 @@
         <i data-lucide="menu"></i>
     </button>
 
-    <form class="navbar-search d-none d-md-flex" role="search" aria-label="Site search">
+    <form class="navbar-search d-none d-md-flex" role="search" aria-label="Marketplace search" method="get" asp-area="" asp-controller="Marketplace" asp-action="Index">
         <i data-lucide="search" class="navbar-search-icon"></i>
-        <input type="search" class="form-control" placeholder="Search…" aria-label="Search" disabled
-               title="Search is coming soon" />
+        <input type="search" name="search" class="form-control" placeholder="Search the marketplace…" aria-label="Search" />
     </form>
 
     <div class="navbar-spacer"></div>
@@ -121,7 +120,7 @@
                     <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
                     <li><hr class="dropdown-divider" /></li>
                     <li>
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="px-0">
                             <button type="submit" class="dropdown-item text-danger">
                                 <i data-lucide="log-out" class="me-2"></i>Logout
                             </button>

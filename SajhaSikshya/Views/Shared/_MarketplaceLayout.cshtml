@@ -1,12 +1,23 @@
+@using SajhaSikshya.Constants
 @using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Notifications
 @using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Catalog
+@using SajhaSikshya.Services.Interfaces.Chat
 @using SajhaSikshya.Services.Interfaces.Marketplace
+@using SajhaSikshya.Services.Interfaces.Notifications
 @using SajhaSikshya.Services.Interfaces.Verification
 @inject ICompareService CompareService
 @inject IVerificationQueryService VerificationQueryService
+@inject ICategoryService CategoryService
+@inject IUniversityService UniversityService
+@inject IChatQueryService ChatQueryService
+@inject INotificationQueryService NotificationQueryService
 @{
     var appName = "SajhaSikshya";
-    var compareCount = User.Identity?.IsAuthenticated == true
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var compareCount = isAuthenticated
         ? (await CompareService.GetCompareListingIdsAsync(User.GetUserId()!)).Count
         : Context.Session.GetCompareListingIds().Count;
     var metaDescription = ViewData["MetaDescription"] as string
@@ -19,22 +30,45 @@
     var initials = "?";
     var fullName = "Guest";
     var isCurrentUserVerified = false;
-    if (User.Identity?.IsAuthenticated == true)
+    var isStudent = User.IsInRole(Roles.Student);
+    var isAdmin = User.IsInRole(Roles.Admin);
+    var unreadChatCount = 0;
+    var unreadNotificationCount = 0;
+    var recentNotifications = new List<NotificationDto>();
+
+    if (isAuthenticated)
     {
-        fullName = User.GetFullName() ?? User.Identity.Name ?? "User";
+        fullName = User.GetFullName() ?? User.Identity!.Name ?? "User";
         var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         initials = parts.Length >= 2
             ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
             : fullName.Length > 0 ? fullName[0].ToString().ToUpperInvariant() : "?";
+
+        var userId = User.GetUserId()!;
+        if (isStudent)
+        {
+            isCurrentUserVerified = await VerificationQueryService.IsUserVerifiedAsync(userId);
+            unreadChatCount = await ChatQueryService.GetUnreadCountAsync(userId);
+        }
+
+        unreadNotificationCount = await NotificationQueryService.GetUnreadCountAsync(userId);
+        var recentPage = await NotificationQueryService.GetHistoryAsync(userId, 1, NotificationConstants.RecentNotificationsCount);
+        recentNotifications = recentPage.Items.ToList();
     }
 
-    var isStudent = User.IsInRole(Roles.Student);
-    var isAdmin = User.IsInRole(Roles.Admin);
+    var categories = await CategoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
+    var universities = await UniversityService.GetAllActiveAsync();
 
-    if (isStudent)
+    string IconFor(NotificationType type) => type switch
     {
-        isCurrentUserVerified = await VerificationQueryService.IsUserVerifiedAsync(User.GetUserId()!);
-    }
+        NotificationType.Message => "message-circle",
+        NotificationType.Order => "package",
+        NotificationType.Review => "star",
+        NotificationType.Verification => "shield-check",
+        NotificationType.AIRecommendation => "sparkles",
+        NotificationType.Announcement => "megaphone",
+        _ => "bell",
+    };
 }
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -58,25 +92,76 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/marketplace.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/verification.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body data-authenticated="@(User.Identity?.IsAuthenticated == true ? "true" : "false")">
+<body data-authenticated="@(isAuthenticated ? "true" : "false")">
+    @if (isAuthenticated)
+    {
+        <form id="notificationTokenForm" class="d-none">@Html.AntiForgeryToken()</form>
+    }
     <header class="marketplace-navbar">
-        <div class="container-fluid d-flex align-items-center gap-3">
-            <a asp-controller="Marketplace" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
+        <div class="container-fluid d-flex align-items-center gap-2 gap-lg-3">
+            <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
                 <span class="brand-mark">S</span>
                 <span class="brand-text d-none d-sm-inline">SajhaSikshya</span>
             </a>
 
-            <form class="navbar-search d-none d-md-flex" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
+            <button type="button" class="btn-icon d-lg-none flex-shrink-0" data-bs-toggle="collapse" data-bs-target="#marketplaceNavLinks" aria-controls="marketplaceNavLinks" aria-expanded="false" aria-label="Toggle navigation">
+                <i data-lucide="menu"></i>
+            </button>
+
+            <nav class="marketplace-nav-links d-none d-lg-flex align-items-center gap-1">
+                <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
+                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
+                <div class="dropdown">
+                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Categories <i data-lucide="chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var category in categories)
+                        {
+                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-category="@category.Id">@category.Name</a></li>
+                        }
+                        @if (!categories.Any())
+                        {
+                            <li><span class="dropdown-item-text text-secondary small">No categories yet</span></li>
+                        }
+                    </ul>
+                </div>
+                <div class="dropdown">
+                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Universities <i data-lucide="chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var university in universities)
+                        {
+                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-university="@university.Id">@university.Name</a></li>
+                        }
+                        @if (!universities.Any())
+                        {
+                            <li><span class="dropdown-item-text text-secondary small">No universities yet</span></li>
+                        }
+                    </ul>
+                </div>
+                <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link d-flex align-items-center gap-1">
+                    <i data-lucide="sparkles"></i> AI Assistant
+                </a>
+            </nav>
+
+            <form class="navbar-search d-none d-md-flex ms-lg-2" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
                 <i data-lucide="search" class="navbar-search-icon"></i>
                 <input type="search" name="search" class="form-control" placeholder="Search the marketplace…" aria-label="Search"
                        value="@Context.Request.Query["search"]" />
             </form>
+
+            <a asp-controller="Assistant" asp-action="Index" class="btn btn-sm gradient-primary-soft text-primary d-none d-md-inline-flex align-items-center gap-1 flex-shrink-0" title="Ask the AI Assistant">
+                <i data-lucide="sparkles"></i> AI Search
+            </a>
 
             <div class="navbar-spacer"></div>
 
@@ -86,17 +171,62 @@
 
             @if (isStudent)
             {
-                <a asp-area="Student" asp-controller="Listings" asp-action="Create" class="btn btn-primary btn-sm d-none d-sm-inline-flex">
-                    <i data-lucide="plus" class="me-1"></i>Sell an Item
+                <a asp-area="Student" asp-controller="SavedListings" asp-action="Index" class="btn-icon" title="Wishlist" aria-label="Wishlist">
+                    <i data-lucide="heart"></i>
+                </a>
+                <a asp-area="Student" asp-controller="Chat" asp-action="Index" class="btn-icon position-relative" title="Messages" aria-label="Messages">
+                    <i data-lucide="message-circle"></i>
+                    <span id="marketplaceChatDot" class="notification-dot @(unreadChatCount > 0 ? "" : "d-none")"></span>
                 </a>
             }
 
-            @if (User.Identity?.IsAuthenticated == true)
+            @if (isAuthenticated)
+            {
+                <div class="dropdown">
+                    <button type="button" class="btn-icon position-relative" id="marketplaceNotificationsDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" title="Notifications">
+                        <i data-lucide="bell"></i>
+                        <span class="notification-dot @(unreadNotificationCount > 0 ? "" : "d-none")"></span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notification-panel" aria-labelledby="marketplaceNotificationsDropdown">
+                        <div class="notification-panel-header d-flex justify-content-between align-items-center">
+                            <span>Notifications <span class="badge text-bg-primary rounded-pill @(unreadNotificationCount > 0 ? "" : "d-none")">@unreadNotificationCount</span></span>
+                        </div>
+                        <div class="notification-panel-list @(recentNotifications.Any() ? "" : "d-none")">
+                            @foreach (var notification in recentNotifications)
+                            {
+                                <a class="notification-panel-item @(notification.IsRead ? "" : "is-unread")"
+                                   href="@(string.IsNullOrEmpty(notification.Link) ? "/notifications" : notification.Link)">
+                                    <i data-lucide="@IconFor(notification.NotificationType)" class="flex-shrink-0"></i>
+                                    <span class="notification-panel-item-body">
+                                        <span class="notification-panel-item-title">@notification.Title</span>
+                                        <span class="notification-panel-item-message">@notification.Message</span>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                        <div class="notification-panel-empty @(recentNotifications.Any() ? "d-none" : "")">
+                            <i data-lucide="bell-off"></i>
+                            <p class="mb-0">You're all caught up.</p>
+                        </div>
+                        <a href="/notifications" class="notification-panel-footer">View All Notifications</a>
+                    </div>
+                </div>
+            }
+
+            @if (isStudent)
+            {
+                <a asp-area="Student" asp-controller="Listings" asp-action="Create" class="btn btn-primary btn-sm d-none d-sm-inline-flex">
+                    <i data-lucide="plus" class="me-1"></i>Become a Seller
+                </a>
+            }
+
+            @if (isAuthenticated)
             {
                 <div class="dropdown">
                     <button type="button" class="btn-profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="avatar-initials">@initials</span>
-                        <span class="d-none d-lg-inline">@fullName</span>
+                        <span class="d-none d-xl-inline">@fullName</span>
                         <i data-lucide="chevron-down"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
@@ -114,6 +244,7 @@
                         {
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Dashboard</a></li>
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Listings" asp-action="Index"><i data-lucide="tag" class="me-2"></i>My Listings</a></li>
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
                         }
                         <li><hr class="dropdown-divider" /></li>
                         <li>
@@ -131,6 +262,15 @@
                 <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-sm">Sign In</a>
                 <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm d-none d-sm-inline-flex">Sign Up</a>
             }
+        </div>
+
+        <div class="collapse d-lg-none marketplace-nav-links-mobile" id="marketplaceNavLinks">
+            <div class="container-fluid d-flex flex-column gap-1 py-2">
+                <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
+                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
+                <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link">AI Assistant</a>
+                <a asp-area="Student" asp-controller="SavedListings" asp-action="Index" class="marketplace-nav-link">Wishlist</a>
+            </div>
         </div>
     </header>
 
@@ -155,9 +295,7 @@
         </div>
     </main>
 
-    <footer class="marketplace-footer">
-        <span>&copy; @DateTime.UtcNow.Year SajhaSikshya. All rights reserved.</span>
-    </footer>
+    <partial name="_MarketplaceFooter" />
 
     @if (compareCount > 0)
     {

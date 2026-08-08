@@ -3,8 +3,11 @@
     ViewData["Title"] = "Create Account";
 }
 
-<h1 class="h4 fw-bold mb-1">Create your student account</h1>
-<p class="text-secondary mb-4">It only takes a minute to get started.</p>
+<div class="text-center mb-4">
+    <span class="status-chip status-chip-primary mb-2"><i data-lucide="sparkles"></i> Join SajhaSikshya</span>
+    <h1 class="h4 fw-bold mb-1">Create your student account</h1>
+    <p class="text-secondary mb-0">It only takes a minute to get started.</p>
+</div>
 
 <form asp-controller="Account" asp-action="Register" method="post" novalidate>
     @if (!ViewData.ModelState.IsValid)
@@ -15,31 +18,46 @@
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="FirstName" class="form-label"></label>
-            <input asp-for="FirstName" class="form-control" autofocus />
+            <div class="input-icon-group">
+                <i data-lucide="user"></i>
+                <input asp-for="FirstName" class="form-control" autofocus />
+            </div>
             <span asp-validation-for="FirstName" class="text-danger small"></span>
         </div>
         <div class="col-md-6 mb-3">
             <label asp-for="LastName" class="form-label"></label>
-            <input asp-for="LastName" class="form-control" />
+            <div class="input-icon-group">
+                <i data-lucide="user"></i>
+                <input asp-for="LastName" class="form-control" />
+            </div>
             <span asp-validation-for="LastName" class="text-danger small"></span>
         </div>
     </div>
 
     <div class="mb-3">
         <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" autocomplete="username" />
+        <div class="input-icon-group">
+            <i data-lucide="mail"></i>
+            <input asp-for="Email" class="form-control" autocomplete="username" />
+        </div>
         <span asp-validation-for="Email" class="text-danger small"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+        <div class="input-icon-group">
+            <i data-lucide="lock"></i>
+            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+        </div>
         <span asp-validation-for="Password" class="text-danger small"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="ConfirmPassword" class="form-label"></label>
-        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+        <div class="input-icon-group">
+            <i data-lucide="lock"></i>
+            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+        </div>
         <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
     </div>
 

@@ -1,5 +1,11 @@
 @using SajhaSikshya.DTOs.Marketplace
 @model ListingSummaryDto
+@{
+    var sellerParts = Model.SellerName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    var sellerInitials = sellerParts.Length >= 2
+        ? $"{sellerParts[0][0]}{sellerParts[^1][0]}".ToUpperInvariant()
+        : Model.SellerName.Length > 0 ? Model.SellerName[0].ToString().ToUpperInvariant() : "?";
+}
 
 @* The save button must be a sibling of the <a>, not nested inside it — a <form>/
    <button> inside an <a> is invalid HTML (nested interactive elements) and breaks
@@ -25,13 +31,18 @@
         <div class="marketplace-card-body">
             <div class="d-flex flex-wrap gap-1 mb-2">
                 <span class="badge marketplace-badge-condition">@Model.ConditionDisplay</span>
+                @if (!string.IsNullOrEmpty(Model.UniversityName))
+                {
+                    <span class="badge marketplace-badge-university text-truncate" style="max-width: 140px;">@Model.UniversityName</span>
+                }
             </div>
             <h3 class="marketplace-card-title">@Model.Title</h3>
             <p class="marketplace-card-price">@Model.FormattedPrice</p>
-            <p class="marketplace-card-meta mb-1">@Model.CategoryName@(string.IsNullOrEmpty(Model.UniversityName) ? "" : $" · {Model.UniversityName}")</p>
+            <p class="marketplace-card-meta mb-1">@Model.CategoryName</p>
             <div class="marketplace-card-footer">
-                <span class="text-truncate d-flex align-items-center gap-1">
-                    @Model.SellerName
+                <span class="marketplace-card-seller text-truncate">
+                    <span class="marketplace-card-seller-avatar">@sellerInitials</span>
+                    <span class="text-truncate">@Model.SellerName</span>
                     <partial name="_VerifiedStudentBadge" model="Model.IsSellerVerified" />
                 </span>
                 <span class="d-flex align-items-center gap-2 flex-shrink-0">

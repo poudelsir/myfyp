@@ -5,18 +5,85 @@
    ========================================================================== */
 
 :root {
-  --sajha-primary: #4f46e5;
-  --sajha-primary-hover: #4338ca;
+  /* Brand — royal blue primary, sky-blue accent. The gradient pair is the
+     signature "premium AI marketplace" treatment used on the hero, CTAs, and
+     the brand mark; everything else stays flat-color for readability. */
+  --sajha-primary: #2563eb;
+  --sajha-primary-hover: #1d4ed8;
+  --sajha-primary-active: #1e40af;
+  --sajha-primary-rgb: 37, 99, 235;
+  --sajha-primary-subtle: rgba(37, 99, 235, 0.08);
+  --sajha-accent: #38bdf8;
+  --sajha-accent-rgb: 56, 189, 248;
+  --sajha-accent-subtle: rgba(56, 189, 248, 0.12);
+  --sajha-gradient-primary: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
+  --sajha-gradient-primary-soft: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(56, 189, 248, 0.08) 100%);
+  --sajha-gradient-text: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+
+  /* Neutral surfaces — very light blue-gray tints for section backgrounds,
+     distinct from Bootstrap's own body/tertiary backgrounds. */
+  --sajha-surface: #f8fafc;
+  --sajha-surface-alt: #eff6ff;
+
+  /* Radii */
+  --sajha-radius-sm: 0.4rem;
   --sajha-radius: 0.65rem;
   --sajha-radius-lg: 1rem;
+  --sajha-radius-xl: 1.5rem;
+  --sajha-radius-pill: 999px;
+
+  /* Elevation scale — soft, layered shadows instead of heavy borders. */
+  --sajha-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --sajha-shadow-md: 0 4px 6px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.06);
+  --sajha-shadow-lg: 0 12px 24px rgba(15, 23, 42, 0.08), 0 24px 48px rgba(15, 23, 42, 0.08);
+  --sajha-shadow-glow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+
+  /* Glassmorphism (sticky navbar, elevated panels) */
+  --sajha-blur: 16px;
+  --sajha-glass-bg: rgba(255, 255, 255, 0.72);
+  --sajha-glass-border: rgba(255, 255, 255, 0.5);
+
+  /* Motion */
+  --sajha-transition: 180ms ease;
+  --sajha-transition-fast: 120ms ease;
+  --sajha-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --sajha-transition-base: 220ms var(--sajha-ease-out);
+
+  /* Shell dimensions (unchanged — layout JS assumes these) */
   --sajha-sidebar-width: 260px;
   --sajha-sidebar-width-collapsed: 76px;
   --sajha-navbar-height: 64px;
-  --sajha-transition: 180ms ease;
+
+  /* Section rhythm for marketing-style pages (homepage) */
+  --sajha-section-padding-y: 5rem;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --sajha-section-padding-y: 3rem;
+  }
+}
+
+*,
+*::before,
+*::after {
+  scrollbar-color: rgba(37, 99, 235, 0.3) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 html {
   font-size: 15px;
+  scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
@@ -26,7 +93,7 @@ html {
 }
 
 body {
-  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
 }
@@ -35,28 +102,18 @@ body {
 .btn:active:focus,
 .btn-link.nav-link:focus,
 .form-control:focus,
+.form-select:focus,
 .form-check-input:focus {
-  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
-}
-
-.btn-primary {
-  background-color: var(--sajha-primary);
-  border-color: var(--sajha-primary);
-}
-
-.btn-primary:hover,
-.btn-primary:focus {
-  background-color: var(--sajha-primary-hover);
-  border-color: var(--sajha-primary-hover);
+  box-shadow: var(--sajha-shadow-glow);
 }
 
 a {
   color: var(--sajha-primary);
+  transition: color var(--sajha-transition-fast);
 }
 
-.card {
-  border-radius: var(--sajha-radius-lg);
-  border: 1px solid var(--bs-border-color);
+a:hover {
+  color: var(--sajha-primary-hover);
 }
 
 /* Brand mark used in the sidebar, navbar and auth screens. */
@@ -66,17 +123,19 @@ a {
   justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 0.5rem;
-  background: var(--sajha-primary);
+  border-radius: var(--sajha-radius-sm);
+  background: var(--sajha-gradient-primary);
   color: #fff;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(var(--sajha-primary-rgb), 0.35);
 }
 
 .brand-mark-lg {
-  width: 56px;
-  height: 56px;
-  font-size: 1.5rem;
+  width: 64px;
+  height: 64px;
+  font-size: 1.7rem;
+  border-radius: var(--sajha-radius);
   display: flex;
 }
 
@@ -84,6 +143,14 @@ a {
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--bs-body-color);
+}
+
+/* Gradient text utility — headline accents, "AI-powered" callouts. */
+.text-gradient {
+  background: var(--sajha-gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* ==========================================================================
@@ -95,12 +162,22 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bs-tertiary-bg);
+  background:
+    radial-gradient(circle at 15% 15%, rgba(var(--sajha-primary-rgb), 0.12), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(var(--sajha-accent-rgb), 0.14), transparent 45%),
+    var(--sajha-surface);
+}
+
+[data-bs-theme="dark"] .auth-body {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(var(--sajha-primary-rgb), 0.22), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(var(--sajha-accent-rgb), 0.18), transparent 45%),
+    var(--bs-body-bg);
 }
 
 .auth-shell {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   padding: 1.5rem;
 }
 
@@ -114,11 +191,18 @@ a {
 }
 
 .auth-card {
-  background: var(--bs-body-bg);
-  border: 1px solid var(--bs-border-color);
-  border-radius: var(--sajha-radius-lg);
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
+  background: var(--sajha-glass-bg);
+  backdrop-filter: blur(var(--sajha-blur));
+  -webkit-backdrop-filter: blur(var(--sajha-blur));
+  border: 1px solid var(--sajha-glass-border);
+  border-radius: var(--sajha-radius-xl);
+  padding: 2.25rem;
+  box-shadow: var(--sajha-shadow-lg);
+}
+
+[data-bs-theme="dark"] .auth-card {
+  background: rgba(30, 41, 59, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .auth-footer-note {
@@ -126,4 +210,23 @@ a {
   color: var(--bs-secondary-color);
   font-size: 0.85rem;
   margin-top: 1.5rem;
+}
+
+.input-icon-group {
+  position: relative;
+}
+
+.input-icon-group svg {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--bs-secondary-color);
+  pointer-events: none;
+}
+
+.input-icon-group input {
+  padding-left: 2.5rem;
 }

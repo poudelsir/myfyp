@@ -1,21 +1,34 @@
 /* ==========================================================================
    SajhaSikshya — Dark mode overrides
    Bootstrap 5.3 recolors its own components automatically via [data-bs-theme].
-   This file only adjusts the custom, non-Bootstrap surfaces in site.css /
-   dashboard.css that don't already ride on Bootstrap's CSS variables.
+   This file re-tunes the design-system tokens (site.css) for dark surfaces
+   and adjusts the few custom, non-Bootstrap surfaces that don't already ride
+   on Bootstrap's own CSS variables.
    ========================================================================== */
 
 [data-bs-theme="dark"] {
-  --sajha-primary: #6366f1;
-  --sajha-primary-hover: #818cf8;
-}
+  --sajha-primary: #60a5fa;
+  --sajha-primary-hover: #93c5fd;
+  --sajha-primary-active: #3b82f6;
+  --sajha-primary-rgb: 96, 165, 250;
+  --sajha-primary-subtle: rgba(96, 165, 250, 0.14);
+  --sajha-accent: #38bdf8;
+  --sajha-accent-rgb: 56, 189, 248;
+  --sajha-accent-subtle: rgba(56, 189, 248, 0.16);
+  --sajha-gradient-primary: linear-gradient(135deg, #3b82f6 0%, #38bdf8 100%);
+  --sajha-gradient-primary-soft: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(56, 189, 248, 0.16) 100%);
+  --sajha-gradient-text: linear-gradient(135deg, #60a5fa 0%, #38bdf8 100%);
 
-[data-bs-theme="dark"] .auth-body {
-  background-color: var(--bs-dark-bg-subtle, #16171d);
-}
+  --sajha-surface: #0f172a;
+  --sajha-surface-alt: #131c2e;
 
-[data-bs-theme="dark"] .auth-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --sajha-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --sajha-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 10px 24px rgba(0, 0, 0, 0.35);
+  --sajha-shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.45);
+  --sajha-shadow-glow: 0 0 0 4px rgba(96, 165, 250, 0.22);
+
+  --sajha-glass-bg: rgba(15, 23, 42, 0.72);
+  --sajha-glass-border: rgba(255, 255, 255, 0.08);
 }
 
 [data-bs-theme="dark"] .app-sidebar,

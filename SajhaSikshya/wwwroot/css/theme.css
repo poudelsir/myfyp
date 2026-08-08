@@ -1,0 +1,480 @@
+/* ==========================================================================
+   SajhaSikshya — Design System
+   Presentation-layer-only component library sitting on top of Bootstrap 5.3's
+   prebuilt CSS. Bootstrap ships most component colors as literal hex values
+   inside each component's own scoped custom properties (e.g. .btn-primary's
+   --bs-btn-bg is a compiled literal, not var(--bs-primary)) — so this file
+   does two things everywhere it matters: (1) rebinds the handful of *global*
+   Bootstrap variables that components genuinely inherit from
+   (--bs-primary-rgb feeds .text-bg-primary/.bg-primary/.border-primary for
+   free), and (2) directly restyles every component selector that hardcodes
+   its own colors. Together these reskin every plain-Bootstrap screen in the
+   app (all Admin CRUD lists/forms, pagination, modals, alerts) with zero
+   markup changes there. Loaded after site.css (tokens) and before every
+   module CSS file, in all three layouts.
+   ========================================================================== */
+
+:root {
+  --bs-primary: var(--sajha-primary);
+  --bs-primary-rgb: var(--sajha-primary-rgb);
+  --bs-link-color: var(--sajha-primary);
+  --bs-link-color-rgb: var(--sajha-primary-rgb);
+  --bs-link-hover-color: var(--sajha-primary-hover);
+  --bs-link-hover-color-rgb: var(--sajha-primary-rgb);
+  --bs-border-radius: var(--sajha-radius);
+  --bs-border-radius-sm: var(--sajha-radius-sm);
+  --bs-border-radius-lg: var(--sajha-radius-lg);
+  --bs-border-radius-xl: var(--sajha-radius-xl);
+  --bs-border-radius-pill: var(--sajha-radius-pill);
+  --bs-box-shadow: var(--sajha-shadow-md);
+  --bs-box-shadow-sm: var(--sajha-shadow-sm);
+  --bs-box-shadow-lg: var(--sajha-shadow-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.btn {
+  border-radius: var(--sajha-radius);
+  font-weight: 600;
+  padding-inline: 1.1rem;
+  transition: transform var(--sajha-transition-base), box-shadow var(--sajha-transition-base), background-color var(--sajha-transition-fast), border-color var(--sajha-transition-fast), color var(--sajha-transition-fast);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-sm {
+  border-radius: var(--sajha-radius-sm);
+}
+
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--sajha-primary);
+  --bs-btn-border-color: var(--sajha-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--sajha-primary-hover);
+  --bs-btn-hover-border-color: var(--sajha-primary-hover);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--sajha-primary-active);
+  --bs-btn-active-border-color: var(--sajha-primary-active);
+  --bs-btn-disabled-bg: var(--sajha-primary);
+  --bs-btn-disabled-border-color: var(--sajha-primary);
+  background-image: var(--sajha-gradient-primary);
+  border: none;
+  box-shadow: 0 2px 10px rgba(var(--sajha-primary-rgb), 0.3);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  box-shadow: 0 6px 18px rgba(var(--sajha-primary-rgb), 0.4);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--sajha-primary);
+  --bs-btn-border-color: var(--sajha-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--sajha-primary);
+  --bs-btn-hover-border-color: var(--sajha-primary);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--sajha-primary);
+  --bs-btn-active-border-color: var(--sajha-primary);
+  --bs-btn-disabled-color: var(--sajha-primary);
+  --bs-btn-disabled-border-color: var(--sajha-primary);
+}
+
+.btn-outline-secondary,
+.btn-secondary {
+  border-radius: var(--sajha-radius);
+}
+
+.btn-link {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.btn-check:checked + .btn,
+.btn.active,
+.btn:first-child:active {
+  box-shadow: var(--sajha-shadow-sm);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Cards                                                                   */
+/* ---------------------------------------------------------------------- */
+
+.card {
+  border-radius: var(--sajha-radius-lg);
+  border: 1px solid var(--bs-border-color);
+  box-shadow: var(--sajha-shadow-sm);
+  transition: box-shadow var(--sajha-transition-base), transform var(--sajha-transition-base);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.hover-lift {
+  transition: transform var(--sajha-transition-base), box-shadow var(--sajha-transition-base);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sajha-shadow-lg);
+}
+
+.glass-card {
+  background: var(--sajha-glass-bg);
+  backdrop-filter: blur(var(--sajha-blur));
+  -webkit-backdrop-filter: blur(var(--sajha-blur));
+  border: 1px solid var(--sajha-glass-border);
+  border-radius: var(--sajha-radius-lg);
+  box-shadow: var(--sajha-shadow-md);
+}
+
+.gradient-primary {
+  background-image: var(--sajha-gradient-primary);
+  color: #fff;
+}
+
+.gradient-primary-soft {
+  background-image: var(--sajha-gradient-primary-soft);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Badges & status chips                                                   */
+/* ---------------------------------------------------------------------- */
+
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--sajha-radius-pill);
+  padding: 0.4em 0.75em;
+}
+
+/* Generalized status chip — a softer, pill-shaped alternative to .badge for
+   listing/order/verification status labels across the app. */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--sajha-radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.status-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.status-chip-primary { background: var(--sajha-primary-subtle); color: var(--sajha-primary-hover); }
+.status-chip-success { background: rgba(25, 135, 84, 0.12); color: #146c43; }
+.status-chip-warning { background: rgba(255, 193, 7, 0.16); color: #997404; }
+.status-chip-danger { background: rgba(220, 53, 69, 0.12); color: #b02a37; }
+.status-chip-info { background: var(--sajha-accent-subtle); color: #0369a1; }
+.status-chip-secondary { background: var(--bs-tertiary-bg); color: var(--bs-secondary-color); }
+
+[data-bs-theme="dark"] .status-chip-success { color: #75d99b; }
+[data-bs-theme="dark"] .status-chip-warning { color: #ffd873; }
+[data-bs-theme="dark"] .status-chip-danger { color: #ff9aa5; }
+[data-bs-theme="dark"] .status-chip-info { color: #7dd3fc; }
+
+/* ---------------------------------------------------------------------- */
+/* Tables (Admin lists)                                                    */
+/* ---------------------------------------------------------------------- */
+
+.table {
+  --bs-table-hover-bg: var(--sajha-primary-subtle);
+  vertical-align: middle;
+}
+
+.table > :not(caption) > * > * {
+  padding: 0.85rem 1rem;
+}
+
+.table thead th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color);
+  border-bottom-width: 1px;
+  background: var(--sajha-surface);
+}
+
+[data-bs-theme="dark"] .table thead th {
+  background: var(--sajha-surface);
+}
+
+.table-responsive {
+  border-radius: var(--sajha-radius-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Forms                                                                   */
+/* ---------------------------------------------------------------------- */
+
+.form-control,
+.form-select {
+  border-radius: var(--sajha-radius);
+  border-color: var(--bs-border-color);
+  padding-block: 0.55rem;
+  transition: border-color var(--sajha-transition-fast), box-shadow var(--sajha-transition-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--sajha-primary);
+  box-shadow: var(--sajha-shadow-glow);
+}
+
+.form-control-sm,
+.form-select-sm {
+  border-radius: var(--sajha-radius-sm);
+}
+
+.form-check-input {
+  border-radius: 0.3em;
+}
+
+.form-check-input[type="radio"] {
+  border-radius: 50%;
+}
+
+.form-check-input:checked {
+  background-color: var(--sajha-primary);
+  border-color: var(--sajha-primary);
+}
+
+.form-check-input:focus {
+  border-color: var(--sajha-primary);
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Pagination                                                              */
+/* ---------------------------------------------------------------------- */
+
+.pagination {
+  --bs-pagination-border-radius: var(--sajha-radius-sm);
+  gap: 0.25rem;
+}
+
+.page-link {
+  border-radius: var(--sajha-radius-sm) !important;
+  color: var(--bs-body-color);
+  border-color: var(--bs-border-color);
+  font-weight: 600;
+}
+
+.page-link:hover {
+  background: var(--sajha-primary-subtle);
+  color: var(--sajha-primary-hover);
+  border-color: var(--bs-border-color);
+}
+
+.page-item.active .page-link {
+  background-image: var(--sajha-gradient-primary);
+  border-color: var(--sajha-primary);
+}
+
+.page-item.disabled .page-link {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Dropdowns                                                               */
+/* ---------------------------------------------------------------------- */
+
+.dropdown-menu {
+  border-radius: var(--sajha-radius);
+  border: 1px solid var(--bs-border-color);
+  box-shadow: var(--sajha-shadow-lg);
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  border-radius: var(--sajha-radius-sm);
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--sajha-primary-subtle);
+  color: var(--sajha-primary-hover);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: var(--sajha-primary);
+  color: #fff;
+}
+
+.dropdown-item.disabled,
+.dropdown-item.disabled:hover {
+  background-color: transparent;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Modals                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.modal-content {
+  border-radius: var(--sajha-radius-lg);
+  border: none;
+  box-shadow: var(--sajha-shadow-lg);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--bs-border-color);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Alerts                                                                  */
+/* ---------------------------------------------------------------------- */
+
+.alert {
+  border-radius: var(--sajha-radius);
+  border: 1px solid transparent;
+}
+
+.alert-primary {
+  background: var(--sajha-primary-subtle);
+  color: var(--sajha-primary-hover);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Offcanvas                                                               */
+/* ---------------------------------------------------------------------- */
+
+.offcanvas {
+  border: none;
+  box-shadow: var(--sajha-shadow-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Progress                                                                 */
+/* ---------------------------------------------------------------------- */
+
+.progress {
+  border-radius: var(--sajha-radius-pill);
+  background-color: var(--sajha-primary-subtle);
+}
+
+.progress-bar {
+  background-image: var(--sajha-gradient-primary);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Entrance animation                                                      */
+/* ---------------------------------------------------------------------- */
+
+@keyframes sajha-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: sajha-fade-in-up 480ms var(--sajha-ease-out) both;
+}
+
+.fade-in-up-delay-1 { animation-delay: 80ms; }
+.fade-in-up-delay-2 { animation-delay: 160ms; }
+.fade-in-up-delay-3 { animation-delay: 240ms; }
+
+/* ---------------------------------------------------------------------- */
+/* Generalized empty state — any module can reuse this instead of a        */
+/* bespoke one (dashboard.css's .dashboard-empty-state now aliases this).  */
+/* ---------------------------------------------------------------------- */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--bs-secondary-color);
+}
+
+.empty-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--sajha-primary-subtle);
+  color: var(--sajha-primary);
+}
+
+.empty-state-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.empty-state-title {
+  font-weight: 700;
+  color: var(--bs-body-color);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Generalized skeleton shimmer (promoted from dashboard.css)              */
+/* ---------------------------------------------------------------------- */
+
+.skeleton,
+.skeleton-text {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bs-tertiary-bg);
+  border-radius: var(--sajha-radius-sm);
+  color: transparent !important;
+}
+
+.skeleton::after,
+.skeleton-text::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(var(--sajha-primary-rgb), 0.12), transparent);
+  animation: sajha-skeleton-shimmer 1.2s infinite;
+}
+
+.skeleton-text {
+  display: inline-block;
+  height: 0.9em;
+  width: 60%;
+}
+
+@keyframes sajha-skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

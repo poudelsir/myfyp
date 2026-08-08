@@ -1,14 +1,208 @@
+@using SajhaSikshya.Services.Interfaces.AI
+@using SajhaSikshya.Services.Interfaces.Catalog
+@using SajhaSikshya.Services.Interfaces.Marketplace
+@inject IAdminInsightsService AdminInsightsService
+@inject ICategoryService CategoryService
+@inject IUniversityService UniversityService
+@inject IListingQueryService ListingQueryService
 @{
+    Layout = "_MarketplaceLayout";
     ViewData["Title"] = "Welcome";
+    ViewData["MetaDescription"] = "SajhaSikshya is a premium, AI-powered marketplace where students buy, sell, and donate secondhand books and study materials.";
+
+    var stats = await AdminInsightsService.GetStatsAsync();
+    var categories = await CategoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
+    var universities = await UniversityService.GetAllActiveAsync();
+    var featured = await ListingQueryService.GetFeaturedListingsAsync(8);
+    var recent = await ListingQueryService.GetRecentListingsAsync(8);
+
+    var categoryIcons = new[] { "book-open", "calculator", "flask-conical", "landmark", "palette", "code", "globe", "music" };
 }
 
-<div class="text-center py-4">
-    <span class="brand-mark brand-mark-lg mx-auto mb-3">S</span>
-    <h1 class="h3 fw-bold mb-2">Welcome to SajhaSikshya</h1>
-    <p class="text-secondary mb-4">Shared learning, built for everyone. Sign in to reach your dashboard.</p>
+<section class="home-hero">
+    <div class="home-hero-inner text-center fade-in-up">
+        <span class="status-chip status-chip-primary mb-3">
+            <i data-lucide="sparkles"></i> AI-Powered Student Marketplace
+        </span>
+        <h1 class="home-hero-title">
+            Buy, sell &amp; donate textbooks —
+            <span class="text-gradient">the smart way</span>
+        </h1>
+        <p class="home-hero-subtitle">
+            SajhaSikshya connects verified students to trade secondhand books and study materials,
+            with AI-assisted pricing, descriptions, and recommendations along the way.
+        </p>
 
-    <div class="d-grid gap-2 col-10 mx-auto">
-        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Sign In</a>
-        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">Create a Student Account</a>
+        <form class="home-hero-search" method="get" asp-controller="Marketplace" asp-action="Index">
+            <i data-lucide="search"></i>
+            <input type="search" name="search" class="form-control form-control-lg" placeholder="Search for textbooks, notes, subjects…" aria-label="Search the marketplace" />
+            <button type="submit" class="btn btn-primary btn-lg">Search</button>
+        </form>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+            <a asp-controller="Assistant" asp-action="Index" class="btn btn-sm gradient-primary-soft text-primary d-inline-flex align-items-center gap-1">
+                <i data-lucide="sparkles"></i> Ask the AI Assistant
+            </a>
+            <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="btn btn-sm btn-outline-secondary">Browse Donations</a>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary">Create a Student Account</a>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary">Sign In</a>
+        </div>
     </div>
-</div>
+</section>
+
+<section class="mb-5 fade-in-up">
+    <div class="row g-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
+                <div>
+                    <p class="stat-card-label">Active Listings</p>
+                    <p class="stat-card-value">@stats.ActiveListings</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="badge-check"></i></div>
+                <div>
+                    <p class="stat-card-label">Verified Students</p>
+                    <p class="stat-card-value">@stats.ApprovedVerifications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="star"></i></div>
+                <div>
+                    <p class="stat-card-label">Student Reviews</p>
+                    <p class="stat-card-value">@stats.TotalReviews</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="heart-handshake"></i></div>
+                <div>
+                    <p class="stat-card-label">Books Donated</p>
+                    <p class="stat-card-value">@stats.DonationListings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (categories.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Browse by Category</h2>
+            <a asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">View All</a>
+        </div>
+        <div class="home-category-grid">
+            @for (var i = 0; i < categories.Count; i++)
+            {
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-category="@categories[i].Id" class="home-category-card hover-lift">
+                    <span class="home-category-icon"><i data-lucide="@categoryIcons[i % categoryIcons.Length]"></i></span>
+                    <span class="home-category-name">@categories[i].Name</span>
+                </a>
+            }
+        </div>
+    </section>
+}
+
+@if (featured.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Featured Listings</h2>
+            <a asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">Browse Marketplace</a>
+        </div>
+        <partial name="_ListingCardGrid" model="featured" />
+    </section>
+}
+
+<section class="mb-5">
+    <div class="donation-banner fade-in-up">
+        <div class="donation-banner-content">
+            <span class="status-chip status-chip-warning mb-2"><i data-lucide="heart-handshake"></i> Community Giving</span>
+            <h2 class="h4 fw-bold mb-2">Pass your books forward</h2>
+            <p class="mb-3">
+                @(stats.DonationListings) book@(stats.DonationListings == 1 ? "" : "s") have been donated by generous students so far.
+                Give your old textbooks a second life instead of letting them collect dust.
+            </p>
+            <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="btn btn-primary">
+                <i data-lucide="heart" class="me-1"></i>Browse Donations
+            </a>
+        </div>
+    </div>
+</section>
+
+@if (recent.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Recently Listed</h2>
+            <a asp-controller="Marketplace" asp-action="Index" asp-route-recent="true" class="small text-decoration-none">View All</a>
+        </div>
+        <partial name="_ListingCardGrid" model="recent" />
+    </section>
+}
+
+@if (universities.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">Popular Universities</h2>
+        </div>
+        <div class="home-university-grid">
+            @foreach (var university in universities.Take(8))
+            {
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-university="@university.Id" class="home-university-card hover-lift">
+                    <span class="home-university-icon"><i data-lucide="landmark"></i></span>
+                    <span class="home-university-name">@university.Name</span>
+                    @if (!string.IsNullOrEmpty(university.City))
+                    {
+                        <span class="home-university-city text-secondary small">@university.City</span>
+                    }
+                </a>
+            }
+        </div>
+    </section>
+}
+
+<section class="mb-4">
+    <h2 class="h4 fw-bold text-center mb-4">How It Works</h2>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="how-it-works-step">
+                <span class="how-it-works-number">1</span>
+                <h3 class="h6 fw-semibold">Create an Account</h3>
+                <p class="text-secondary small mb-0">Sign up with your student email and get verified for full marketplace access.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="how-it-works-step">
+                <span class="how-it-works-number">2</span>
+                <h3 class="h6 fw-semibold">List or Browse</h3>
+                <p class="text-secondary small mb-0">Sell your used books with AI-generated descriptions and pricing, or browse what others are offering.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="how-it-works-step">
+                <span class="how-it-works-number">3</span>
+                <h3 class="h6 fw-semibold">Chat &amp; Agree</h3>
+                <p class="text-secondary small mb-0">Message the seller directly, ask questions, and agree on a pickup time.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="how-it-works-step">
+                <span class="how-it-works-number">4</span>
+                <h3 class="h6 fw-semibold">Meet &amp; Exchange</h3>
+                <p class="text-secondary small mb-0">Complete the exchange, then leave a review to build trust in the community.</p>
+            </div>
+        </div>
+    </div>
+</section>

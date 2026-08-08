@@ -1,0 +1,48 @@
+<footer class="marketplace-footer">
+    <div class="container-fluid">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <a asp-controller="Home" asp-action="Index" class="d-inline-flex align-items-center gap-2 text-decoration-none mb-2">
+                    <span class="brand-mark">S</span>
+                    <span class="brand-text">SajhaSikshya</span>
+                </a>
+                <p class="text-secondary small mb-0">A premium, AI-powered marketplace where students buy, sell, and donate secondhand books and study materials.</p>
+            </div>
+            <div class="col-6 col-md-2">
+                <h6 class="footer-heading">Marketplace</h6>
+                <ul class="footer-links">
+                    <li><a asp-controller="Marketplace" asp-action="Index">Browse All</a></li>
+                    <li><a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true">Donations</a></li>
+                    <li><a asp-controller="Marketplace" asp-action="Index" asp-route-recent="true">Recently Listed</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-2">
+                <h6 class="footer-heading">Account</h6>
+                <ul class="footer-links">
+                    <li><a asp-controller="Account" asp-action="Login">Sign In</a></li>
+                    <li><a asp-controller="Account" asp-action="Register">Create Account</a></li>
+                    <li><a asp-controller="Assistant" asp-action="Index">AI Assistant</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-2">
+                <h6 class="footer-heading">Support</h6>
+                <ul class="footer-links">
+                    <li><a asp-controller="Home" asp-action="Index">How It Works</a></li>
+                    <li><a asp-controller="Notifications" asp-action="Preferences">Notification Preferences</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-2">
+                <h6 class="footer-heading">Legal</h6>
+                <ul class="footer-links">
+                    <li><span class="text-secondary">Terms of Service</span></li>
+                    <li><span class="text-secondary">Privacy Policy</span></li>
+                </ul>
+            </div>
+        </div>
+        <hr class="my-4" />
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+            <span class="text-secondary small">&copy; @DateTime.UtcNow.Year SajhaSikshya. All rights reserved.</span>
+            <span class="text-secondary small">Built for students, by students.</span>
+        </div>
+    </div>
+</footer>

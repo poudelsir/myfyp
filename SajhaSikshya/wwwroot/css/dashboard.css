@@ -51,37 +51,54 @@
   letter-spacing: 0.06em;
   color: var(--bs-secondary-color);
   padding: 0 0.75rem;
-  margin: 1rem 0 0.4rem;
+  margin: 1.5rem 0 0.5rem;
 }
 
 .sidebar-section-title:first-child {
   margin-top: 0;
 }
 
+.app-sidebar .nav-item {
+  margin-bottom: 0.15rem;
+}
+
 .app-sidebar .nav-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-radius: var(--sajha-radius);
   color: var(--bs-body-color);
   font-size: 0.92rem;
   font-weight: 500;
+  transition: background-color var(--sajha-transition-fast), color var(--sajha-transition-fast);
 }
 
 .app-sidebar .nav-link svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  color: var(--bs-secondary-color);
+  transition: color var(--sajha-transition-fast);
 }
 
 .app-sidebar .nav-link:hover {
-  background-color: var(--bs-tertiary-bg);
+  background-color: var(--sajha-primary-subtle);
+  color: var(--sajha-primary);
+}
+
+.app-sidebar .nav-link:hover svg {
+  color: var(--sajha-primary);
 }
 
 .app-sidebar .nav-link.active {
-  background-color: rgba(79, 70, 229, 0.12);
-  color: var(--sajha-primary);
+  background: var(--sajha-gradient-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(var(--sajha-primary-rgb), 0.3);
+}
+
+.app-sidebar .nav-link.active svg {
+  color: #fff;
 }
 
 .app-sidebar .nav-link.disabled {
@@ -91,13 +108,19 @@
 
 .app-sidebar .nav-link.disabled:hover {
   background: none;
+  color: var(--bs-secondary-color);
+}
+
+.app-sidebar .nav-link.disabled:hover svg {
+  color: var(--bs-secondary-color);
 }
 
 .sidebar-backdrop {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
   z-index: 1020;
 }
 
@@ -120,7 +143,9 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0 1.25rem;
-  background: var(--bs-body-bg);
+  background: var(--sajha-glass-bg);
+  backdrop-filter: blur(var(--sajha-blur));
+  -webkit-backdrop-filter: blur(var(--sajha-blur));
   border-bottom: 1px solid var(--bs-border-color);
   position: sticky;
   top: 0;
@@ -154,10 +179,13 @@
   border: none;
   background: transparent;
   color: var(--bs-body-color);
+  transition: background-color var(--sajha-transition-fast), color var(--sajha-transition-fast), transform var(--sajha-transition-fast);
 }
 
 .btn-icon:hover {
-  background-color: var(--bs-tertiary-bg);
+  background-color: var(--sajha-primary-subtle);
+  color: var(--sajha-primary);
+  transform: translateY(-1px);
 }
 
 .btn-icon svg {
@@ -167,12 +195,12 @@
 
 .navbar-search {
   position: relative;
-  width: 280px;
+  width: 300px;
 }
 
 .navbar-search-icon {
   position: absolute;
-  left: 0.75rem;
+  left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
@@ -182,9 +210,18 @@
 }
 
 .navbar-search input {
-  padding-left: 2.25rem;
-  background-color: var(--bs-tertiary-bg);
+  padding-left: 2.5rem;
+  background-color: var(--sajha-surface);
   border-color: transparent;
+  border-radius: var(--sajha-radius-pill);
+}
+
+[data-bs-theme="dark"] .navbar-search input {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.navbar-search input:focus {
+  background-color: var(--bs-body-bg);
 }
 
 .navbar-spacer {
@@ -209,9 +246,10 @@
 }
 
 .notification-panel {
-  width: 320px;
+  width: 340px;
   padding: 0;
   overflow: hidden;
+  border-radius: var(--sajha-radius-lg);
 }
 
 .notification-panel-header {
@@ -252,7 +290,7 @@
 }
 
 .notification-panel-item.is-unread {
-  background: var(--sajha-primary-subtle, rgba(79, 70, 229, 0.06));
+  background: var(--sajha-primary-subtle);
 }
 
 .notification-panel-item svg {
@@ -292,7 +330,7 @@
 }
 
 .notification-item-unread {
-  background: var(--sajha-primary-subtle, rgba(79, 70, 229, 0.06));
+  background: var(--sajha-primary-subtle);
 }
 
 .notification-date-heading {
@@ -333,10 +371,11 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--sajha-primary);
+  background: var(--sajha-gradient-primary);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -352,6 +391,13 @@
   border-radius: var(--sajha-radius-lg);
   padding: 1.1rem 1.25rem;
   height: 100%;
+  box-shadow: var(--sajha-shadow-sm);
+  transition: transform var(--sajha-transition-base), box-shadow var(--sajha-transition-base);
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sajha-shadow-md);
 }
 
 .stat-card-icon {
@@ -452,42 +498,9 @@
   font-size: 0.75rem;
 }
 
-/* Short CSS-only perceived-performance layer: all dashboard content is already
-   server-rendered on first paint (no async fetch), so this is a brief shimmer
-   removed right after DOMContentLoaded — never a real "waiting for data" state. */
-.skeleton,
-.skeleton-text {
-  position: relative;
-  overflow: hidden;
-  background-color: var(--bs-tertiary-bg);
-  border-radius: var(--sajha-radius);
-  color: transparent !important;
-}
-
-.skeleton::after,
-.skeleton-text::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-  animation: skeleton-shimmer 1.2s infinite;
-}
-
-.skeleton-text {
-  display: inline-block;
-  height: 0.9em;
-  width: 60%;
-}
-
-@keyframes skeleton-shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
+/* .skeleton/.skeleton-text shimmer is now defined globally in theme.css
+   (the Design System's shared skeleton utility) — nothing dashboard-specific
+   left to add here. */
 
 /* ---------------------------------------------------------------------- */
 /* Responsive behavior                                                     */
