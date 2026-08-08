@@ -1,0 +1,67 @@
+@using SajhaSikshya.Constants
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Reviews
+@model MyReviewsViewModel
+@{
+    ViewData["Title"] = "My Reviews";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">My Reviews</h1>
+    <p class="text-secondary mb-0">Reviews you've written for completed orders.</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (!Model.Page.Items.Any())
+        {
+            <div class="text-center text-secondary py-5">
+                <i data-lucide="star-off" class="mb-2"></i>
+                <p class="mb-0">You haven't written any reviews yet. Reviews can be posted from a completed order's details page.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var review in Model.Page.Items)
+            {
+                var canEdit = review.CreatedAtUtc.AddHours(ReviewConstants.EditWindowHours) > DateTime.UtcNow;
+                <div class="review-card">
+                    <div class="review-card-header">
+                        <div>
+                            <partial name="_StarRatingDisplay" model="(double)review.Rating" />
+                            <div class="review-card-meta">
+                                About <strong>@review.RevieweeName</strong> · @review.ReviewTypeDisplay · "@review.ListingTitle"
+                            </div>
+                        </div>
+                        <span class="text-secondary small text-nowrap" title="@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")">
+                            @review.CreatedAtUtc.ToRelativeTimeString()
+                            @if (review.IsEdited)
+                            {
+                                <text> (edited)</text>
+                            }
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(review.Title))
+                    {
+                        <p class="review-card-title mb-1">@review.Title</p>
+                    }
+                    @if (!string.IsNullOrEmpty(review.Comment))
+                    {
+                        <p class="mb-2">@review.Comment</p>
+                    }
+                    <div class="d-flex gap-2">
+                        @if (canEdit)
+                        {
+                            <a asp-action="Edit" asp-route-reviewId="@review.Id" class="btn btn-outline-secondary btn-sm">Edit</a>
+                        }
+                        <form asp-action="Delete" asp-route-reviewId="@review.Id" method="post" class="js-delete-form" data-confirm="Delete this review? This cannot be undone.">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

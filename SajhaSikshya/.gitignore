@@ -15,6 +15,10 @@ obj/
 *.ldf
 *.ndf
 
+## User-uploaded content (written at runtime, not source)
+wwwroot/uploads/
+PrivateUploads/
+
 ## Logs
 *.log
 

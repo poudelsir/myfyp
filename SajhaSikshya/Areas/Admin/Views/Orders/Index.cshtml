@@ -1,0 +1,140 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Admin.Orders
+@model AdminOrderListViewModel
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Orders</h1>
+    <p class="text-secondary mb-0">Every purchase and donation request across the marketplace.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+            <div>
+                <p class="stat-card-label">Pending</p>
+                <p class="stat-card-value">@Model.Statistics.PendingCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="check"></i></div>
+            <div>
+                <p class="stat-card-label">Confirmed</p>
+                <p class="stat-card-value">@Model.Statistics.ConfirmedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="package-check"></i></div>
+            <div>
+                <p class="stat-card-label">Ready for Pickup</p>
+                <p class="stat-card-value">@Model.Statistics.ReadyForPickupCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="circle-check-big"></i></div>
+            <div>
+                <p class="stat-card-label">Completed</p>
+                <p class="stat-card-value">@Model.Statistics.CompletedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="ban"></i></div>
+            <div>
+                <p class="stat-card-label">Cancelled</p>
+                <p class="stat-card-value">@Model.Statistics.CancelledCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="heart-handshake"></i></div>
+            <div>
+                <p class="stat-card-label">Donations</p>
+                <p class="stat-card-value">@Model.Statistics.DonationCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 280px;"
+                   placeholder="Search by listing or buyer/seller name…" aria-label="Search" />
+            <select name="status" class="form-select" style="max-width: 220px;" asp-items="EnumExtensions.GetSelectList<OrderStatus>(Model.Status)">
+                <option value="">All Statuses</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i data-lucide="search" class="me-1"></i>Filter
+            </button>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || Model.Status.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">No orders match this filter.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Listing</th>
+                            <th>Buyer</th>
+                            <th>Seller</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>@order.ReferenceNumber</td>
+                                <td>@order.ListingTitle</td>
+                                <td>@order.BuyerName</td>
+                                <td>@order.SellerName</td>
+                                <td>
+                                    @if (order.IsDonation)
+                                    {
+                                        <span class="badge marketplace-badge-donation">Donation</span>
+                                    }
+                                    else
+                                    {
+                                        @order.FormattedPrice
+                                    }
+                                </td>
+                                <td><partial name="_OrderStatusBadge" model="order.Status" /></td>
+                                <td>@order.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-secondary">Review</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

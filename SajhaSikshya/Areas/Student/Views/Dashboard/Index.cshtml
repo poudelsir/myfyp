@@ -1,10 +1,15 @@
+@using SajhaSikshya.DTOs.Reviews
 @{
     ViewData["Title"] = "Student Dashboard";
+    var reputation = ViewData["Reputation"] as ReputationDto ?? new ReputationDto();
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h4 fw-bold mb-1">Welcome back@(User.GetFullName() is { } name ? $", {name.Split(' ')[0]}" : "")</h1>
+        <h1 class="h4 fw-bold mb-1 d-flex align-items-center gap-2">
+            Welcome back@(User.GetFullName() is { } name ? $", {name.Split(' ')[0]}" : "")
+            <partial name="_VerifiedStudentBadge" model='(bool)(ViewData["IsVerified"] ?? false)' />
+        </h1>
         <p class="text-secondary mb-0">Here's what's happening with your learning.</p>
     </div>
 </div>
@@ -44,5 +49,37 @@
         <i data-lucide="construction" class="mb-3" style="width:40px;height:40px;color:var(--bs-secondary-color)"></i>
         <h2 class="h6 fw-semibold">Your courses will appear here</h2>
         <p class="text-secondary mb-0">Course enrollment and content are coming in a later phase.</p>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 fw-semibold mb-0">My Reputation</h2>
+            <a asp-controller="Reviews" asp-action="Index" class="small text-decoration-none">View My Reviews</a>
+        </div>
+        @if (reputation.SellerReviewCount == 0 && reputation.BuyerReviewCount == 0)
+        {
+            <p class="text-secondary small mb-0">No reviews yet. Reviews appear after you complete an order.</p>
+        }
+        else
+        {
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <p class="text-secondary small mb-1">As Seller</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <partial name="_StarRatingDisplay" model="reputation.SellerAverageRating" />
+                        <span class="small text-secondary">@reputation.SellerAverageRating.ToString("0.0") (@reputation.SellerReviewCount)</span>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <p class="text-secondary small mb-1">As Buyer</p>
+                    <div class="d-flex align-items-center gap-2">
+                        <partial name="_StarRatingDisplay" model="reputation.BuyerAverageRating" />
+                        <span class="small text-secondary">@reputation.BuyerAverageRating.ToString("0.0") (@reputation.BuyerReviewCount)</span>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>

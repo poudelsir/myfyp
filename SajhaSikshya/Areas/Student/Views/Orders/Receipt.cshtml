@@ -1,0 +1,80 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Orders
+@model OrderDetailDto
+@{
+    ViewData["Title"] = $"Receipt — {Model.ReferenceNumber}";
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <h1 class="h4 fw-bold mb-0">Receipt</h1>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">
+        <i data-lucide="arrow-left" class="me-1"></i>Back to Order
+    </a>
+</div>
+
+<div class="card" style="max-width: 560px;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <p class="text-secondary small mb-0">Reference Number</p>
+                <p class="h5 fw-bold mb-0">@Model.ReferenceNumber</p>
+            </div>
+            <partial name="_OrderStatusBadge" model="Model.Status" />
+        </div>
+
+        <dl class="row small mb-4">
+            <dt class="col-5 text-secondary">Listing</dt>
+            <dd class="col-7 text-end">@Model.ListingTitle</dd>
+
+            <dt class="col-5 text-secondary">Buyer</dt>
+            <dd class="col-7 text-end">@Model.BuyerName</dd>
+
+            <dt class="col-5 text-secondary">Seller</dt>
+            <dd class="col-7 text-end">@Model.SellerName</dd>
+
+            <dt class="col-5 text-secondary">Donation Status</dt>
+            <dd class="col-7 text-end">@(Model.IsDonation ? "Donation" : "Sale")</dd>
+
+            <dt class="col-5 text-secondary">Price</dt>
+            <dd class="col-7 text-end fw-semibold">@Model.FormattedPrice</dd>
+        </dl>
+
+        <hr />
+
+        <dl class="row small mb-0">
+            <dt class="col-5 text-secondary">Requested</dt>
+            <dd class="col-7 text-end">@Model.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</dd>
+
+            @if (Model.ConfirmedAtUtc.HasValue)
+            {
+                <dt class="col-5 text-secondary">Confirmed</dt>
+                <dd class="col-7 text-end">@Model.ConfirmedAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</dd>
+            }
+
+            <dt class="col-5 text-secondary">Completion Date</dt>
+            <dd class="col-7 text-end">
+                @(Model.CompletedAtUtc.HasValue ? Model.CompletedAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt") : "—")
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<h2 class="h6 fw-semibold mt-4 mb-3">Timeline</h2>
+<ul class="list-unstyled" style="max-width: 560px;">
+    @foreach (var step in Model.StatusHistory)
+    {
+        <li class="d-flex gap-3 pb-3">
+            <div class="flex-shrink-0">
+                <div class="verification-timeline-marker is-complete" style="border-color: var(--bs-success); background: var(--bs-success); color: #fff;">
+                    <i data-lucide="check" style="width:14px;height:14px;"></i>
+                </div>
+            </div>
+            <div>
+                <p class="mb-0 fw-semibold small">
+                    @(step.OldStatusDisplay is null ? $"Order placed ({step.NewStatusDisplay})" : $"{step.OldStatusDisplay} → {step.NewStatusDisplay}")
+                </p>
+                <p class="mb-0 text-secondary small">@step.ChangedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</p>
+            </div>
+        </li>
+    }
+</ul>

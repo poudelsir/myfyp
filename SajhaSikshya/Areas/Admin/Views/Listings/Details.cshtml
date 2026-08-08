@@ -1,0 +1,142 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Marketplace
+@model ListingDto
+@{
+    ViewData["Title"] = $"Review: {Model.Title}";
+
+    var statusClass = Model.Status switch
+    {
+        ListingStatus.Draft => "text-bg-secondary",
+        ListingStatus.PendingApproval => "text-bg-info",
+        ListingStatus.Active => "text-bg-success",
+        ListingStatus.Reserved => "text-bg-warning",
+        ListingStatus.Sold => "text-bg-dark",
+        ListingStatus.Donated => "text-bg-primary",
+        ListingStatus.Archived => "text-bg-secondary",
+        ListingStatus.Rejected => "text-bg-danger",
+        _ => "text-bg-secondary",
+    };
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+        <span class="badge @statusClass mb-2">@Model.StatusDisplay</span>
+        <h1 class="h4 fw-bold mb-0">@Model.Title</h1>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+        <i data-lucide="arrow-left" class="me-1"></i>Back to Moderation Queue
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        @if (Model.Images.Any())
+        {
+            var mainImage = Model.Images.FirstOrDefault(i => i.ImagePath == Model.ThumbnailImagePath) ?? Model.Images[0];
+            <img id="galleryMainImage" src="@mainImage.ImagePath" alt="@Model.Title" class="marketplace-gallery-main" />
+
+            @if (Model.Images.Count > 1)
+            {
+                <div class="marketplace-gallery-strip">
+                    @foreach (var image in Model.Images)
+                    {
+                        <img src="@image.ImagePath" alt="@Model.Title"
+                             class="marketplace-gallery-thumb @(image.ImagePath == mainImage.ImagePath ? "is-active" : "")"
+                             onclick="document.getElementById('galleryMainImage').src = this.src;
+                                      document.querySelectorAll('.marketplace-gallery-thumb').forEach(t => t.classList.remove('is-active'));
+                                      this.classList.add('is-active');" />
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="marketplace-image-placeholder">
+                <i data-lucide="image"></i>
+                <p class="mb-0">No photos yet</p>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge marketplace-badge-condition">@Model.ConditionDisplay</span>
+            @if (Model.IsDonation)
+            {
+                <span class="badge marketplace-badge-donation">Donation</span>
+            }
+        </div>
+
+        <p class="marketplace-price mb-3">@Model.FormattedPrice</p>
+
+        <dl class="row small text-secondary mb-3">
+            <dt class="col-4">Seller</dt>
+            <dd class="col-8">@Model.SellerName</dd>
+            <dt class="col-4">Category</dt>
+            <dd class="col-8">@Model.CategoryName</dd>
+            <dt class="col-4">Subject</dt>
+            <dd class="col-8">@Model.SubjectName</dd>
+            <dt class="col-4">Academic Level</dt>
+            <dd class="col-8">@Model.AcademicLevelName</dd>
+            @if (!string.IsNullOrEmpty(Model.UniversityName))
+            {
+                <dt class="col-4">University</dt>
+                <dd class="col-8">@Model.UniversityName</dd>
+            }
+            <dt class="col-4">Created</dt>
+            <dd class="col-8">@Model.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")</dd>
+            <dt class="col-4">Views</dt>
+            <dd class="col-8">@Model.ViewCount</dd>
+        </dl>
+
+        <h2 class="h6 fw-semibold">Description</h2>
+        <p class="text-body mb-4" style="white-space: pre-wrap;">@Model.Description</p>
+
+        @if (Model.LastModerationAction is not null)
+        {
+            <div class="alert alert-light border small mb-4">
+                <strong>Last moderation:</strong> @Model.LastModerationActionDisplay
+                by @(Model.LastModeratedByName ?? "an admin")
+                on @Model.LastModeratedAtUtc?.ToLocalTime().ToString("MMMM d, yyyy")
+                @if (!string.IsNullOrWhiteSpace(Model.ModerationReason))
+                {
+                    <div class="mt-1"><strong>Reason:</strong> @Model.ModerationReason</div>
+                }
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-2">
+            @if (Model.Status == ListingStatus.PendingApproval)
+            {
+                <form asp-action="Approve" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">
+                        <i data-lucide="check" class="me-1"></i>Approve
+                    </button>
+                </form>
+                <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="d-inline d-flex gap-1">
+                    <input type="text" name="reason" class="form-control form-control-sm" placeholder="Reason (optional)" style="width: 220px;" maxlength="500" />
+                    <button type="submit" class="btn btn-outline-warning">
+                        <i data-lucide="x" class="me-1"></i>Reject
+                    </button>
+                </form>
+            }
+            @if (Model.Status == ListingStatus.Archived)
+            {
+                <form asp-action="Restore" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-success">Restore</button>
+                </form>
+            }
+            else if (Model.Status is not (ListingStatus.Sold or ListingStatus.Donated))
+            {
+                <form asp-action="Archive" asp-route-id="@Model.Id" method="post" class="d-inline js-delete-form"
+                      data-confirm="Archive '@Model.Title'? It will no longer be visible in the marketplace until restored.">
+                    <button type="submit" class="btn btn-outline-secondary">Archive</button>
+                </form>
+            }
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline js-delete-form"
+                  data-confirm="Delete '@Model.Title'? This cannot be undone from the UI.">
+                <button type="submit" class="btn btn-outline-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>

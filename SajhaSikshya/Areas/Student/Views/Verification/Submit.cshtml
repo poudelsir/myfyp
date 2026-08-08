@@ -1,0 +1,26 @@
+@using SajhaSikshya.ViewModels.Verification
+@model VerificationSubmissionViewModel
+@{
+    ViewData["Title"] = "Submit Verification";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Submit Verification</h1>
+    <p class="text-secondary mb-0">Verified students can create listings, buy books, and request donations. This only takes a minute.</p>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form asp-action="Submit" method="post" enctype="multipart/form-data" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <partial name="_SubmissionForm" />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

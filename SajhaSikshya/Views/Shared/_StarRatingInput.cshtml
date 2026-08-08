@@ -1,0 +1,16 @@
+@model int
+@{
+    // Plain name="Rating" (not asp-for) since this partial is included twice on the
+    // same page's worth of markup surface area across Write/Edit — asp-for would stamp
+    // a duplicate id="Rating" on every radio. Model is just the initially-selected
+    // value (0 for a fresh Write form). Right-to-left DOM order + CSS row-reverse is
+    // the standard checkbox-only 5-star picker trick: a later radio's :checked state
+    // can style itself and every earlier (visually: further right) sibling via ~.
+}
+<div class="star-rating-input">
+    @for (var i = 5; i >= 1; i--)
+    {
+        <input type="radio" name="Rating" id="star-@i" value="@i" checked="@(Model == i ? "checked" : null)" />
+        <label for="star-@i" title="@i star@(i == 1 ? "" : "s")"><i data-lucide="star"></i></label>
+    }
+</div>

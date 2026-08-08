@@ -1,0 +1,118 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Notifications
+@model NotificationCenterViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    DateTime? lastGroupDate = null;
+
+    string IconFor(NotificationType type) => type switch
+    {
+        NotificationType.Message => "message-circle",
+        NotificationType.Order => "package",
+        NotificationType.Review => "star",
+        NotificationType.Verification => "shield-check",
+        NotificationType.AIRecommendation => "sparkles",
+        NotificationType.Announcement => "megaphone",
+        NotificationType.Listing => "tag",
+        _ => "bell",
+    };
+
+    string GroupLabel(DateTime localDate)
+    {
+        var today = DateTime.Today;
+        if (localDate == today)
+        {
+            return "Today";
+        }
+
+        if (localDate == today.AddDays(-1))
+        {
+            return "Yesterday";
+        }
+
+        return localDate.ToString("MMMM d, yyyy");
+    }
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Notifications</h1>
+        <p class="text-secondary mb-0">Everything the platform has let you know about.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Notifications" asp-action="Preferences" class="btn btn-outline-secondary btn-sm">
+            <i data-lucide="settings" class="me-1"></i>Preferences
+        </a>
+        @if (Model.Page.Items.Any(n => !n.IsRead))
+        {
+            <form asp-controller="Notifications" asp-action="MarkAllRead" method="post">
+                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                    <i data-lucide="check-check" class="me-1"></i>Mark All Read
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (!Model.Page.Items.Any())
+        {
+            <div class="notification-panel-empty py-5">
+                <i data-lucide="bell-off"></i>
+                <p class="mb-0">You're all caught up. New notifications will appear here in real time.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var notification in Model.Page.Items)
+            {
+                var groupDate = notification.CreatedAtUtc.ToLocalTime().Date;
+                if (lastGroupDate != groupDate)
+                {
+                    <p class="notification-date-heading @(lastGroupDate is null ? "" : "mt-3")">@GroupLabel(groupDate)</p>
+                    lastGroupDate = groupDate;
+                }
+
+                <div class="list-group mb-1">
+                    <div class="list-group-item @(notification.IsRead ? "" : "notification-item-unread") d-flex align-items-start gap-3">
+                        <i data-lucide="@IconFor(notification.NotificationType)" class="flex-shrink-0 mt-1"></i>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                @if (!string.IsNullOrEmpty(notification.Link))
+                                {
+                                    <a href="@notification.Link" class="fw-semibold text-body text-decoration-none">@notification.Title</a>
+                                }
+                                else
+                                {
+                                    <span class="fw-semibold">@notification.Title</span>
+                                }
+                                <span class="text-secondary small flex-shrink-0" title="@notification.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")">
+                                    @notification.CreatedAtUtc.ToRelativeTimeString()
+                                </span>
+                            </div>
+                            <p class="mb-1 text-secondary small">@notification.Message</p>
+                            <div class="d-flex gap-2">
+                                @if (!notification.IsRead)
+                                {
+                                    <form asp-controller="Notifications" asp-action="MarkRead" asp-route-id="@notification.Id" method="post">
+                                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                        <button type="submit" class="btn btn-link btn-sm p-0">Mark Read</button>
+                                    </form>
+                                }
+                                <form asp-controller="Notifications" asp-action="Delete" asp-route-id="@notification.Id" method="post" class="js-delete-form" data-confirm="Delete this notification?">
+                                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                    <button type="submit" class="btn btn-link btn-sm p-0 text-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

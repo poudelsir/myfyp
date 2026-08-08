@@ -1,0 +1,37 @@
+@model SajhaSikshya.DTOs.IPagedResult
+@{
+    // A dedicated pagination partial (rather than reusing Views/Shared/_Pagination.cshtml,
+    // which hardcodes asp-action="Index" and only carries "searchTerm") because Marketplace
+    // pagination needs to (a) work from both Index and Seller, and (b) carry the active
+    // category/subject/university filter (or sellerId) forward onto every page link.
+    var action = ViewData["PaginationAction"] as string ?? "Index";
+    var categoryId = ViewData["CategoryId"] as int?;
+    var subjectId = ViewData["SubjectId"] as int?;
+    var universityId = ViewData["UniversityId"] as int?;
+    var sellerId = ViewData["SellerId"] as string;
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <span class="text-secondary small">
+            Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount total)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="@action" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-sellerId="@sellerId"
+                   asp-route-categoryId="@categoryId" asp-route-subjectId="@subjectId" asp-route-universityId="@universityId">Previous</a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" asp-action="@action" asp-route-pageNumber="@i" asp-route-sellerId="@sellerId"
+                       asp-route-categoryId="@categoryId" asp-route-subjectId="@subjectId" asp-route-universityId="@universityId">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="@action" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-sellerId="@sellerId"
+                   asp-route-categoryId="@categoryId" asp-route-subjectId="@subjectId" asp-route-universityId="@universityId">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

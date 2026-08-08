@@ -1,0 +1,15 @@
+@model double
+@{
+    // Read-only star display for an already-computed rating (a review's own Rating,
+    // or a reputation average) — used everywhere a rating is shown but never edited:
+    // review cards, seller/listing cards, dashboard widgets. The separate interactive
+    // picker used only on Write/Edit lives inline in those two views instead of here,
+    // since radio-button input markup shares nothing with this read-only rendering.
+    var full = (int)Math.Round(Model, MidpointRounding.AwayFromZero);
+}
+<span class="star-rating-display" aria-label="@Model.ToString("0.0") out of 5 stars">
+    @for (var i = 1; i <= 5; i++)
+    {
+        <i data-lucide="star" class="@(i <= full ? "star-filled" : "star-empty")"></i>
+    }
+</span>

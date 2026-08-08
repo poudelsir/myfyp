@@ -1,0 +1,102 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Orders
+@model MyOrdersViewModel
+@{
+    ViewData["Title"] = "My Orders";
+    var isSelling = Model.Tab == "selling";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">My Orders</h1>
+    <p class="text-secondary mb-0">Track the books and donations you're buying, and requests on your own listings.</p>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(isSelling ? "" : "active")" asp-action="Index" asp-route-tab="buying">
+            <i data-lucide="shopping-bag" class="me-1"></i>Buying
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(isSelling ? "active" : "")" asp-action="Index" asp-route-tab="selling">
+            <i data-lucide="store" class="me-1"></i>Selling
+        </a>
+    </li>
+</ul>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="hidden" name="tab" value="@Model.Tab" />
+            <select name="status" class="form-select" style="max-width: 220px;" asp-items="EnumExtensions.GetSelectList<OrderStatus>(Model.Status)">
+                <option value="">All Statuses</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i data-lucide="filter" class="me-1"></i>Filter
+            </button>
+            @if (Model.Status.HasValue)
+            {
+                <a asp-action="Index" asp-route-tab="@Model.Tab" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">
+                @(isSelling ? "No one has requested any of your listings yet." : "You haven't requested any books or donations yet.")
+            </p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th>@(isSelling ? "Buyer" : "Seller")</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (!string.IsNullOrEmpty(order.ListingThumbnailImagePath))
+                                        {
+                                            <img src="@order.ListingThumbnailImagePath" alt="@order.ListingTitle" style="width:40px;height:40px;object-fit:cover;border-radius:var(--sajha-radius);" />
+                                        }
+                                        <span>@order.ListingTitle</span>
+                                    </div>
+                                </td>
+                                <td>@(isSelling ? order.BuyerName : order.SellerName)</td>
+                                <td>
+                                    @if (order.IsDonation)
+                                    {
+                                        <span class="badge marketplace-badge-donation">Donation</span>
+                                    }
+                                    else
+                                    {
+                                        @order.FormattedPrice
+                                    }
+                                </td>
+                                <td><partial name="_OrderStatusBadge" model="order.Status" /></td>
+                                <td>@order.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-secondary">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

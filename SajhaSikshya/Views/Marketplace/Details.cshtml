@@ -1,0 +1,186 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.ViewModels.Marketplace
+@model ListingDetailsViewModel
+@{
+    var listing = Model.Listing;
+    ViewData["Title"] = listing.Title;
+    ViewData["MetaDescription"] = listing.Description.Length > 160
+        ? listing.Description[..157] + "..."
+        : listing.Description;
+    ViewData["OgTitle"] = listing.Title;
+    ViewData["OgType"] = "product";
+    if (!string.IsNullOrEmpty(listing.ThumbnailImagePath))
+    {
+        ViewData["OgImage"] = listing.ThumbnailImagePath;
+    }
+
+    var isOwnListing = User.GetUserId() == listing.SellerId;
+    var isStudent = User.IsInRole(Roles.Student);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Marketplace" asp-action="Index">Marketplace</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Marketplace" asp-action="Index" asp-route-category="@listing.CategoryId">@listing.CategoryName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@listing.Title</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        @if (listing.Images.Any())
+        {
+            var mainImage = listing.Images.FirstOrDefault(i => i.ImagePath == listing.ThumbnailImagePath) ?? listing.Images[0];
+            <img id="galleryMainImage" src="@mainImage.ImagePath" alt="@listing.Title" class="marketplace-gallery-main" />
+
+            @if (listing.Images.Count > 1)
+            {
+                <div class="marketplace-gallery-strip">
+                    @foreach (var image in listing.Images)
+                    {
+                        <img src="@image.ImagePath" alt="@listing.Title"
+                             class="marketplace-gallery-thumb @(image.ImagePath == mainImage.ImagePath ? "is-active" : "")"
+                             onclick="document.getElementById('galleryMainImage').src = this.src;
+                                      document.querySelectorAll('.marketplace-gallery-thumb').forEach(t => t.classList.remove('is-active'));
+                                      this.classList.add('is-active');" />
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="marketplace-image-placeholder">
+                <i data-lucide="image"></i>
+                <p class="mb-0">No photos yet</p>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge marketplace-badge-condition">@listing.ConditionDisplay</span>
+            @if (listing.IsDonation)
+            {
+                <span class="badge marketplace-badge-donation">Donation</span>
+            }
+        </div>
+
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <h1 class="h4 fw-bold mb-2">@listing.Title</h1>
+            <div class="d-flex gap-2 flex-shrink-0">
+                <form asp-area="Student" asp-controller="SavedListings" asp-action="Toggle" method="post">
+                    <input type="hidden" name="listingId" value="@listing.Id" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-outline-secondary marketplace-save-btn-detail @(listing.IsSaved ? "is-saved" : "")"
+                            aria-pressed="@(listing.IsSaved ? "true" : "false")">
+                        <i data-lucide="heart" class="me-1"></i>@(listing.IsSaved ? "Saved" : "Save")
+                    </button>
+                </form>
+                <form asp-controller="Compare" asp-action="@(listing.IsInCompare ? "Remove" : "Add")" asp-route-listingId="@listing.Id" method="post">
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-outline-secondary marketplace-save-btn-detail @(listing.IsInCompare ? "is-saved" : "")"
+                            aria-pressed="@(listing.IsInCompare ? "true" : "false")">
+                        <i data-lucide="git-compare" class="me-1"></i>@(listing.IsInCompare ? "Comparing" : "Compare")
+                    </button>
+                </form>
+            </div>
+        </div>
+        <p class="marketplace-price mb-3">@listing.FormattedPrice</p>
+
+        @if (listing.Status == ListingStatus.Active && !isOwnListing)
+        {
+            <div class="mb-3 d-flex flex-wrap gap-2">
+                @if (isStudent)
+                {
+                    <form asp-area="Student" asp-controller="Orders" asp-action="Create" method="post">
+                        <input type="hidden" name="listingId" value="@listing.Id" />
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i data-lucide="@(listing.IsDonation ? "gift" : "shopping-bag")" class="me-1"></i>
+                            @(listing.IsDonation ? "Request Donation" : "Request to Buy")
+                        </button>
+                    </form>
+                    <form asp-area="Student" asp-controller="Chat" asp-action="Start" method="post">
+                        <input type="hidden" name="listingId" value="@listing.Id" />
+                        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        <button type="submit" class="btn btn-outline-primary btn-lg">
+                            <i data-lucide="message-circle" class="me-1"></i>Message Seller
+                        </button>
+                    </form>
+                }
+                else if (User.Identity?.IsAuthenticated != true)
+                {
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)" class="btn btn-primary btn-lg">
+                        Sign in to @(listing.IsDonation ? "Request Donation" : "Request to Buy")
+                    </a>
+                }
+            </div>
+        }
+        else if (!isOwnListing && isStudent)
+        {
+            <div class="mb-3">
+                <form asp-area="Student" asp-controller="Chat" asp-action="Start" method="post">
+                    <input type="hidden" name="listingId" value="@listing.Id" />
+                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                    <button type="submit" class="btn btn-outline-primary btn-lg">
+                        <i data-lucide="message-circle" class="me-1"></i>Message Seller
+                    </button>
+                </form>
+            </div>
+        }
+
+        <dl class="row small text-secondary mb-3">
+            <dt class="col-4">Category</dt>
+            <dd class="col-8"><a asp-controller="Marketplace" asp-action="Index" asp-route-category="@listing.CategoryId">@listing.CategoryName</a></dd>
+            <dt class="col-4">Subject</dt>
+            <dd class="col-8"><a asp-controller="Marketplace" asp-action="Index" asp-route-subject="@listing.SubjectId">@listing.SubjectName</a></dd>
+            <dt class="col-4">Academic Level</dt>
+            <dd class="col-8">@listing.AcademicLevelName</dd>
+            @if (!string.IsNullOrEmpty(listing.UniversityName))
+            {
+                <dt class="col-4">University</dt>
+                <dd class="col-8"><a asp-controller="Marketplace" asp-action="Index" asp-route-university="@listing.UniversityId">@listing.UniversityName</a></dd>
+            }
+            <dt class="col-4">Listed</dt>
+            <dd class="col-8">@listing.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")</dd>
+            <dt class="col-4">Views</dt>
+            <dd class="col-8">@listing.ViewCount</dd>
+        </dl>
+
+        <h2 class="h6 fw-semibold">Description</h2>
+        <p class="text-body" style="white-space: pre-wrap;">@listing.Description</p>
+
+        @if (Model.SellerProfile is not null)
+        {
+            <a asp-controller="Marketplace" asp-action="Seller" asp-route-sellerId="@Model.SellerProfile.SellerId" class="marketplace-seller-card text-decoration-none text-body">
+                <span class="avatar-initials">@(Model.SellerProfile.SellerName.Length > 0 ? Model.SellerProfile.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+                <div>
+                    <p class="mb-0 fw-semibold d-flex align-items-center gap-1">
+                        @Model.SellerProfile.SellerName
+                        <partial name="_VerifiedStudentBadge" model="Model.SellerProfile.IsVerified" />
+                    </p>
+                    <p class="mb-0 text-secondary small">
+                        Member since @Model.SellerProfile.MemberSinceUtc.ToLocalTime().ToString("MMMM yyyy")
+                        &middot; @Model.SellerProfile.ActiveListingCount active listing@(Model.SellerProfile.ActiveListingCount == 1 ? "" : "s")
+                    </p>
+                    @if (Model.SellerProfile.ReviewCount > 0)
+                    {
+                        <p class="mb-0 d-flex align-items-center gap-1">
+                            <partial name="_StarRatingDisplay" model="Model.SellerProfile.AverageRating" />
+                            <span class="small text-secondary">@Model.SellerProfile.AverageRating.ToString("0.0") (@Model.SellerProfile.ReviewCount)</span>
+                        </p>
+                    }
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+@if (Model.RelatedListings.Any())
+{
+    <section class="mt-5">
+        <h2 class="h5 fw-bold mb-3">Related Listings</h2>
+        <partial name="_ListingCardGrid" model="Model.RelatedListings" />
+    </section>
+}

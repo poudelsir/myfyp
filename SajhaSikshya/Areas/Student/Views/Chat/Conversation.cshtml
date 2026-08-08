@@ -1,0 +1,190 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Chat
+@model ConversationViewModel
+@{
+    var c = Model.Conversation;
+    ViewData["Title"] = $"Chat with {c.OtherPartyName}";
+    var currentUserId = User.GetUserId();
+    DateTime? lastDate = null;
+
+    string FormatFileSize(long? bytes)
+    {
+        if (!bytes.HasValue)
+        {
+            return string.Empty;
+        }
+
+        double kb = bytes.Value / 1024.0;
+        return kb < 1024 ? $"{kb:0.#} KB" : $"{kb / 1024.0:0.#} MB";
+    }
+
+    string FileIconFor(string? fileName)
+    {
+        var extension = System.IO.Path.GetExtension(fileName ?? string.Empty).ToLowerInvariant();
+        return extension switch
+        {
+            ".pdf" => "file-text",
+            ".docx" => "file-text",
+            ".txt" => "file-text",
+            _ => "file",
+        };
+    }
+}
+
+<div id="chatContainer" data-conversation-id="@c.Id" data-current-user-id="@currentUserId" data-other-party-name="@c.OtherPartyName">
+
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <h1 class="h5 fw-bold mb-0 d-flex align-items-center gap-2">
+            @c.OtherPartyName
+            <span class="chat-presence-dot @(Model.IsOtherPartyOnline ? "is-online" : "is-offline")" title="@(Model.IsOtherPartyOnline ? "Online" : "Offline")"></span>
+        </h1>
+        <p class="text-secondary small mb-0">
+            About <a asp-controller="Marketplace" asp-action="Details" asp-area="" asp-route-slug="@c.ListingSlug">@c.ListingTitle</a>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Attachments" asp-route-id="@c.Id" class="btn btn-outline-secondary btn-sm">
+            <i data-lucide="paperclip" class="me-1"></i>Attachments
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i data-lucide="arrow-left" class="me-1"></i>Back to Messages
+        </a>
+        <form asp-action="Archive" asp-route-id="@c.Id" method="post" class="d-inline">
+            <input type="hidden" name="archived" value="@(c.IsArchived ? "false" : "true")" />
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                @(c.IsArchived ? "Restore" : "Archive")
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="chatConnectionStatus" class="alert alert-warning py-1 px-2 small d-none" role="status"></div>
+
+@if (Model.Messages.HasNextPage)
+{
+    <div class="text-center mb-3">
+        <a asp-action="Conversation" asp-route-id="@c.Id" asp-route-pageNumber="@(Model.Messages.PageNumber + 1)" class="btn btn-sm btn-outline-secondary">
+            Load Older Messages
+        </a>
+    </div>
+}
+
+<div id="chatMessages" class="chat-thread mb-2">
+    @if (!Model.Messages.Items.Any())
+    {
+        <p class="text-secondary text-center py-4 mb-0" id="chatEmptyState">No messages yet. Say hello!</p>
+    }
+    @foreach (var message in Model.Messages.Items)
+    {
+        var isMine = message.SenderId == currentUserId;
+        var messageDate = message.CreatedAtUtc.ToLocalTime().Date;
+        if (lastDate != messageDate)
+        {
+            <div class="chat-date-separator"><span>@messageDate.ToString("MMMM d, yyyy")</span></div>
+            lastDate = messageDate;
+        }
+        if (Model.FirstUnreadMessageId == message.Id)
+        {
+            <div class="chat-unread-separator"><span>New messages</span></div>
+        }
+        <div class="chat-bubble-row @(isMine ? "is-mine" : "")" data-message-id="@message.Id">
+            <div class="chat-bubble @(isMine ? "chat-bubble-mine" : "chat-bubble-theirs")" data-sender-id="@message.SenderId">
+                <div class="chat-message-body">
+                    @if (message.IsDeleted)
+                    {
+                        <p class="mb-0 fst-italic small chat-message-deleted-text" style="opacity:0.75;">This message was deleted.</p>
+                    }
+                    else
+                    {
+                        @if (message.MessageType == MessageType.Text)
+                        {
+                            <p class="mb-1 chat-message-text" style="white-space: pre-wrap;">@message.Text</p>
+                        }
+                        else if (message.MessageType == MessageType.Image)
+                        {
+                            <a href="#" class="chat-attachment-image-link" data-full-src="@Url.Action("Attachment", new { messageId = message.Id })" data-file-name="@message.OriginalFileName">
+                                <img src="@Url.Action("Attachment", new { messageId = message.Id })" alt="@message.OriginalFileName" class="chat-attachment-thumb" />
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Attachment", new { messageId = message.Id, download = true })" class="chat-attachment-file text-decoration-none text-body">
+                                <i data-lucide="@FileIconFor(message.OriginalFileName)" class="chat-attachment-file-icon"></i>
+                                <span class="chat-attachment-file-info">
+                                    <span class="chat-attachment-file-name">@message.OriginalFileName</span>
+                                    <span class="chat-attachment-file-size">@FormatFileSize(message.FileSizeBytes)</span>
+                                </span>
+                                <i data-lucide="download" class="flex-shrink-0"></i>
+                            </a>
+                        }
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="chat-bubble-meta chat-message-meta">
+                                @message.CreatedAtUtc.ToLocalTime().ToString("MMM d, h:mm tt")
+                                <span class="chat-edited-marker@(message.IsEdited ? "" : " d-none")">&middot; edited</span>
+                                @if (isMine)
+                                {
+                                    <text>&middot; <span class="chat-read-status">@(message.ReadAtUtc.HasValue ? "Read" : "Sent")</span></text>
+                                }
+                            </span>
+                            @if (isMine && message.MessageType == MessageType.Text)
+                            {
+                                <button type="button" class="btn btn-link btn-sm p-0 chat-bubble-meta" data-bs-toggle="collapse" data-bs-target="#editMessage@(message.Id)">Edit</button>
+                            }
+                            @if (isMine)
+                            {
+                                <form asp-action="Delete" asp-route-id="@c.Id" asp-route-messageId="@message.Id" method="post" class="d-inline js-delete-form chat-delete-form" data-confirm="Delete this message?" data-message-id="@message.Id">
+                                    <button type="submit" class="btn btn-link btn-sm p-0 chat-bubble-meta">Delete</button>
+                                </form>
+                            }
+                        </div>
+                        @if (isMine && message.MessageType == MessageType.Text)
+                        {
+                            <div class="collapse mt-2" id="editMessage@(message.Id)">
+                                <form asp-action="Edit" asp-route-id="@c.Id" asp-route-messageId="@message.Id" method="post" class="d-flex gap-2 chat-edit-form" data-message-id="@message.Id">
+                                    <input type="text" name="text" value="@message.Text" class="form-control form-control-sm" maxlength="2000" required />
+                                    <button type="submit" class="btn btn-sm btn-light">Save</button>
+                                </form>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div id="typingIndicator" class="text-secondary small mb-2 fst-italic d-none"></div>
+
+<form id="chatSendForm" asp-action="Send" asp-route-id="@c.Id" method="post" class="d-flex gap-2">
+    <input type="text" id="chatMessageText" name="text" class="form-control" maxlength="2000" required placeholder="Type a message…" autocomplete="off" />
+    <button type="submit" class="btn btn-primary flex-shrink-0">
+        <i data-lucide="send" class="me-1"></i>Send
+    </button>
+</form>
+
+<form id="chatAttachmentForm" asp-action="UploadAttachment" asp-route-id="@c.Id" method="post" enctype="multipart/form-data" class="mt-2">
+    <label class="btn btn-outline-secondary btn-sm mb-0" for="chatAttachmentInput">
+        <i data-lucide="paperclip" class="me-1"></i>Attach a file
+    </label>
+    <input type="file" id="chatAttachmentInput" name="file" class="d-none"
+           accept=".png,.jpg,.jpeg,.webp,.pdf,.docx,.txt" />
+    <span id="chatAttachmentFileName" class="text-secondary small ms-2"></span>
+</form>
+
+</div>
+
+<div class="modal fade" id="chatImagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chatImagePreviewTitle">Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="chatImagePreviewImg" src="" alt="" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+</div>

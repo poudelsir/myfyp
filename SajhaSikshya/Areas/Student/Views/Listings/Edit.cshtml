@@ -1,0 +1,127 @@
+@using SajhaSikshya.Constants
+@using SajhaSikshya.ViewModels.Marketplace
+@model ListingFormViewModel
+@{
+    ViewData["Title"] = "Edit Listing";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Edit Listing</h1>
+    <p class="text-secondary mb-0">Changes to a live listing send it back for review before it's visible again.</p>
+</div>
+
+<div class="card mb-4" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <input type="hidden" asp-for="Id" />
+            <partial name="_Form" />
+        </form>
+    </div>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Photos</h2>
+
+        @if (Model.Images.Any())
+        {
+            <div id="imageGallery" class="row g-3 mb-4" data-listing-id="@Model.Id"
+                 data-reorder-url="@Url.Action("ReorderImages", new { listingId = Model.Id })">
+                @foreach (var image in Model.Images)
+                {
+                    <div class="col-6 col-md-3 marketplace-image-item" data-image-id="@image.Id" draggable="true">
+                        <div class="marketplace-image-card @(image.IsThumbnail ? "is-thumbnail" : "")">
+                            <img src="@image.ImagePath" alt="Listing photo" />
+                            @if (image.IsThumbnail)
+                            {
+                                <span class="badge marketplace-thumbnail-badge">Thumbnail</span>
+                            }
+                            <div class="marketplace-image-actions">
+                                @if (!image.IsThumbnail)
+                                {
+                                    <form asp-action="SetThumbnail" method="post" class="d-inline">
+                                        <input type="hidden" name="imageId" value="@image.Id" />
+                                        <input type="hidden" name="listingId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-light" title="Set as thumbnail">
+                                            <i data-lucide="star"></i>
+                                        </button>
+                                    </form>
+                                }
+                                <button type="button" class="btn btn-sm btn-outline-light js-preview-image" data-image-src="@image.ImagePath" title="Preview">
+                                    <i data-lucide="expand"></i>
+                                </button>
+                                <form asp-action="ReplaceImage" method="post" enctype="multipart/form-data" class="d-inline js-replace-form">
+                                    <input type="hidden" name="imageId" value="@image.Id" />
+                                    <input type="hidden" name="listingId" value="@Model.Id" />
+                                    <label class="btn btn-sm btn-outline-light mb-0" title="Replace">
+                                        <i data-lucide="refresh-cw"></i>
+                                        <input type="file" name="newImage" accept=".jpg,.jpeg,.png,.webp" class="js-replace-input" hidden />
+                                    </label>
+                                </form>
+                                <form asp-action="DeleteImage" method="post" class="d-inline js-delete-form" data-confirm="Delete this photo?">
+                                    <input type="hidden" name="imageId" value="@image.Id" />
+                                    <input type="hidden" name="listingId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-light" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <p class="text-secondary small">Drag photos to reorder them. The starred photo is used as the listing's thumbnail.</p>
+        }
+        else
+        {
+            <p class="text-secondary small">No photos yet — add some below so buyers can see what you're offering.</p>
+        }
+
+        @if (Model.Images.Count < ListingConstants.MaximumImages)
+        {
+            <form asp-action="UploadImages" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="uploadForm" class="mt-3">
+                <label for="fileInput" class="marketplace-dropzone" id="dropzone">
+                    <i data-lucide="upload-cloud"></i>
+                    <span class="mb-1">Drag photos here or click to browse</span>
+                    <span class="text-secondary small">
+                        Up to @(ListingConstants.MaximumImages - Model.Images.Count) more &middot;
+                        JPG, PNG or WEBP &middot; Max @ListingConstants.MaximumImageSizeMB MB each
+                    </span>
+                    <input type="file" name="images" id="fileInput" accept=".jpg,.jpeg,.png,.webp" multiple hidden />
+                </label>
+                <div id="fileList" class="mt-2 small text-secondary"></div>
+                <button type="submit" class="btn btn-primary mt-3" id="uploadBtn" disabled>
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="uploadSpinner" role="status" aria-hidden="true"></span>
+                    Upload Photos
+                </button>
+            </form>
+        }
+        else
+        {
+            <p class="text-secondary small mb-0">Maximum of @ListingConstants.MaximumImages photos reached.</p>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <img id="previewModalImage" src="" alt="Photo preview" class="w-100 rounded" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/listing-media.js" asp-append-version="true"></script>
+    <script src="~/js/ai-listing.js" asp-append-version="true"></script>
+}

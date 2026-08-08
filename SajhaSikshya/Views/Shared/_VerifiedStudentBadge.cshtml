@@ -1,0 +1,9 @@
+@model bool
+@* Renders nothing at all when false — every call site can unconditionally include this partial (<partial name="_VerifiedStudentBadge" model="x.IsVerified" />) instead of wrapping it in its own @if, which is exactly what "don't duplicate badge markup" means in practice: zero conditional logic repeated at each of the six call sites. *@
+@if (Model)
+{
+    <span class="verified-student-badge" title="Verified Student">
+        <i data-lucide="badge-check"></i>
+        Verified
+    </span>
+}

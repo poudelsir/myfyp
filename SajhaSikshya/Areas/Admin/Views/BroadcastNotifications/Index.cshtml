@@ -1,0 +1,58 @@
+@using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Admin.Notifications
+@model BroadcastNotificationViewModel
+@{
+    ViewData["Title"] = "Broadcast Notification";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Broadcast Notification</h1>
+    <p class="text-secondary mb-0">Send a System Announcement, Maintenance Notice, or role-targeted notice to every matching user at once.</p>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form asp-action="Index" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+
+            <div class="mb-3">
+                <label asp-for="NotificationType" class="form-label">Category</label>
+                <select asp-for="NotificationType" class="form-select" asp-items="EnumExtensions.GetSelectList<NotificationType>(Model.NotificationType)"></select>
+                <div class="form-text">Most broadcasts are "Announcement" (general notices) or "System" (maintenance).</div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="TargetRole" class="form-label">Audience</label>
+                <select asp-for="TargetRole" class="form-select">
+                    <option value="">Everyone</option>
+                    <option value="@Roles.Student">Students only</option>
+                    <option value="@Roles.Admin">Admins only</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Title</label>
+                <input asp-for="Title" class="form-control" maxlength="150" required />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Message" class="form-label">Message</label>
+                <textarea asp-for="Message" class="form-control" rows="4" maxlength="500" required></textarea>
+                <span asp-validation-for="Message" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Link" class="form-label">Link (optional)</label>
+                <input asp-for="Link" class="form-control" maxlength="300" placeholder="/Marketplace" />
+                <div class="form-text">Where the notification navigates to when clicked. Leave blank for none.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="megaphone" class="me-1"></i>Send Broadcast
+            </button>
+        </form>
+    </div>
+</div>

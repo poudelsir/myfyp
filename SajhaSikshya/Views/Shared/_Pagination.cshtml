@@ -1,0 +1,26 @@
+@model SajhaSikshya.DTOs.IPagedResult
+@{
+    var searchTerm = ViewData["SearchTerm"] as string;
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <span class="text-secondary small">
+            Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount total)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-searchTerm="@searchTerm">Previous</a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-pageNumber="@i" asp-route-searchTerm="@searchTerm">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-searchTerm="@searchTerm">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

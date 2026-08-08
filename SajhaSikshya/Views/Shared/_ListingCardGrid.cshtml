@@ -1,0 +1,21 @@
+@using SajhaSikshya.DTOs.Marketplace
+@model IReadOnlyList<ListingSummaryDto>
+@{
+    var emptyMessage = ViewData["EmptyMessage"] as string ?? "No listings found.";
+}
+@if (!Model.Any())
+{
+    <div class="marketplace-empty-state">
+        <i data-lucide="package-search"></i>
+        <p class="mb-0">@emptyMessage</p>
+    </div>
+}
+else
+{
+    <div class="marketplace-grid">
+        @foreach (var item in Model)
+        {
+            <partial name="_ListingCard" model="item" />
+        }
+    </div>
+}

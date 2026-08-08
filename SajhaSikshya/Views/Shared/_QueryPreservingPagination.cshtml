@@ -1,0 +1,39 @@
+@model SajhaSikshya.DTOs.IPagedResult
+@{
+    // Generic pagination: forwards whatever query string is already on the request
+    // (searchTerm, status, category filters, whatever the page uses) onto every page
+    // link automatically, instead of each page needing its own pagination partial
+    // hardcoded to its specific filter parameter names (see _MarketplacePagination.cshtml,
+    // which predates this and is left as-is rather than migrated — not broken, not touched).
+    var currentQuery = Context.Request.Query
+        .Where(q => !string.Equals(q.Key, "pageNumber", StringComparison.OrdinalIgnoreCase))
+        .ToDictionary(q => q.Key, q => q.Value.ToString());
+
+    Dictionary<string, string> RouteValuesFor(int page)
+    {
+        var values = new Dictionary<string, string>(currentQuery) { ["pageNumber"] = page.ToString() };
+        return values;
+    }
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+        <span class="text-secondary small">
+            Page @Model.PageNumber of @Model.TotalPages (@Model.TotalCount total)
+        </span>
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                <a class="page-link" asp-all-route-data="RouteValuesFor(Model.PageNumber - 1)">Previous</a>
+            </li>
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" asp-all-route-data="RouteValuesFor(i)">@i</a>
+                </li>
+            }
+            <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                <a class="page-link" asp-all-route-data="RouteValuesFor(Model.PageNumber + 1)">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

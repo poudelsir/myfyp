@@ -1,0 +1,89 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Marketplace
+@model ListingFormViewModel
+
+<div class="mb-3">
+    <label asp-for="Title" class="form-label"></label>
+    <input asp-for="Title" class="form-control" autofocus />
+    <span asp-validation-for="Title" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Description" class="form-label"></label>
+    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+    <span asp-validation-for="Description" class="text-danger small"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="CategoryId" class="form-label"></label>
+        <select asp-for="CategoryId" asp-items="Model.CategoryOptions" class="form-select">
+            <option value="">— Select a category —</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="SubjectId" class="form-label"></label>
+        <select asp-for="SubjectId" asp-items="Model.SubjectOptions" class="form-select">
+            <option value="">— Select a subject —</option>
+        </select>
+        <span asp-validation-for="SubjectId" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="Condition" class="form-label"></label>
+        <select asp-for="Condition" asp-items="EnumExtensions.GetSelectList<BookCondition>(Model.Condition)" class="form-select">
+        </select>
+        <span asp-validation-for="Condition" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="PriceAmount" class="form-label"></label>
+        <input asp-for="PriceAmount" class="form-control" id="priceInput" />
+        <span asp-validation-for="PriceAmount" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="mb-4 form-check form-switch">
+    <input asp-for="IsDonation" class="form-check-input" role="switch" id="isDonationInput" />
+    <label asp-for="IsDonation" class="form-check-label"></label>
+</div>
+
+<div class="mb-4">
+    <button type="button" id="aiGenerateBtn" class="btn btn-outline-primary btn-sm" data-generate-url="@Url.Action("GenerateDescription")">
+        <i data-lucide="sparkles" class="me-1"></i>Generate with AI
+    </button>
+    <div id="aiGenerateStatus" class="form-text mt-1"></div>
+    <div id="aiKeywordsHint" class="form-text mt-1 d-none"></div>
+</div>
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</div>
+
+@section Scripts {
+    <script>
+        // Free/donation listings don't need a price — lock it at 0 client-side for a
+        // cleaner UX. Uses readonly (not disabled) so the field still posts; the server
+        // still authoritatively re-derives Price from IsDonation regardless either way
+        // (see ListingService), this is just presentation.
+        (function () {
+            "use strict";
+            var donationToggle = document.getElementById("isDonationInput");
+            var priceInput = document.getElementById("priceInput");
+
+            function syncPriceState() {
+                priceInput.readOnly = donationToggle.checked;
+                if (donationToggle.checked) {
+                    priceInput.value = "0";
+                }
+            }
+
+            donationToggle?.addEventListener("change", syncPriceState);
+            syncPriceState();
+        })();
+    </script>
+}

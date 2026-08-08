@@ -1,3 +1,4 @@
+using SajhaSikshya.Constants;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Hubs;
 using SajhaSikshya.Middleware;
@@ -17,6 +18,7 @@ builder.Logging.AddDebug();
 builder.Services.AddApplicationConfigurations(builder.Configuration);
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplicationIdentity();
+builder.Services.AddApplicationAuthorization();
 builder.Services.AddRepositories();
 builder.Services.AddApplicationServices();
 
@@ -33,9 +35,14 @@ builder.Services.AddControllersWithViews(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddDistributedMemoryCache();
+
+// In-process cache for repeated-prompt AI responses (Services/AI/GeminiAIService.cs) —
+// deliberately separate from the distributed cache above, which backs Session state.
+builder.Services.AddMemoryCache();
+
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromMinutes(SecurityConstants.SessionTimeoutMinutes);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
@@ -64,6 +71,12 @@ app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 app.UseHttpsRedirection();
 app.MapStaticAssets();
 
+// MapStaticAssets() only serves files present in wwwroot at build time (it works off a
+// publish-time manifest for fingerprinting/compression). User uploads (Listing photos,
+// and later profile pictures, verification documents, etc.) are written to
+// wwwroot/uploads/ at runtime, so they need the classic static-file middleware as well.
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseSession();
@@ -82,6 +95,7 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<ChatHub>("/hubs/chat");
 
 await app.InitializeDatabaseAsync();
 

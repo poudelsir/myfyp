@@ -1,0 +1,46 @@
+@using SajhaSikshya.ViewModels.Marketplace
+@model SellerProfileViewModel
+@{
+    ViewData["Title"] = $"{Model.Seller.SellerName}'s Listings";
+    ViewData["MetaDescription"] = $"Browse listings from {Model.Seller.SellerName} on SajhaSikshya.";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Marketplace" asp-action="Index">Marketplace</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Seller.SellerName</li>
+    </ol>
+</nav>
+
+<div class="marketplace-seller-card mb-4" style="max-width: 420px;">
+    <span class="avatar-initials">@(Model.Seller.SellerName.Length > 0 ? Model.Seller.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+    <div>
+        <p class="mb-0 fw-semibold d-flex align-items-center gap-1">
+            @Model.Seller.SellerName
+            <partial name="_VerifiedStudentBadge" model="Model.Seller.IsVerified" />
+        </p>
+        <p class="mb-0 text-secondary small">
+            Member since @Model.Seller.MemberSinceUtc.ToLocalTime().ToString("MMMM yyyy")
+            &middot; @Model.Seller.ActiveListingCount active listing@(Model.Seller.ActiveListingCount == 1 ? "" : "s")
+        </p>
+        <p class="mb-0 d-flex align-items-center gap-1">
+            @if (Model.Seller.ReviewCount > 0)
+            {
+                <partial name="_StarRatingDisplay" model="Model.Seller.AverageRating" />
+                <a asp-controller="Reviews" asp-action="ForUser" asp-area="" asp-route-userId="@Model.Seller.SellerId" class="small text-decoration-none">
+                    @Model.Seller.AverageRating.ToString("0.0") (@Model.Seller.ReviewCount review@(Model.Seller.ReviewCount == 1 ? "" : "s"))
+                </a>
+            }
+            else
+            {
+                <span class="text-secondary small">No reviews yet</span>
+            }
+        </p>
+    </div>
+</div>
+
+<h2 class="h5 fw-bold mb-3">Listings from @Model.Seller.SellerName</h2>
+<partial name="_ListingCardGrid" model="Model.Listings.Items" view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = "This seller has no active listings right now." }' />
+<partial name="_MarketplacePagination" model="Model.Listings"
+         view-data='new ViewDataDictionary(ViewData) { ["PaginationAction"] = "Seller", ["SellerId"] = Model.Seller.SellerId }' />

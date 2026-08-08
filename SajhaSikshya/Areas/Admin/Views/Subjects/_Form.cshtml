@@ -1,0 +1,41 @@
+@using SajhaSikshya.ViewModels.Admin.Catalog
+@model SubjectFormViewModel
+
+<div class="mb-3">
+    <label asp-for="Name" class="form-label"></label>
+    <input asp-for="Name" class="form-control" autofocus />
+    <span asp-validation-for="Name" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Code" class="form-label"></label>
+    <input asp-for="Code" class="form-control" />
+    <span asp-validation-for="Code" class="text-danger small"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="AcademicLevelId" class="form-label"></label>
+        <select asp-for="AcademicLevelId" asp-items="Model.AcademicLevelOptions" class="form-select">
+            <option value="">— Select a level —</option>
+        </select>
+        <span asp-validation-for="AcademicLevelId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="UniversityId" class="form-label"></label>
+        <select asp-for="UniversityId" asp-items="Model.UniversityOptions" class="form-select">
+            <option value="">— Any university —</option>
+        </select>
+        <span asp-validation-for="UniversityId" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="mb-4 form-check form-switch">
+    <input asp-for="IsActive" class="form-check-input" role="switch" />
+    <label asp-for="IsActive" class="form-check-label"></label>
+</div>
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</div>

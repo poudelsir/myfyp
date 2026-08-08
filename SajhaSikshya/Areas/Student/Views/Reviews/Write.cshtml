@@ -1,0 +1,51 @@
+@using SajhaSikshya.ViewModels.Reviews
+@model WriteReviewViewModel
+@{
+    ViewData["Title"] = "Write a Review";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Write a Review</h1>
+    <p class="text-secondary mb-0">Share how your exchange with <strong>@Model.RevieweeName</strong> went for "@Model.ListingTitle".</p>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form asp-action="Write" method="post" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <input type="hidden" asp-for="OrderId" />
+            <input type="hidden" asp-for="ListingTitle" />
+            <input type="hidden" asp-for="RevieweeName" />
+
+            <div class="mb-3">
+                <label class="form-label d-block">Your Rating</label>
+                <partial name="_StarRatingInput" model="Model.Rating" />
+                <span asp-validation-for="Rating" class="text-danger small d-block"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" placeholder="Sum it up in a few words (optional)" />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Comment" class="form-label"></label>
+                <textarea asp-for="Comment" class="form-control" rows="4" placeholder="Details about the item, communication, pickup — whatever's useful for others (optional)"></textarea>
+                <span asp-validation-for="Comment" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Post Review</button>
+                <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,109 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Marketplace
+@using SajhaSikshya.ViewModels.Admin.Shared
+@model AdminListViewModel<ListingDto>
+@{
+    ViewData["Title"] = "My Listings";
+    ViewData["SearchTerm"] = Model.SearchTerm;
+    ViewData["SearchPlaceholder"] = "Search your listings…";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 fw-bold mb-1">My Listings</h1>
+        <p class="text-secondary mb-0">Manage the items you've listed for sale or donation.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i data-lucide="plus" class="me-1"></i>New Listing
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <partial name="_AdminSearchBox" />
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">You haven't listed anything yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category / Subject</th>
+                            <th>Price</th>
+                            <th>Condition</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var listing in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>@listing.Title</td>
+                                <td>
+                                    <div>@listing.CategoryName</div>
+                                    <div class="text-secondary small">@listing.SubjectName</div>
+                                </td>
+                                <td>
+                                    @if (listing.IsDonation)
+                                    {
+                                        <span class="badge marketplace-badge-donation">Donation</span>
+                                    }
+                                    else
+                                    {
+                                        @listing.FormattedPrice
+                                    }
+                                </td>
+                                <td><span class="badge marketplace-badge-condition">@listing.ConditionDisplay</span></td>
+                                <td><span class="badge @StatusBadgeClass(listing.Status)">@listing.StatusDisplay</span></td>
+                                <td class="text-end">
+                                    <a asp-action="Preview" asp-route-id="@listing.Id" class="btn btn-sm btn-outline-secondary">Preview</a>
+                                    <a asp-action="Edit" asp-route-id="@listing.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    @if (listing.Status == ListingStatus.Archived)
+                                    {
+                                        <form asp-action="Restore" asp-route-id="@listing.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Archive" asp-route-id="@listing.Id" method="post" class="d-inline js-delete-form"
+                                              data-confirm="Archive '@listing.Title'? It will no longer be visible in the marketplace until restored.">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">Archive</button>
+                                        </form>
+                                    }
+                                    <form asp-action="Delete" asp-route-id="@listing.Id" method="post" class="d-inline js-delete-form"
+                                          data-confirm="Delete '@listing.Title'? This cannot be undone.">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_Pagination" model="Model.Page" />
+        }
+    </div>
+</div>
+
+@functions {
+    private static string StatusBadgeClass(ListingStatus status) => status switch
+    {
+        ListingStatus.Draft => "text-bg-secondary",
+        ListingStatus.PendingApproval => "text-bg-info",
+        ListingStatus.Active => "text-bg-success",
+        ListingStatus.Reserved => "text-bg-warning",
+        ListingStatus.Sold => "text-bg-dark",
+        ListingStatus.Donated => "text-bg-primary",
+        ListingStatus.Archived => "text-bg-secondary",
+        ListingStatus.Rejected => "text-bg-danger",
+        _ => "text-bg-secondary",
+    };
+}

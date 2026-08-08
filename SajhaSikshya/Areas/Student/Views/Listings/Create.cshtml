@@ -1,0 +1,27 @@
+@using SajhaSikshya.ViewModels.Marketplace
+@model ListingFormViewModel
+@{
+    ViewData["Title"] = "New Listing";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">New Listing</h1>
+    <p class="text-secondary mb-0">List a book or study material for sale or donation. It will be reviewed before going live.</p>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <partial name="_Form" />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/ai-listing.js" asp-append-version="true"></script>
+}

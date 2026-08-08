@@ -1,0 +1,77 @@
+@using SajhaSikshya.DTOs.Marketplace
+@model ListingSummaryDto
+
+@* The save button must be a sibling of the <a>, not nested inside it — a <form>/
+   <button> inside an <a> is invalid HTML (nested interactive elements) and breaks
+   click handling. The wrapper is what CSS positions the heart icon relative to. *@
+<div class="marketplace-card-wrapper">
+    <a asp-controller="Marketplace" asp-action="Details" asp-route-slug="@Model.Slug" class="marketplace-card">
+        <div class="marketplace-card-image">
+            @if (Model.IsDonation)
+            {
+                <span class="marketplace-ribbon">Donation</span>
+            }
+            @if (!string.IsNullOrEmpty(Model.ThumbnailImagePath))
+            {
+                <img src="@Model.ThumbnailImagePath" alt="@Model.Title" loading="lazy" onload="this.classList.add('is-loaded')" />
+            }
+            else
+            {
+                <div class="marketplace-card-image-placeholder">
+                    <i data-lucide="image"></i>
+                </div>
+            }
+        </div>
+        <div class="marketplace-card-body">
+            <div class="d-flex flex-wrap gap-1 mb-2">
+                <span class="badge marketplace-badge-condition">@Model.ConditionDisplay</span>
+            </div>
+            <h3 class="marketplace-card-title">@Model.Title</h3>
+            <p class="marketplace-card-price">@Model.FormattedPrice</p>
+            <p class="marketplace-card-meta mb-1">@Model.CategoryName@(string.IsNullOrEmpty(Model.UniversityName) ? "" : $" · {Model.UniversityName}")</p>
+            <div class="marketplace-card-footer">
+                <span class="text-truncate d-flex align-items-center gap-1">
+                    @Model.SellerName
+                    <partial name="_VerifiedStudentBadge" model="Model.IsSellerVerified" />
+                </span>
+                <span class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span title="@Model.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")">@Model.CreatedAtUtc.ToLocalTime().ToString("MMM d")</span>
+                    <span class="d-flex align-items-center gap-1"><i data-lucide="eye"></i>@Model.ViewCount</span>
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <div class="marketplace-card-actions">
+        <form asp-area="Student" asp-controller="SavedListings" asp-action="Toggle" method="post" class="marketplace-save-form">
+            <input type="hidden" name="listingId" value="@Model.Id" />
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button type="submit" class="marketplace-save-btn @(Model.IsSaved ? "is-saved" : "")"
+                    title="@(Model.IsSaved ? "Remove from saved" : "Save for later")"
+                    aria-label="@(Model.IsSaved ? "Remove from saved" : "Save for later")" aria-pressed="@(Model.IsSaved ? "true" : "false")">
+                <i data-lucide="heart"></i>
+            </button>
+        </form>
+
+        @if (Model.IsInCompare)
+        {
+            <form asp-controller="Compare" asp-action="Remove" asp-route-listingId="@Model.Id" method="post" class="marketplace-save-form marketplace-compare-form">
+                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                <button type="submit" class="marketplace-save-btn marketplace-compare-btn is-saved"
+                        title="Remove from comparison" aria-label="Remove from comparison" aria-pressed="true">
+                    <i data-lucide="git-compare"></i>
+                </button>
+            </form>
+        }
+        else
+        {
+            <form asp-controller="Compare" asp-action="Add" asp-route-listingId="@Model.Id" method="post" class="marketplace-save-form marketplace-compare-form">
+                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                <button type="submit" class="marketplace-save-btn marketplace-compare-btn"
+                        title="Add to comparison" aria-label="Add to comparison" aria-pressed="false">
+                    <i data-lucide="git-compare"></i>
+                </button>
+            </form>
+        }
+    </div>
+</div>

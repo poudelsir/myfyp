@@ -1,0 +1,14 @@
+@{
+    var searchTerm = ViewData["SearchTerm"] as string;
+    var placeholder = ViewData["SearchPlaceholder"] as string ?? "Search…";
+}
+<form method="get" asp-action="Index" class="d-flex gap-2 mb-3" style="max-width: 380px;">
+    <input type="search" name="searchTerm" value="@searchTerm" class="form-control" placeholder="@placeholder" aria-label="Search" />
+    <button type="submit" class="btn btn-outline-secondary flex-shrink-0">
+        <i data-lucide="search"></i>
+    </button>
+    @if (!string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <a asp-action="Index" class="btn btn-outline-secondary flex-shrink-0">Clear</a>
+    }
+</form>

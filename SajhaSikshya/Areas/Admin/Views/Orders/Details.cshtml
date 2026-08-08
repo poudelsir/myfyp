@@ -1,0 +1,135 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Orders
+@model OrderDetailDto
+@{
+    ViewData["Title"] = $"Order {Model.ReferenceNumber}";
+    var canCancel = Model.Status is OrderStatus.Pending or OrderStatus.Confirmed;
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <partial name="_OrderStatusBadge" model="Model.Status" />
+        <h1 class="h4 fw-bold mb-0 mt-2">Order @Model.ReferenceNumber</h1>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+        <i data-lucide="arrow-left" class="me-1"></i>Back to Orders
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Listing</h2>
+                <a asp-controller="Marketplace" asp-action="Details" asp-area="" asp-route-slug="@Model.ListingSlug" class="d-flex align-items-center gap-3 text-decoration-none text-body">
+                    @if (!string.IsNullOrEmpty(Model.ListingThumbnailImagePath))
+                    {
+                        <img src="@Model.ListingThumbnailImagePath" alt="@Model.ListingTitle" style="width:64px;height:64px;object-fit:cover;border-radius:var(--sajha-radius);" />
+                    }
+                    <div>
+                        <p class="mb-0 fw-semibold">@Model.ListingTitle</p>
+                        <p class="mb-0 text-secondary small">
+                            @if (Model.IsDonation)
+                            {
+                                <span class="badge marketplace-badge-donation">Donation</span>
+                            }
+                            else
+                            {
+                                @Model.FormattedPrice
+                            }
+                        </p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Parties</h2>
+                <dl class="row small text-secondary mb-0">
+                    <dt class="col-4">Buyer</dt>
+                    <dd class="col-8">@Model.BuyerName &lt;@Model.BuyerEmail&gt;</dd>
+                    <dt class="col-4">Seller</dt>
+                    <dd class="col-8">@Model.SellerName &lt;@Model.SellerEmail&gt;</dd>
+                    <dt class="col-4">Requested</dt>
+                    <dd class="col-8">@Model.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy h:mm tt")</dd>
+                    <dt class="col-4">Payment Method</dt>
+                    <dd class="col-8">@Model.PaymentMethodDisplay</dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.PickupNotes))
+                    {
+                        <dt class="col-4">Pickup Notes</dt>
+                        <dd class="col-8">@Model.PickupNotes</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                    {
+                        <dt class="col-4">Cancellation Reason</dt>
+                        <dd class="col-8">@Model.CancellationReason</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        @if (canCancel)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#adminCancelModal">
+                <i data-lucide="ban" class="me-1"></i>Cancel Order (Dispute Resolution)
+            </button>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Timeline</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var step in Model.StatusHistory)
+                    {
+                        <li class="d-flex gap-3 pb-3">
+                            <div class="flex-shrink-0">
+                                <div class="verification-timeline-marker is-complete" style="border-color: var(--bs-success); background: var(--bs-success); color: #fff;">
+                                    <i data-lucide="check" style="width:14px;height:14px;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-semibold small">
+                                    @(step.OldStatusDisplay is null ? $"Order placed ({step.NewStatusDisplay})" : $"{step.OldStatusDisplay} → {step.NewStatusDisplay}")
+                                </p>
+                                <p class="mb-0 text-secondary small">
+                                    @step.ChangedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt") by @step.ChangedByName
+                                </p>
+                                @if (!string.IsNullOrWhiteSpace(step.Reason))
+                                {
+                                    <p class="mb-0 text-secondary small fst-italic">"@step.Reason"</p>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (canCancel)
+{
+    <div class="modal fade" id="adminCancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cancel Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label for="adminCancelReason" class="form-label">Reason (shown to both buyer and seller)</label>
+                        <textarea name="reason" id="adminCancelReason" class="form-control" rows="3" required maxlength="500"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep Order</button>
+                        <button type="submit" class="btn btn-danger">Cancel Order</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}

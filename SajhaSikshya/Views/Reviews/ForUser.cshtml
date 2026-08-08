@@ -1,0 +1,115 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Reviews
+@model UserReviewsViewModel
+@{
+    ViewData["Title"] = $"Reviews for {Model.UserName}";
+    var isSellerView = Model.ReviewType == ReviewType.BuyerToSeller;
+    var averageRating = isSellerView ? Model.Reputation.SellerAverageRating : Model.Reputation.BuyerAverageRating;
+    var reviewCount = isSellerView ? Model.Reputation.SellerReviewCount : Model.Reputation.BuyerReviewCount;
+    var distribution = isSellerView ? Model.Reputation.SellerRatingDistribution : Model.Reputation.BuyerRatingDistribution;
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">@Model.UserName's Reviews</h1>
+    <p class="text-secondary mb-0">What other students say after completing an order with @Model.UserName.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <ul class="nav nav-pills nav-fill mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link @(isSellerView ? "active" : "")" asp-action="ForUser" asp-route-userId="@Model.UserId" asp-route-type="@ReviewType.BuyerToSeller">As Seller</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(!isSellerView ? "active" : "")" asp-action="ForUser" asp-route-userId="@Model.UserId" asp-route-type="@ReviewType.SellerToBuyer">As Buyer</a>
+                    </li>
+                </ul>
+
+                <div class="text-center mb-3">
+                    <div class="display-6 fw-bold mb-0">@averageRating.ToString("0.0")</div>
+                    <partial name="_StarRatingDisplay" model="averageRating" />
+                    <p class="text-secondary small mb-0">@reviewCount review@(reviewCount == 1 ? "" : "s")</p>
+                </div>
+
+                <partial name="_RatingDistribution" model="distribution" />
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <label class="form-label small text-secondary">Filter by rating</label>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action @(Model.RatingFilter is null ? "active" : "")"
+                       asp-action="ForUser" asp-route-userId="@Model.UserId" asp-route-type="@Model.ReviewType">
+                        All ratings
+                    </a>
+                    @for (var star = 5; star >= 1; star--)
+                    {
+                        <a class="list-group-item list-group-item-action @(Model.RatingFilter == star ? "active" : "")"
+                           asp-action="ForUser" asp-route-userId="@Model.UserId" asp-route-type="@Model.ReviewType" asp-route-rating="@star">
+                            @star star@(star == 1 ? "" : "s")
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                @if (!Model.Page.Items.Any())
+                {
+                    <div class="text-center text-secondary py-5">
+                        <i data-lucide="star-off" class="mb-2"></i>
+                        <p class="mb-0">No reviews to show yet.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var review in Model.Page.Items)
+                    {
+                        <div class="review-card">
+                            <div class="review-card-header">
+                                <div>
+                                    <partial name="_StarRatingDisplay" model="(double)review.Rating" />
+                                    <div class="review-card-meta">by @review.ReviewerName</div>
+                                </div>
+                                <span class="text-secondary small text-nowrap" title="@review.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")">
+                                    @review.CreatedAtUtc.ToRelativeTimeString()
+                                    @if (review.IsEdited)
+                                    {
+                                        <text> (edited)</text>
+                                    }
+                                </span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(review.Title))
+                            {
+                                <p class="review-card-title mb-1">@review.Title</p>
+                            }
+                            @if (!string.IsNullOrEmpty(review.Comment))
+                            {
+                                <p class="mb-2">@review.Comment</p>
+                            }
+                            @if (User.Identity?.IsAuthenticated == true && User.GetUserId() != review.ReviewerId)
+                            {
+                                <form asp-controller="Reviews" asp-action="Report" asp-route-id="@review.Id" method="post"
+                                      class="js-delete-form" data-confirm="Report this review for moderator attention?">
+                                    <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                    <button type="submit" class="btn btn-link btn-sm p-0 text-secondary">
+                                        <i data-lucide="flag" class="me-1"></i>Report
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
+
+                    <partial name="_QueryPreservingPagination" model="Model.Page" />
+                }
+            </div>
+        </div>
+    </div>
+</div>

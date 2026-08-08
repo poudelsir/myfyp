@@ -1,0 +1,156 @@
+/* ==========================================================================
+   SajhaSikshya — Chat (Phase 7)
+   Conversation list rows and the message thread's bubble layout.
+   ========================================================================== */
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-bubble-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.chat-bubble-row.is-mine {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--sajha-radius-lg);
+  background: var(--bs-tertiary-bg);
+}
+
+.chat-bubble-mine {
+  background: var(--sajha-primary);
+  color: #fff;
+}
+
+.chat-bubble-mine a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.chat-bubble-theirs {
+  background: var(--bs-tertiary-bg);
+}
+
+.chat-bubble-meta {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+@media (max-width: 575.98px) {
+  .chat-bubble {
+    max-width: 88%;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Date / unread separators (Phase 7.3)                                   */
+/* ---------------------------------------------------------------------- */
+
+.chat-date-separator,
+.chat-unread-separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0.75rem 0;
+  color: var(--bs-secondary-color);
+  font-size: 0.75rem;
+}
+
+.chat-date-separator span,
+.chat-unread-separator span {
+  margin: 0 auto;
+  padding: 0.15rem 0.75rem;
+  border-radius: 999px;
+  background: var(--bs-tertiary-bg);
+}
+
+.chat-unread-separator span {
+  background: var(--bs-danger-bg-subtle, #f8d7da);
+  color: var(--bs-danger-text-emphasis, #842029);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Online presence dot (Phase 7.3)                                        */
+/* ---------------------------------------------------------------------- */
+
+.chat-presence-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chat-presence-dot.is-online {
+  background: var(--bs-success);
+}
+
+.chat-presence-dot.is-offline {
+  background: var(--bs-secondary-color);
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Attachments (Phase 7.3)                                                */
+/* ---------------------------------------------------------------------- */
+
+.chat-attachment-thumb {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: var(--sajha-radius);
+  display: block;
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+}
+
+.chat-attachment-image-link {
+  display: inline-block;
+}
+
+.chat-attachment-file {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--sajha-radius);
+  background: rgba(0, 0, 0, 0.06);
+  margin-bottom: 0.35rem;
+  text-decoration: none !important;
+}
+
+.chat-bubble-mine .chat-attachment-file {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.chat-attachment-file-icon {
+  flex-shrink: 0;
+}
+
+.chat-attachment-file-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.chat-attachment-file-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-attachment-file-size {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}

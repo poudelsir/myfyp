@@ -1,0 +1,114 @@
+/* ---------------------------------------------------------------------- */
+/* Star rating display (read-only) — _StarRatingDisplay.cshtml            */
+/* ---------------------------------------------------------------------- */
+
+.star-rating-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.star-rating-display svg,
+.rating-distribution svg {
+  width: 14px;
+  height: 14px;
+}
+
+.star-filled {
+  color: #f5a623;
+  fill: #f5a623;
+}
+
+.star-empty {
+  color: var(--bs-border-color);
+  fill: none;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Interactive star picker input — Write.cshtml / Edit.cshtml             */
+/* ---------------------------------------------------------------------- */
+
+.star-rating-input {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  gap: 0.15rem;
+}
+
+.star-rating-input input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.star-rating-input label {
+  cursor: pointer;
+  color: var(--bs-border-color);
+}
+
+.star-rating-input label svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+}
+
+.star-rating-input input:checked ~ label,
+.star-rating-input label:hover,
+.star-rating-input label:hover ~ label {
+  color: #f5a623;
+}
+
+.star-rating-input input:checked ~ label svg,
+.star-rating-input label:hover svg,
+.star-rating-input label:hover ~ label svg {
+  fill: #f5a623;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Rating distribution bar chart — _RatingDistribution.cshtml             */
+/* ---------------------------------------------------------------------- */
+
+.rating-distribution-row {
+  margin-bottom: 0.25rem;
+}
+
+.rating-distribution-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  width: 2.75rem;
+  font-size: 0.85rem;
+}
+
+.rating-distribution-count {
+  width: 2rem;
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Review card — used on My Reviews, Seller/Buyer Reviews, Admin queue    */
+/* ---------------------------------------------------------------------- */
+
+.review-card {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.review-card-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.review-card-meta {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}

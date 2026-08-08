@@ -1,0 +1,19 @@
+@model IReadOnlyList<int>
+@{
+    // Model[0..4] = count of 1-star..5-star reviews (ReputationDto's own array order).
+    var total = Model.Sum();
+}
+<div class="rating-distribution">
+    @for (var star = 5; star >= 1; star--)
+    {
+        var count = Model[star - 1];
+        var percent = total == 0 ? 0 : (int)Math.Round(count * 100.0 / total);
+        <div class="rating-distribution-row d-flex align-items-center gap-2">
+            <span class="rating-distribution-label text-nowrap">@star <i data-lucide="star" class="star-filled"></i></span>
+            <div class="progress flex-grow-1" role="progressbar" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-warning" style="width: @(percent)%"></div>
+            </div>
+            <span class="rating-distribution-count text-secondary small text-nowrap">@count</span>
+        </div>
+    }
+</div>

@@ -1,0 +1,39 @@
+@using SajhaSikshya.ViewModels.Admin.Catalog
+@model CategoryFormViewModel
+
+<div class="mb-3">
+    <label asp-for="Name" class="form-label"></label>
+    <input asp-for="Name" class="form-control" autofocus />
+    <span asp-validation-for="Name" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Slug" class="form-label"></label>
+    <input asp-for="Slug" class="form-control" placeholder="Leave blank to generate from name" />
+    <span asp-validation-for="Slug" class="text-danger small"></span>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="ParentCategoryId" class="form-label"></label>
+        <select asp-for="ParentCategoryId" asp-items="Model.ParentCategoryOptions" class="form-select">
+            <option value="">— No parent (top level) —</option>
+        </select>
+        <span asp-validation-for="ParentCategoryId" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="DisplayOrder" class="form-label"></label>
+        <input asp-for="DisplayOrder" type="number" class="form-control" />
+        <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+    </div>
+</div>
+
+<div class="mb-4 form-check form-switch">
+    <input asp-for="IsActive" class="form-check-input" role="switch" />
+    <label asp-for="IsActive" class="form-check-label"></label>
+</div>
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</div>

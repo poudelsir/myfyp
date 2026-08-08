@@ -1,5 +1,11 @@
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Marketplace
+@inject ICompareService CompareService
 @{
     var appName = "SajhaSikshya";
+    var compareCount = User.Identity?.IsAuthenticated == true
+        ? (await CompareService.GetCompareListingIdsAsync(User.GetUserId()!)).Count
+        : Context.Session.GetCompareListingIds().Count;
 }
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -11,6 +17,10 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/marketplace.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/verification.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reviews.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -46,13 +56,24 @@
         </div>
     </div>
 
+    @if (compareCount > 0)
+    {
+        <a asp-controller="Compare" asp-action="Index" asp-area="" class="marketplace-compare-fab">
+            <i data-lucide="git-compare"></i>
+            Compare
+            <span class="marketplace-compare-fab-count">@compareCount</span>
+        </a>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/signalr/dist/browser/signalr.min.js" asp-append-version="true"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/dark-mode.js" asp-append-version="true"></script>
     <script src="~/js/dashboard.js" asp-append-version="true"></script>
     <script src="~/js/notifications.js" asp-append-version="true"></script>
+    <script src="~/js/chat.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

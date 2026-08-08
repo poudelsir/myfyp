@@ -1,0 +1,56 @@
+@using SajhaSikshya.ViewModels.Verification
+@model VerificationSubmissionViewModel
+
+<div class="mb-3">
+    <label asp-for="UniversityId" class="form-label"></label>
+    <select asp-for="UniversityId" asp-items="Model.UniversityOptions" class="form-select">
+        <option value="">— Select your university —</option>
+    </select>
+    <span asp-validation-for="UniversityId" class="text-danger small"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="StudentNumber" class="form-label"></label>
+    <input asp-for="StudentNumber" class="form-control" autocomplete="off" />
+    <span asp-validation-for="StudentNumber" class="text-danger small"></span>
+</div>
+
+<div class="mb-4">
+    <label asp-for="StudentIdImage" class="form-label">Student ID Photo</label>
+    <input asp-for="StudentIdImage" type="file" class="form-control" accept="image/jpeg,image/png,image/webp" id="studentIdImageInput" />
+    <div class="form-text">A clear photo of your student ID card (JPG, PNG, or WEBP, up to 5 MB).</div>
+    <span asp-validation-for="StudentIdImage" class="text-danger small"></span>
+    <img id="studentIdImagePreview" class="verification-upload-preview" alt="Student ID preview" />
+</div>
+
+<div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Submit for Review</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+</div>
+
+@* Plain inline <script>, not @section Scripts — sections aren't supported inside
+   partial views (they only work in the top-level view rendered for the request), and
+   this element-lookup script only needs to run after the elements above it exist,
+   which is already true by the time the parser reaches this tag. *@
+<script>
+    (function () {
+        "use strict";
+        var input = document.getElementById("studentIdImageInput");
+        var preview = document.getElementById("studentIdImagePreview");
+
+        input?.addEventListener("change", function () {
+            var file = input.files && input.files[0];
+            if (!file) {
+                preview.classList.remove("is-visible");
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.add("is-visible");
+            };
+            reader.readAsDataURL(file);
+        });
+    })();
+</script>

@@ -1,6 +1,18 @@
+@using SajhaSikshya.Constants
+@using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Notifications
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Notifications
+@using SajhaSikshya.Services.Interfaces.Verification
+@inject IVerificationQueryService VerificationQueryService
+@inject INotificationQueryService NotificationQueryService
 @{
     var initials = "?";
     var fullName = "Guest";
+    var isVerified = false;
+    var unreadNotificationCount = 0;
+    var recentNotifications = new List<NotificationDto>();
     if (User.Identity?.IsAuthenticated == true)
     {
         fullName = User.GetFullName() ?? User.Identity.Name ?? "User";
@@ -8,9 +20,38 @@
         initials = parts.Length >= 2
             ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
             : fullName.Length > 0 ? fullName[0].ToString().ToUpperInvariant() : "?";
+
+        if (User.IsInRole(Roles.Student))
+        {
+            isVerified = await VerificationQueryService.IsUserVerifiedAsync(User.GetUserId()!);
+        }
+
+        // Initial, server-rendered paint only — chat.js/notifications.js's SignalR
+        // connections take over live updates from here, the same pattern the sidebar's
+        // chat unread badge already established.
+        var userId = User.GetUserId()!;
+        unreadNotificationCount = await NotificationQueryService.GetUnreadCountAsync(userId);
+        var recentPage = await NotificationQueryService.GetHistoryAsync(userId, 1, NotificationConstants.RecentNotificationsCount);
+        recentNotifications = recentPage.Items.ToList();
     }
+
+    string IconFor(NotificationType type) => type switch
+    {
+        NotificationType.Message => "message-circle",
+        NotificationType.Order => "package",
+        NotificationType.Review => "star",
+        NotificationType.Verification => "shield-check",
+        NotificationType.AIRecommendation => "sparkles",
+        NotificationType.Announcement => "megaphone",
+        _ => "bell",
+    };
 }
 <header class="app-navbar">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- Token source for notifications.js's fetch()-based mark-read/mark-all-read/delete calls, which have no <form asp-action> of their own to auto-carry one. -->
+        <form id="notificationTokenForm" class="d-none">@Html.AntiForgeryToken()</form>
+    }
     <button type="button" class="btn-icon" id="sidebarToggleBtn" aria-label="Toggle sidebar">
         <i data-lucide="menu"></i>
     </button>
@@ -32,16 +73,32 @@
             <button type="button" class="btn-icon position-relative" id="notificationsDropdown"
                     data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" title="Notifications">
                 <i data-lucide="bell"></i>
-                <span class="notification-dot d-none" id="notificationDot"></span>
+                <span class="notification-dot @(unreadNotificationCount > 0 ? "" : "d-none")" id="notificationDot"></span>
             </button>
             <div class="dropdown-menu dropdown-menu-end notification-panel" aria-labelledby="notificationsDropdown">
-                <div class="notification-panel-header">
-                    <span>Notifications</span>
+                <div class="notification-panel-header d-flex justify-content-between align-items-center">
+                    <span>Notifications <span id="notificationUnreadBadge" class="badge text-bg-primary rounded-pill @(unreadNotificationCount > 0 ? "" : "d-none")">@unreadNotificationCount</span></span>
+                    <button type="button" id="notificationMarkAllReadBtn" class="btn btn-link btn-sm p-0 @(recentNotifications.Any(n => !n.IsRead) ? "" : "d-none")">Mark all read</button>
                 </div>
-                <div class="notification-panel-empty">
+                <div id="notificationPanelList" class="notification-panel-list @(recentNotifications.Any() ? "" : "d-none")">
+                    @foreach (var notification in recentNotifications)
+                    {
+                        <a class="notification-panel-item @(notification.IsRead ? "" : "is-unread")"
+                           href="@(string.IsNullOrEmpty(notification.Link) ? "/notifications" : notification.Link)"
+                           data-notification-id="@notification.Id">
+                            <i data-lucide="@IconFor(notification.NotificationType)" class="flex-shrink-0"></i>
+                            <span class="notification-panel-item-body">
+                                <span class="notification-panel-item-title">@notification.Title</span>
+                                <span class="notification-panel-item-message">@notification.Message</span>
+                            </span>
+                        </a>
+                    }
+                </div>
+                <div id="notificationPanelEmpty" class="notification-panel-empty @(recentNotifications.Any() ? "d-none" : "")">
                     <i data-lucide="bell-off"></i>
                     <p class="mb-0">You're all caught up. New notifications will appear here in real time.</p>
                 </div>
+                <a href="/notifications" class="notification-panel-footer">View All Notifications</a>
             </div>
         </div>
 
@@ -54,7 +111,12 @@
                     <i data-lucide="chevron-down"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                    <li><h6 class="dropdown-header">@fullName</h6></li>
+                    <li>
+                        <h6 class="dropdown-header d-flex align-items-center gap-1">
+                            @fullName
+                            <partial name="_VerifiedStudentBadge" model="isVerified" />
+                        </h6>
+                    </li>
                     <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                     <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
                     <li><hr class="dropdown-divider" /></li>

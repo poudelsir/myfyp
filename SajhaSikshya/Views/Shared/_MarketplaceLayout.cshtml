@@ -1,0 +1,178 @@
+@using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.Services.Interfaces.Marketplace
+@using SajhaSikshya.Services.Interfaces.Verification
+@inject ICompareService CompareService
+@inject IVerificationQueryService VerificationQueryService
+@{
+    var appName = "SajhaSikshya";
+    var compareCount = User.Identity?.IsAuthenticated == true
+        ? (await CompareService.GetCompareListingIdsAsync(User.GetUserId()!)).Count
+        : Context.Session.GetCompareListingIds().Count;
+    var metaDescription = ViewData["MetaDescription"] as string
+        ?? "Buy, sell, and donate secondhand books and study materials with fellow students.";
+    var ogTitle = ViewData["OgTitle"] as string ?? $"{ViewData["Title"]} - {appName}";
+    var ogImage = ViewData["OgImage"] as string;
+    var ogType = ViewData["OgType"] as string ?? "website";
+    var canonicalUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}";
+
+    var initials = "?";
+    var fullName = "Guest";
+    var isCurrentUserVerified = false;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        fullName = User.GetFullName() ?? User.Identity.Name ?? "User";
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        initials = parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
+            : fullName.Length > 0 ? fullName[0].ToString().ToUpperInvariant() : "?";
+    }
+
+    var isStudent = User.IsInRole(Roles.Student);
+    var isAdmin = User.IsInRole(Roles.Admin);
+
+    if (isStudent)
+    {
+        isCurrentUserVerified = await VerificationQueryService.IsUserVerifiedAsync(User.GetUserId()!);
+    }
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @appName</title>
+
+    <meta name="description" content="@metaDescription" />
+    <link rel="canonical" href="@canonicalUrl" />
+
+    <meta property="og:site_name" content="@appName" />
+    <meta property="og:title" content="@ogTitle" />
+    <meta property="og:description" content="@metaDescription" />
+    <meta property="og:type" content="@ogType" />
+    <meta property="og:url" content="@canonicalUrl" />
+    @if (!string.IsNullOrEmpty(ogImage))
+    {
+        <meta property="og:image" content="@($"{Context.Request.Scheme}://{Context.Request.Host}{ogImage}")" />
+    }
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/marketplace.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/verification.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dark-mode.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body data-authenticated="@(User.Identity?.IsAuthenticated == true ? "true" : "false")">
+    <header class="marketplace-navbar">
+        <div class="container-fluid d-flex align-items-center gap-3">
+            <a asp-controller="Marketplace" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
+                <span class="brand-mark">S</span>
+                <span class="brand-text d-none d-sm-inline">SajhaSikshya</span>
+            </a>
+
+            <form class="navbar-search d-none d-md-flex" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
+                <i data-lucide="search" class="navbar-search-icon"></i>
+                <input type="search" name="search" class="form-control" placeholder="Search the marketplace…" aria-label="Search"
+                       value="@Context.Request.Query["search"]" />
+            </form>
+
+            <div class="navbar-spacer"></div>
+
+            <button type="button" class="btn-icon" id="darkModeToggleBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <i data-lucide="moon" id="darkModeIcon"></i>
+            </button>
+
+            @if (isStudent)
+            {
+                <a asp-area="Student" asp-controller="Listings" asp-action="Create" class="btn btn-primary btn-sm d-none d-sm-inline-flex">
+                    <i data-lucide="plus" class="me-1"></i>Sell an Item
+                </a>
+            }
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="dropdown">
+                    <button type="button" class="btn-profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="avatar-initials">@initials</span>
+                        <span class="d-none d-lg-inline">@fullName</span>
+                        <i data-lucide="chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li>
+                            <h6 class="dropdown-header d-flex align-items-center gap-1">
+                                @fullName
+                                <partial name="_VerifiedStudentBadge" model="isCurrentUserVerified" />
+                            </h6>
+                        </li>
+                        @if (isAdmin)
+                        {
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Admin Dashboard</a></li>
+                        }
+                        else
+                        {
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Listings" asp-action="Index"><i data-lucide="tag" class="me-2"></i>My Listings</a></li>
+                        }
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i data-lucide="log-out" class="me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-sm">Sign In</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm d-none d-sm-inline-flex">Sign Up</a>
+            }
+        </div>
+    </header>
+
+    <main class="marketplace-main">
+        <div class="container-fluid py-4">
+            @if (TempData[SajhaSikshya.Helpers.AlertHelper.SuccessKey] is string successMessage)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @successMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData[SajhaSikshya.Helpers.AlertHelper.ErrorKey] is string errorMessage)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @errorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="marketplace-footer">
+        <span>&copy; @DateTime.UtcNow.Year SajhaSikshya. All rights reserved.</span>
+    </footer>
+
+    @if (compareCount > 0)
+    {
+        <a asp-controller="Compare" asp-action="Index" class="marketplace-compare-fab">
+            <i data-lucide="git-compare"></i>
+            Compare
+            <span class="marketplace-compare-fab-count">@compareCount</span>
+        </a>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/dark-mode.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

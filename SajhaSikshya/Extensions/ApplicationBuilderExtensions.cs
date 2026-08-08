@@ -25,6 +25,7 @@ public static class ApplicationBuilderExtensions
             var context = services.GetRequiredService<ApplicationDbContext>();
             await context.Database.MigrateAsync();
             await DbInitializer.SeedAsync(services);
+            await CatalogSeeder.SeedAsync(services);
         }
         catch (Exception ex)
         {

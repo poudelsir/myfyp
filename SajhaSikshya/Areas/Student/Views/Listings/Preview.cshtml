@@ -1,0 +1,104 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Marketplace
+@model ListingDto
+@{
+    ViewData["Title"] = Model.Title;
+    var statusClass = Model.Status switch
+    {
+        ListingStatus.Draft => "text-bg-secondary",
+        ListingStatus.PendingApproval => "text-bg-info",
+        ListingStatus.Active => "text-bg-success",
+        ListingStatus.Reserved => "text-bg-warning",
+        ListingStatus.Sold => "text-bg-dark",
+        ListingStatus.Donated => "text-bg-primary",
+        ListingStatus.Archived => "text-bg-secondary",
+        ListingStatus.Rejected => "text-bg-danger",
+        _ => "text-bg-secondary",
+    };
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+        <span class="badge text-bg-secondary mb-2">Preview</span>
+        <h1 class="h4 fw-bold mb-0">@Model.Title</h1>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+        <i data-lucide="arrow-left" class="me-1"></i>Back to My Listings
+    </a>
+</div>
+
+@if (Model.Status == ListingStatus.Rejected && !string.IsNullOrWhiteSpace(Model.ModerationReason))
+{
+    <div class="alert alert-warning">
+        <strong>This listing was rejected.</strong> @Model.ModerationReason
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        @if (Model.Images.Any())
+        {
+            var mainImage = Model.Images.FirstOrDefault(i => i.IsThumbnail) ?? Model.Images[0];
+            <img id="galleryMainImage" src="@mainImage.ImagePath" alt="@Model.Title" class="marketplace-gallery-main" />
+
+            @if (Model.Images.Count > 1)
+            {
+                <div class="marketplace-gallery-strip">
+                    @foreach (var image in Model.Images)
+                    {
+                        <img src="@image.ImagePath" alt="@Model.Title"
+                             class="marketplace-gallery-thumb @(image.ImagePath == mainImage.ImagePath ? "is-active" : "")"
+                             onclick="document.getElementById('galleryMainImage').src = this.src;
+                                      document.querySelectorAll('.marketplace-gallery-thumb').forEach(t => t.classList.remove('is-active'));
+                                      this.classList.add('is-active');" />
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="marketplace-image-placeholder">
+                <i data-lucide="image"></i>
+                <p class="mb-0">No photos yet</p>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge @statusClass">@Model.StatusDisplay</span>
+            <span class="badge marketplace-badge-condition">@Model.ConditionDisplay</span>
+            @if (Model.IsDonation)
+            {
+                <span class="badge marketplace-badge-donation">Donation</span>
+            }
+        </div>
+
+        <p class="marketplace-price mb-3">@Model.FormattedPrice</p>
+
+        <dl class="row small text-secondary mb-3">
+            <dt class="col-4">Category</dt>
+            <dd class="col-8">@Model.CategoryName</dd>
+            <dt class="col-4">Subject</dt>
+            <dd class="col-8">@Model.SubjectName</dd>
+            <dt class="col-4">Academic Level</dt>
+            <dd class="col-8">@Model.AcademicLevelName</dd>
+            @if (!string.IsNullOrEmpty(Model.UniversityName))
+            {
+                <dt class="col-4">University</dt>
+                <dd class="col-8">@Model.UniversityName</dd>
+            }
+        </dl>
+
+        <h2 class="h6 fw-semibold">Description</h2>
+        <p class="text-body" style="white-space: pre-wrap;">@Model.Description</p>
+
+        <div class="marketplace-seller-card">
+            <span class="avatar-initials">@(Model.SellerName.Length > 0 ? Model.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+            <div>
+                <p class="mb-0 fw-semibold">@Model.SellerName</p>
+                <p class="mb-0 text-secondary small">Seller</p>
+            </div>
+        </div>
+    </div>
+</div>

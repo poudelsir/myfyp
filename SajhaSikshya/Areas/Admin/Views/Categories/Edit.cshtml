@@ -1,0 +1,27 @@
+@using SajhaSikshya.ViewModels.Admin.Catalog
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Edit Category</h1>
+    <p class="text-secondary mb-0">Update this category's details.</p>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <input type="hidden" asp-for="Id" />
+            <partial name="_Form" />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

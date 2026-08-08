@@ -1,0 +1,162 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.ViewModels.Verification
+@model VerificationDashboardViewModel
+@{
+    ViewData["Title"] = "My Verification";
+}
+
+<div class="mb-4">
+    <h1 class="h4 fw-bold mb-1">My Verification</h1>
+    <p class="text-secondary mb-0">Verified students can create listings, buy books, and request donations.</p>
+</div>
+
+@if (Model.Current is null)
+{
+    <div class="verification-status-card mb-4 d-flex align-items-center gap-3 flex-wrap">
+        <div class="verification-status-icon is-none">
+            <i data-lucide="shield-question"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h2 class="h6 fw-bold mb-1">You're not verified yet</h2>
+            <p class="text-secondary mb-0">Submit your student ID to get verified.</p>
+        </div>
+        <a asp-action="Submit" class="btn btn-primary flex-shrink-0">Submit Verification</a>
+    </div>
+}
+else
+{
+    var current = Model.Current;
+    var iconClass = current.Status switch
+    {
+        VerificationStatus.Pending => "is-pending",
+        VerificationStatus.Verified => "is-verified",
+        VerificationStatus.Rejected => "is-rejected",
+        _ => "is-none",
+    };
+    var icon = current.Status switch
+    {
+        VerificationStatus.Pending => "clock",
+        VerificationStatus.Verified => "shield-check",
+        VerificationStatus.Rejected => "shield-x",
+        _ => "shield-question",
+    };
+    var step2Class = current.Status == VerificationStatus.Pending
+        ? "is-active"
+        : current.Status == VerificationStatus.Rejected ? "is-rejected" : "is-complete";
+    var step3Class = current.Status switch
+    {
+        VerificationStatus.Verified => "is-complete",
+        VerificationStatus.Rejected => "is-rejected",
+        _ => "",
+    };
+
+    <div class="verification-status-card mb-4">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="verification-status-icon @iconClass">
+                <i data-lucide="@icon"></i>
+            </div>
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h2 class="h6 fw-bold mb-0">@current.UniversityName</h2>
+                    <partial name="_VerificationStatusBadge" model="current.Status" />
+                </div>
+                <p class="text-secondary mb-0 small">
+                    Submitted @current.SubmittedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")
+                    @if (current.ReviewedAtUtc.HasValue)
+                    {
+                        <text> &middot; Reviewed @current.ReviewedAtUtc.Value.ToLocalTime().ToString("MMMM d, yyyy")</text>
+                        if (!string.IsNullOrEmpty(current.ReviewedByName))
+                        {
+                            <text> by @current.ReviewedByName</text>
+                        }
+                    }
+                </p>
+            </div>
+            @if (current.Status == VerificationStatus.Rejected)
+            {
+                <a asp-action="Resubmit" class="btn btn-primary flex-shrink-0">Resubmit</a>
+            }
+        </div>
+
+        @if (current.Status == VerificationStatus.Rejected && !string.IsNullOrWhiteSpace(current.RejectionReason))
+        {
+            <div class="alert alert-danger mt-3 mb-0">
+                <strong>Reason:</strong> @current.RejectionReason
+            </div>
+        }
+
+        <div class="verification-timeline">
+            <div class="verification-timeline-step is-complete">
+                <div class="verification-timeline-marker"><i data-lucide="check" style="width:16px;height:16px;"></i></div>
+                <div class="verification-timeline-label">Submitted</div>
+            </div>
+            <div class="verification-timeline-step @step2Class">
+                <div class="verification-timeline-connector"></div>
+                <div class="verification-timeline-marker">
+                    @if (current.Status != VerificationStatus.Pending)
+                    {
+                        <i data-lucide="check" style="width:16px;height:16px;"></i>
+                    }
+                    else
+                    {
+                        @:2
+                    }
+                </div>
+                <div class="verification-timeline-label">Under Review</div>
+            </div>
+            <div class="verification-timeline-step @step3Class">
+                <div class="verification-timeline-connector"></div>
+                <div class="verification-timeline-marker">
+                    @if (current.Status == VerificationStatus.Verified)
+                    {
+                        <i data-lucide="check" style="width:16px;height:16px;"></i>
+                    }
+                    else if (current.Status == VerificationStatus.Rejected)
+                    {
+                        <i data-lucide="x" style="width:16px;height:16px;"></i>
+                    }
+                    else
+                    {
+                        @:3
+                    }
+                </div>
+                <div class="verification-timeline-label">@(current.Status == VerificationStatus.Rejected ? "Rejected" : "Verified")</div>
+            </div>
+        </div>
+    </div>
+}
+
+<h2 class="h5 fw-bold mb-3">Verification History</h2>
+@if (!Model.History.Items.Any())
+{
+    <p class="text-secondary">No verification attempts yet.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>University</th>
+                    <th>Student Number</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Reviewed</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.History.Items)
+                {
+                    <tr>
+                        <td>@item.UniversityName</td>
+                        <td>@item.StudentNumber</td>
+                        <td><partial name="_VerificationStatusBadge" model="item.Status" /></td>
+                        <td>@item.SubmittedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                        <td>@(item.ReviewedAtUtc.HasValue ? item.ReviewedAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy") : "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_QueryPreservingPagination" model="Model.History" />
+}

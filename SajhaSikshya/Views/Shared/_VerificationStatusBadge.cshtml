@@ -1,0 +1,13 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@model VerificationStatus
+@{
+    var badgeClass = Model switch
+    {
+        VerificationStatus.Pending => "text-bg-info",
+        VerificationStatus.Verified => "text-bg-success",
+        VerificationStatus.Rejected => "text-bg-danger",
+        _ => "text-bg-secondary",
+    };
+}
+<span class="badge @badgeClass">@Model.GetDisplayName()</span>

@@ -1,0 +1,143 @@
+@using SajhaSikshya.Constants
+@using SajhaSikshya.DTOs.Marketplace
+@model IReadOnlyList<ListingComparisonDto>
+@{
+    ViewData["Title"] = "Compare Listings";
+    ViewData["MetaDescription"] = "Compare secondhand books and study materials side by side.";
+}
+@functions {
+    // A row "differs" when the compared listings don't all share the same value for
+    // that attribute — used to highlight exactly the rows worth a second look, rather
+    // than making the reader scan every cell of every row themselves.
+    private static bool RowDiffers<T>(IReadOnlyList<ListingComparisonDto> items, Func<ListingComparisonDto, T> selector)
+    {
+        if (items.Count <= 1)
+        {
+            return false;
+        }
+
+        var first = selector(items[0]);
+        return items.Skip(1).Any(i => !Equals(selector(i), first));
+    }
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Marketplace" asp-action="Index">Marketplace</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Compare</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Compare Listings</h1>
+        <p class="text-secondary mb-0">@Model.Count of @SearchConstants.MaximumCompareCount listings.</p>
+    </div>
+    @if (Model.Any())
+    {
+        <form asp-controller="Compare" asp-action="Clear" method="post">
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i data-lucide="trash-2" class="me-1"></i>Clear All
+            </button>
+        </form>
+    }
+</div>
+
+@if (Model.Count >= SearchConstants.MaximumCompareCount)
+{
+    <div class="alert alert-warning">
+        You've reached the maximum of @SearchConstants.MaximumCompareCount listings. Remove one before adding another.
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="marketplace-empty-state">
+        <i data-lucide="git-compare"></i>
+        <p class="mb-2">You haven't added any listings to compare yet.</p>
+        <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary btn-sm">Browse the Marketplace</a>
+    </div>
+}
+else
+{
+    var rows = new (string Label, Func<ListingComparisonDto, object?> Value, Func<ListingComparisonDto, string> Display)[]
+    {
+        ("Price", i => (i.IsDonation, i.PriceAmount), i => i.FormattedPrice),
+        ("Condition", i => i.ConditionDisplay, i => i.ConditionDisplay),
+        ("University", i => i.UniversityName, i => i.UniversityName ?? "—"),
+        ("Academic Level", i => i.AcademicLevelName, i => i.AcademicLevelName),
+        ("Subject", i => i.SubjectName, i => i.SubjectName),
+        ("Seller", i => i.SellerName, i => i.SellerName),
+        ("Created", i => i.CreatedAtUtc.ToLocalTime().Date, i => i.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")),
+        ("Views", i => i.ViewCount, i => i.ViewCount.ToString()),
+        ("Donation", i => i.IsDonation, i => i.IsDonation ? "Yes" : "No"),
+    };
+
+    <div class="marketplace-compare-table-wrapper">
+        <table class="marketplace-compare-table">
+            <thead>
+                <tr>
+                    <th class="marketplace-compare-row-label"></th>
+                    @foreach (var item in Model)
+                    {
+                        <th>
+                            <img src="@(item.ThumbnailImagePath ?? "")" alt="@item.Title" class="marketplace-compare-thumb mb-2"
+                                 onerror="this.style.display='none'" />
+                            <div class="fw-semibold mb-2"><a asp-controller="Marketplace" asp-action="Details" asp-route-slug="@item.Slug">@item.Title</a></div>
+                            <form asp-controller="Compare" asp-action="Remove" asp-route-listingId="@item.Id" method="post">
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                    <i data-lucide="x" class="me-1"></i>Remove
+                                </button>
+                            </form>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rows)
+                {
+                    var differs = RowDiffers(Model, row.Value);
+                    <tr>
+                        <th class="marketplace-compare-row-label">@row.Label</th>
+                        @foreach (var item in Model)
+                        {
+                            <td class="@(differs ? "is-different" : "")">@row.Display(item)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="marketplace-compare-mobile-cards">
+        @foreach (var item in Model)
+        {
+            <div class="marketplace-compare-mobile-card">
+                <div class="marketplace-compare-mobile-card-header">
+                    @if (!string.IsNullOrEmpty(item.ThumbnailImagePath))
+                    {
+                        <img src="@item.ThumbnailImagePath" alt="@item.Title" />
+                    }
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold"><a asp-controller="Marketplace" asp-action="Details" asp-route-slug="@item.Slug">@item.Title</a></div>
+                        <form asp-controller="Compare" asp-action="Remove" asp-route-listingId="@item.Id" method="post" class="mt-1">
+                            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">Remove</button>
+                        </form>
+                    </div>
+                </div>
+                @foreach (var row in rows)
+                {
+                    var differs = RowDiffers(Model, row.Value);
+                    <div class="marketplace-compare-mobile-row @(differs ? "is-different" : "")">
+                        <span class="marketplace-compare-mobile-row-label">@row.Label</span>
+                        <span>@row.Display(item)</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,15 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@model OrderStatus
+@{
+    var badgeClass = Model switch
+    {
+        OrderStatus.Pending => "text-bg-info",
+        OrderStatus.Confirmed => "text-bg-primary",
+        OrderStatus.ReadyForPickup => "text-bg-warning",
+        OrderStatus.Completed => "text-bg-success",
+        OrderStatus.Cancelled => "text-bg-danger",
+        _ => "text-bg-secondary",
+    };
+}
+<span class="badge @badgeClass">@Model.GetDisplayName()</span>

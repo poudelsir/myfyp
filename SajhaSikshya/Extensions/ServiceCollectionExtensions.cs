@@ -1,12 +1,31 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SajhaSikshya.Authorization;
 using SajhaSikshya.Configurations;
+using SajhaSikshya.Constants;
 using SajhaSikshya.Data;
 using SajhaSikshya.Data.Entities;
 using SajhaSikshya.Repositories;
 using SajhaSikshya.Repositories.Interfaces;
 using SajhaSikshya.Services;
+using SajhaSikshya.Services.AI;
+using SajhaSikshya.Services.Catalog;
+using SajhaSikshya.Services.Chat;
 using SajhaSikshya.Services.Interfaces;
+using SajhaSikshya.Services.Interfaces.AI;
+using SajhaSikshya.Services.Interfaces.Catalog;
+using SajhaSikshya.Services.Interfaces.Chat;
+using SajhaSikshya.Services.Interfaces.Marketplace;
+using SajhaSikshya.Services.Interfaces.Notifications;
+using SajhaSikshya.Services.Interfaces.Orders;
+using SajhaSikshya.Services.Interfaces.Reviews;
+using SajhaSikshya.Services.Interfaces.Verification;
+using SajhaSikshya.Services.Marketplace;
+using SajhaSikshya.Services.Notifications;
+using SajhaSikshya.Services.Orders;
+using SajhaSikshya.Services.Reviews;
+using SajhaSikshya.Services.Verification;
 
 namespace SajhaSikshya.Extensions;
 
@@ -45,8 +64,8 @@ public static class ServiceCollectionExtensions
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = false;
 
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(SecurityConstants.LockoutMinutes);
+                options.Lockout.MaxFailedAccessAttempts = SecurityConstants.MaxLoginAttempts;
                 options.Lockout.AllowedForNewUsers = true;
 
                 options.User.RequireUniqueEmail = true;
@@ -83,6 +102,60 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IImageStorageService, ImageStorageService>();
+
+        services.AddScoped<IUniversityService, UniversityService>();
+        services.AddScoped<IAcademicLevelService, AcademicLevelService>();
+        services.AddScoped<ISubjectService, SubjectService>();
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IListingService, ListingService>();
+        services.AddScoped<IListingQueryService, ListingQueryService>();
+        services.AddScoped<IListingSearchService, ListingSearchService>();
+        services.AddScoped<ISavedListingService, SavedListingService>();
+        services.AddScoped<ICompareService, CompareService>();
+        services.AddScoped<IVerificationService, VerificationService>();
+        services.AddScoped<IVerificationQueryService, VerificationQueryService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IOrderQueryService, OrderQueryService>();
+        services.AddScoped<IChatService, ChatService>();
+        services.AddScoped<IChatQueryService, ChatQueryService>();
+        services.AddScoped<IChatNotificationDispatcher, SignalRChatNotificationDispatcher>();
+
+        // Singleton: presence must be shared across every Hub instance (Hubs are
+        // transient, one per invocation) and outlive any single connection.
+        services.AddSingleton<IChatPresenceTracker, InMemoryChatPresenceTracker>();
+
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationQueryService, NotificationQueryService>();
+        services.AddScoped<INotificationDispatcher, SignalRNotificationDispatcher>();
+
+        services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IReviewQueryService, ReviewQueryService>();
+
+        // Typed HttpClient — one pooled, reused HttpMessageHandler per IHttpClientFactory
+        // conventions, rather than a `new HttpClient()` inside GeminiAIService itself.
+        services.AddHttpClient<IAIService, GeminiAIService>();
+        services.AddScoped<IListingAIService, ListingAIService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the <see cref="AuthorizationPolicies.VerifiedStudent"/> policy and its
+    /// handler (Phase 5). Registered and available for use, but not applied to any
+    /// endpoint yet — a future phase adds <c>[Authorize(Policy = AuthorizationPolicies.VerifiedStudent)]</c>
+    /// to Create Listing, Purchase, Donate, and Chat once those exist.
+    /// </summary>
+    public static IServiceCollection AddApplicationAuthorization(this IServiceCollection services)
+    {
+        services.AddScoped<IAuthorizationHandler, VerifiedStudentHandler>();
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AuthorizationPolicies.VerifiedStudent, policy =>
+                policy.Requirements.Add(new VerifiedStudentRequirement()));
+        });
+
         return services;
     }
 
@@ -93,6 +166,7 @@ public static class ServiceCollectionExtensions
     {
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
         services.Configure<ApplicationSettings>(configuration.GetSection(ApplicationSettings.SectionName));
+        services.Configure<GeminiSettings>(configuration.GetSection(GeminiSettings.SectionName));
         return services;
     }
 }

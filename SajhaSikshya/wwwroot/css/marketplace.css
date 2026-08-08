@@ -1,0 +1,714 @@
+/* ==========================================================================
+   SajhaSikshya — Marketplace
+   Shared styling for Listing screens: price display, condition/donation
+   badges, the seller-info card, the photo gallery/dropzone/thumbnail picker
+   (Milestone 3.2), the public browse/details layout, listing cards, and
+   facet navigation (Milestone 3.3).
+   ========================================================================== */
+
+.marketplace-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--sajha-primary);
+}
+
+.marketplace-badge-condition {
+  background-color: var(--bs-info-bg-subtle);
+  color: var(--bs-info-text-emphasis);
+}
+
+.marketplace-badge-donation {
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
+}
+
+.marketplace-image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-secondary-color);
+}
+
+.marketplace-image-placeholder svg {
+  width: 40px;
+  height: 40px;
+}
+
+.marketplace-seller-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Preview / detail gallery                                                */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-gallery-main {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--sajha-radius-lg);
+  border: 1px solid var(--bs-border-color);
+}
+
+.marketplace-gallery-strip {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+}
+
+.marketplace-gallery-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--sajha-radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity var(--sajha-transition), border-color var(--sajha-transition);
+}
+
+.marketplace-gallery-thumb:hover {
+  opacity: 1;
+}
+
+.marketplace-gallery-thumb.is-active {
+  opacity: 1;
+  border-color: var(--sajha-primary);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Edit page: upload dropzone + manageable image grid                      */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 2rem 1rem;
+  border: 2px dashed var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  background-color: var(--bs-tertiary-bg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--sajha-transition), background-color var(--sajha-transition);
+}
+
+.marketplace-dropzone.is-dragover {
+  border-color: var(--sajha-primary);
+  background-color: rgba(79, 70, 229, 0.06);
+}
+
+.marketplace-dropzone svg {
+  width: 32px;
+  height: 32px;
+  color: var(--bs-secondary-color);
+}
+
+.marketplace-image-item {
+  cursor: grab;
+}
+
+.marketplace-image-item.is-dragging {
+  opacity: 0.4;
+}
+
+.marketplace-image-card {
+  position: relative;
+  border-radius: var(--sajha-radius);
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+  aspect-ratio: 1;
+}
+
+.marketplace-image-card.is-thumbnail {
+  border-color: var(--sajha-primary);
+  border-width: 2px;
+}
+
+.marketplace-image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.marketplace-thumbnail-badge {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  background-color: var(--sajha-primary);
+  color: #fff;
+}
+
+.marketplace-image-actions {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  opacity: 0;
+  transition: opacity var(--sajha-transition);
+}
+
+.marketplace-image-card:hover .marketplace-image-actions,
+.marketplace-image-card:focus-within .marketplace-image-actions {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Public marketplace navbar/footer (separate from the dashboard shell —   */
+/* guests browsing the marketplace never see the authenticated sidebar)    */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-navbar {
+  height: var(--sajha-navbar-height);
+  display: flex;
+  align-items: center;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+}
+
+.marketplace-main {
+  min-height: calc(100vh - var(--sajha-navbar-height) - 3.5rem);
+}
+
+.marketplace-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.25rem;
+  border-top: 1px solid var(--bs-border-color);
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Listing card grid                                                       */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.marketplace-card {
+  display: block;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: var(--bs-body-bg);
+  transition: transform var(--sajha-transition), box-shadow var(--sajha-transition), border-color var(--sajha-transition);
+}
+
+.marketplace-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--sajha-primary);
+  color: inherit;
+}
+
+.marketplace-card-image {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(110deg, var(--bs-tertiary-bg) 8%, var(--bs-secondary-bg, #eceef1) 18%, var(--bs-tertiary-bg) 33%);
+  background-size: 200% 100%;
+  animation: marketplace-shimmer 1.5s ease-in-out infinite;
+}
+
+.marketplace-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 220ms ease;
+  position: relative;
+}
+
+.marketplace-card-image img.is-loaded {
+  opacity: 1;
+}
+
+.marketplace-card-image:has(img.is-loaded) {
+  animation: none;
+  background: none;
+}
+
+@keyframes marketplace-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.marketplace-card-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--bs-secondary-color);
+}
+
+.marketplace-card-image-placeholder svg {
+  width: 32px;
+  height: 32px;
+}
+
+.marketplace-ribbon {
+  position: absolute;
+  top: 0.75rem;
+  left: -2rem;
+  width: 8rem;
+  padding: 0.25rem 0;
+  background: var(--bs-success);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transform: rotate(-45deg);
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.marketplace-card-body {
+  padding: 0.9rem;
+}
+
+.marketplace-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.marketplace-card-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sajha-primary);
+  margin: 0 0 0.4rem;
+}
+
+.marketplace-card-meta {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.marketplace-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--bs-border-color);
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+}
+
+.marketplace-card-footer svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Facet sidebar (Categories / Universities)                               */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-facet-card {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.marketplace-facet-list li + li {
+  margin-top: 0.15rem;
+}
+
+.marketplace-facet-list a {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--sajha-radius);
+  color: var(--bs-body-color);
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+
+.marketplace-facet-list a:hover {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.marketplace-facet-list a.is-active {
+  background-color: rgba(79, 70, 229, 0.12);
+  color: var(--sajha-primary);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Empty state                                                             */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--bs-secondary-color);
+  text-align: center;
+}
+
+.marketplace-empty-state svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Discovery: search bar, filter sidebar, chips, sort (Milestone 4)        */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-search-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+}
+
+.marketplace-search-hero svg {
+  width: 20px;
+  height: 20px;
+  color: var(--bs-secondary-color);
+  flex-shrink: 0;
+}
+
+.marketplace-search-hero input {
+  border: none;
+  box-shadow: none;
+  padding-left: 0;
+  background: transparent;
+}
+
+.marketplace-search-hero input:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.marketplace-filter-group {
+  margin-bottom: 1rem;
+}
+
+.marketplace-filter-group:last-of-type {
+  margin-bottom: 0.5rem;
+}
+
+.marketplace-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.marketplace-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background-color: rgba(79, 70, 229, 0.1);
+  color: var(--sajha-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--sajha-transition);
+}
+
+.marketplace-chip:hover {
+  background-color: rgba(79, 70, 229, 0.18);
+  color: var(--sajha-primary);
+}
+
+.marketplace-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.marketplace-chip-clear {
+  background-color: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text-emphasis);
+}
+
+.marketplace-chip-clear:hover {
+  background-color: var(--bs-danger-border-subtle);
+  color: var(--bs-danger-text-emphasis);
+}
+
+.marketplace-sort-select {
+  width: auto;
+  min-width: 170px;
+}
+
+/* Brief, honest feedback on submit: this app navigates full-page (no AJAX), so a real
+   async skeleton loader doesn't apply — this just dims the current grid for the instant
+   between clicking Search/Apply and the browser's own page-load replacing it. */
+.marketplace-grid.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+@media (max-width: 991.98px) {
+  #marketplaceFiltersOffcanvas .marketplace-facet-card {
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Saved listings: card heart button + details-page Save button            */
+/* (Milestone 4.2)                                                         */
+/* ---------------------------------------------------------------------- */
+
+.marketplace-card-wrapper {
+  position: relative;
+}
+
+.marketplace-card-actions {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.marketplace-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--bs-secondary-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  transition: color var(--sajha-transition), transform 120ms ease;
+}
+
+.marketplace-save-btn:hover {
+  transform: scale(1.08);
+  color: var(--bs-danger);
+}
+
+.marketplace-save-btn svg {
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+}
+
+.marketplace-save-btn.is-saved {
+  color: var(--bs-danger);
+}
+
+.marketplace-save-btn.is-saved svg {
+  fill: var(--bs-danger);
+}
+
+.marketplace-save-btn-detail.is-saved {
+  color: var(--bs-danger);
+  border-color: var(--bs-danger);
+}
+
+.marketplace-save-btn-detail.is-saved svg {
+  fill: var(--bs-danger);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Compare: card button + floating badge + comparison table (Milestone 4.3)*/
+/* ---------------------------------------------------------------------- */
+
+.marketplace-compare-btn:hover {
+  color: var(--sajha-primary);
+}
+
+.marketplace-compare-btn.is-saved {
+  color: var(--sajha-primary);
+}
+
+.marketplace-compare-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1020;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  background-color: var(--sajha-primary);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform 120ms ease;
+}
+
+.marketplace-compare-fab:hover {
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.marketplace-compare-fab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background-color: #fff;
+  color: var(--sajha-primary);
+  font-size: 0.75rem;
+}
+
+.marketplace-compare-table-wrapper {
+  overflow-x: auto;
+}
+
+.marketplace-compare-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.marketplace-compare-table th,
+.marketplace-compare-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color);
+  vertical-align: top;
+  min-width: 180px;
+}
+
+.marketplace-compare-table th.marketplace-compare-row-label {
+  min-width: 140px;
+  width: 140px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-tertiary-bg);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.marketplace-compare-table td.is-different {
+  background-color: rgba(79, 70, 229, 0.06);
+  font-weight: 600;
+}
+
+.marketplace-compare-thumb {
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--sajha-radius);
+  border: 1px solid var(--bs-border-color);
+}
+
+/* The <table> (attributes as rows, listings as columns — the natural comparison
+   shape, since "highlight differences" reads naturally per attribute-row) stays a
+   real table with horizontal scroll down to tablet width. Below that, a genuinely
+   separate stacked-card markup (one card per compared listing, attributes listed
+   top-to-bottom) replaces it — CSS-transforming a rows-are-attributes table into a
+   per-listing mobile card doesn't work cleanly, so the view renders both and this
+   just toggles which one is visible. */
+.marketplace-compare-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .marketplace-compare-table-wrapper {
+    display: none;
+  }
+
+  .marketplace-compare-mobile-cards {
+    display: block;
+  }
+}
+
+.marketplace-compare-mobile-card {
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.marketplace-compare-mobile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  background-color: var(--bs-tertiary-bg);
+}
+
+.marketplace-compare-mobile-card-header img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: var(--sajha-radius);
+  flex-shrink: 0;
+}
+
+.marketplace-compare-mobile-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--bs-border-color);
+  font-size: 0.9rem;
+}
+
+.marketplace-compare-mobile-row-label {
+  color: var(--bs-secondary-color);
+  flex-shrink: 0;
+}
+
+.marketplace-compare-mobile-row.is-different {
+  background-color: rgba(79, 70, 229, 0.06);
+  font-weight: 600;
+}

@@ -1,0 +1,49 @@
+@using SajhaSikshya.ViewModels.Chat
+@model MessageSearchViewModel
+@{
+    ViewData["Title"] = "Search Messages";
+    var hasSearched = !string.IsNullOrWhiteSpace(Model.SearchTerm);
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Search Messages</h1>
+    <p class="text-secondary mb-0">Find a message by its text, or by the listing, buyer, or seller it's tied to.</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" asp-action="Search" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 360px;"
+                   placeholder="Search your messages…" aria-label="Search" autofocus />
+            <button type="submit" class="btn btn-primary">
+                <i data-lucide="search" class="me-1"></i>Search
+            </button>
+        </form>
+
+        @if (!hasSearched)
+        {
+            <p class="text-secondary text-center py-4 mb-0">Enter a search term to find messages across your conversations.</p>
+        }
+        else if (!Model.Results.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">No messages match "@Model.SearchTerm".</p>
+        }
+        else
+        {
+            <div class="list-group">
+                @foreach (var result in Model.Results.Items)
+                {
+                    <a asp-action="Conversation" asp-route-id="@result.ConversationId" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <p class="mb-0 fw-semibold">@result.OtherPartyName &middot; <span class="text-secondary fw-normal">@result.ListingTitle</span></p>
+                            <span class="text-secondary small flex-shrink-0">@result.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</span>
+                        </div>
+                        <p class="mb-0 text-secondary small">@result.SenderName: @result.Snippet</p>
+                    </a>
+                }
+            </div>
+
+            <partial name="_QueryPreservingPagination" model="Model.Results" />
+        }
+    </div>
+</div>

@@ -1,0 +1,15 @@
+@using SajhaSikshya.DTOs
+@using SajhaSikshya.DTOs.Marketplace
+@model PagedResult<ListingSummaryDto>
+@{
+    ViewData["Title"] = "My Saved Listings";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">My Saved Listings</h1>
+    <p class="text-secondary mb-0">Items you've saved for later. @Model.TotalCount saved.</p>
+</div>
+
+<partial name="_ListingCardGrid" model="Model.Items"
+         view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = "You have not saved any listings yet. Browse the marketplace and tap the heart on anything you want to come back to." }' />
+<partial name="_QueryPreservingPagination" model="Model" />

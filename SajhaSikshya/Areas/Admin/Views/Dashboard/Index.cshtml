@@ -1,3 +1,5 @@
+@using SajhaSikshya.ViewModels.Admin.Shared
+@model AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -5,53 +7,187 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h4 fw-bold mb-1">Admin Dashboard</h1>
-        <p class="text-secondary mb-0">Platform overview at a glance.</p>
+        <p class="text-secondary mb-0">Marketplace listing overview at a glance.</p>
     </div>
+    <a asp-controller="Listings" asp-action="Index" class="btn btn-primary">
+        <i data-lucide="shield-check" class="me-1"></i>Go to Moderation Queue
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+            <div>
+                <p class="stat-card-label">Pending Review</p>
+                <p class="stat-card-value">@Model.ListingStats.PendingCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
+            <div>
+                <p class="stat-card-label">Approved (Active)</p>
+                <p class="stat-card-value">@Model.ListingStats.ApprovedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="x-circle"></i></div>
+            <div>
+                <p class="stat-card-label">Rejected</p>
+                <p class="stat-card-value">@Model.ListingStats.RejectedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="archive"></i></div>
+            <div>
+                <p class="stat-card-label">Archived</p>
+                <p class="stat-card-value">@Model.ListingStats.ArchivedCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
+            <div>
+                <p class="stat-card-label">Total Listings</p>
+                <p class="stat-card-value">@Model.ListingStats.TotalListings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
+            <div>
+                <p class="stat-card-label">Donation Listings</p>
+                <p class="stat-card-value">@Model.ListingStats.DonationCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.ListingStats.PendingCount > 0)
+{
+    <div class="card mb-4">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="bell"></i></div>
+                <div>
+                    <h2 class="h6 fw-semibold mb-1">@Model.ListingStats.PendingCount listing@(Model.ListingStats.PendingCount == 1 ? "" : "s") waiting for review</h2>
+                    <p class="text-secondary mb-0">Sellers can't reach the marketplace until you approve or reject their submissions.</p>
+                </div>
+            </div>
+            <a asp-controller="Listings" asp-action="Index" asp-route-status="PendingApproval" class="btn btn-outline-primary flex-shrink-0">
+                Review Now
+            </a>
+        </div>
+    </div>
+}
+
+@if (Model.ReportedReviewCount > 0)
+{
+    <div class="card mb-4">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="flag"></i></div>
+                <div>
+                    <h2 class="h6 fw-semibold mb-1">@Model.ReportedReviewCount review@(Model.ReportedReviewCount == 1 ? "" : "s") reported</h2>
+                    <p class="text-secondary mb-0">Students have flagged these reviews for moderator attention.</p>
+                </div>
+            </div>
+            <a asp-controller="Reviews" asp-action="Index" class="btn btn-outline-danger flex-shrink-0">
+                Review Now
+            </a>
+        </div>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 fw-bold mb-0">Student Verification</h2>
+    <a asp-controller="Verifications" asp-action="Index" class="btn btn-outline-primary btn-sm">
+        <i data-lucide="shield-check" class="me-1"></i>Go to Verification Queue
+    </a>
 </div>
 
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="users"></i></div>
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
             <div>
-                <p class="stat-card-label">Total Users</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Pending</p>
+                <p class="stat-card-value">@Model.VerificationStats.PendingCount</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="book-open"></i></div>
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="shield-check"></i></div>
             <div>
-                <p class="stat-card-label">Courses</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Approved</p>
+                <p class="stat-card-value">@Model.VerificationStats.ApprovedCount</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="graduation-cap"></i></div>
+            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="shield-x"></i></div>
             <div>
-                <p class="stat-card-label">Enrollments</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Rejected</p>
+                <p class="stat-card-value">@Model.VerificationStats.RejectedCount</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="activity"></i></div>
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="percent"></i></div>
             <div>
-                <p class="stat-card-label">Active Today</p>
-                <p class="stat-card-value">&mdash;</p>
+                <p class="stat-card-label">Approval Rate</p>
+                <p class="stat-card-value">@Model.VerificationStats.ApprovalRatePercent.ToString("0.#")%</p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i data-lucide="construction" class="mb-3" style="width:40px;height:40px;color:var(--bs-secondary-color)"></i>
-        <h2 class="h6 fw-semibold">Platform modules coming soon</h2>
-        <p class="text-secondary mb-0">User and course management will appear here in a later phase.</p>
+@if (Model.VerificationStats.AverageReviewTimeHours.HasValue || Model.VerificationStats.RecentReviews.Any())
+{
+    <div class="row g-3">
+        @if (Model.VerificationStats.AverageReviewTimeHours.HasValue)
+        {
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-1">Average Review Time</h3>
+                        <p class="h4 fw-bold mb-0">@Model.VerificationStats.AverageReviewTimeHours.Value.ToString("0.#")h</p>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (Model.VerificationStats.RecentReviews.Any())
+        {
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-3">Recent Reviews</h3>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var review in Model.VerificationStats.RecentReviews)
+                            {
+                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                    <span>
+                                        <a asp-controller="Verifications" asp-action="Details" asp-route-id="@review.Id">@review.StudentName</a>
+                                        <span class="text-secondary small">— @review.UniversityName</span>
+                                    </span>
+                                    <partial name="_VerificationStatusBadge" model="review.Status" />
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
-</div>
+}

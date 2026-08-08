@@ -1,0 +1,76 @@
+@using SajhaSikshya.DTOs.Catalog
+@using SajhaSikshya.ViewModels.Admin.Shared
+@model AdminListViewModel<AcademicLevelDto>
+@{
+    ViewData["Title"] = "Academic Levels";
+    ViewData["SearchTerm"] = Model.SearchTerm;
+    ViewData["SearchPlaceholder"] = "Search by name or code…";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Academic Levels</h1>
+        <p class="text-secondary mb-0">Levels of study (e.g. +2, Bachelor's, Master's) that subjects belong to.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i data-lucide="plus" class="me-1"></i>Add Level
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <partial name="_AdminSearchBox" />
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">No academic levels found.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Subjects</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var level in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>@level.DisplayOrder</td>
+                                <td>@level.Name</td>
+                                <td><code>@level.Code</code></td>
+                                <td>@level.SubjectCount</td>
+                                <td>
+                                    @if (level.IsActive)
+                                    {
+                                        <span class="badge text-bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Edit" asp-route-id="@level.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <form asp-action="Delete" asp-route-id="@level.Id" method="post" class="d-inline js-delete-form"
+                                          data-confirm="Delete '@level.Name'? This cannot be undone.">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_Pagination" model="Model.Page" />
+        }
+    </div>
+</div>

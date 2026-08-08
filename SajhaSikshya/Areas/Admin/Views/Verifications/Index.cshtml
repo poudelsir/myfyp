@@ -1,0 +1,76 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Admin.Verification
+@model AdminVerificationListViewModel
+@{
+    ViewData["Title"] = "Verification Queue";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Student Verification Queue</h1>
+    <p class="text-secondary mb-0">Review submitted student IDs and approve or reject verification requests.</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 280px;"
+                   placeholder="Search by name or student number…" aria-label="Search" />
+            <select name="status" class="form-select" style="max-width: 200px;" asp-items="EnumExtensions.GetSelectList<VerificationStatus>(Model.Status)">
+                <option value="">All Statuses</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i data-lucide="search" class="me-1"></i>Filter
+            </button>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || Model.Status.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">No verification requests match this filter.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>University</th>
+                            <th>Student Number</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>@item.StudentName</td>
+                                <td>@item.UniversityName</td>
+                                <td>@item.StudentNumber</td>
+                                <td><partial name="_VerificationStatusBadge" model="item.Status" /></td>
+                                <td>@item.SubmittedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Review</a>
+                                    @if (item.Status == VerificationStatus.Pending)
+                                    {
+                                        <form asp-action="Approve" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

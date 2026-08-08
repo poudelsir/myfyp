@@ -1,0 +1,166 @@
+/* ==========================================================================
+   SajhaSikshya — Student Verification (Phase 5)
+   Status card, progress timeline, and shared badges for the Student
+   verification dashboard and the Admin review workflow.
+   ========================================================================== */
+
+.verification-status-card {
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--sajha-radius-lg);
+  padding: 1.5rem;
+  background: var(--bs-body-bg);
+}
+
+.verification-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.verification-status-icon.is-pending {
+  background-color: var(--bs-info-bg-subtle);
+  color: var(--bs-info-text-emphasis);
+}
+
+.verification-status-icon.is-verified {
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
+}
+
+.verification-status-icon.is-rejected {
+  background-color: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text-emphasis);
+}
+
+.verification-status-icon.is-none {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-secondary-color);
+}
+
+.verification-status-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Progress timeline (Submitted -> Under Review -> Verified/Rejected)      */
+/* ---------------------------------------------------------------------- */
+
+.verification-timeline {
+  display: flex;
+  align-items: flex-start;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.verification-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.verification-timeline-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+  color: var(--bs-secondary-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+  z-index: 1;
+}
+
+.verification-timeline-step.is-complete .verification-timeline-marker {
+  border-color: var(--bs-success);
+  background: var(--bs-success);
+  color: #fff;
+}
+
+.verification-timeline-step.is-active .verification-timeline-marker {
+  border-color: var(--sajha-primary);
+  color: var(--sajha-primary);
+}
+
+.verification-timeline-step.is-rejected .verification-timeline-marker {
+  border-color: var(--bs-danger);
+  background: var(--bs-danger);
+  color: #fff;
+}
+
+.verification-timeline-connector {
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--bs-border-color);
+  z-index: 0;
+}
+
+.verification-timeline-step.is-complete .verification-timeline-connector,
+.verification-timeline-step.is-rejected .verification-timeline-connector {
+  background: var(--bs-success);
+}
+
+.verification-timeline-label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+}
+
+.verification-timeline-step.is-complete .verification-timeline-label,
+.verification-timeline-step.is-active .verification-timeline-label {
+  color: var(--bs-body-color);
+}
+
+.verification-timeline-step.is-rejected .verification-timeline-label {
+  color: var(--bs-danger);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Student ID upload preview                                               */
+/* ---------------------------------------------------------------------- */
+
+.verification-upload-preview {
+  display: none;
+  max-width: 240px;
+  margin-top: 0.75rem;
+  border-radius: var(--sajha-radius);
+  border: 1px solid var(--bs-border-color);
+}
+
+.verification-upload-preview.is-visible {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------- */
+/* "Verified Student" badge (small pill, used across marketplace surfaces) */
+/* ---------------------------------------------------------------------- */
+
+.verified-student-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.verified-student-badge svg {
+  width: 12px;
+  height: 12px;
+}
