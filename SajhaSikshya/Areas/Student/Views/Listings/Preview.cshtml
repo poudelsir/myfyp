@@ -94,7 +94,7 @@
         <p class="text-body" style="white-space: pre-wrap;">@Model.Description</p>
 
         <div class="marketplace-seller-card">
-            <span class="avatar-initials">@(Model.SellerName.Length > 0 ? Model.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+            <partial name="_Avatar" model="(Model.SellerProfilePicturePath, Model.SellerName)" />
             <div>
                 <p class="mb-0 fw-semibold">@Model.SellerName</p>
                 <p class="mb-0 text-secondary small">Seller</p>

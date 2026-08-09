@@ -1,5 +1,7 @@
+@using Microsoft.AspNetCore.Identity
 @using SajhaSikshya.Constants
 @using SajhaSikshya.Data.Constants
+@using SajhaSikshya.Data.Entities
 @using SajhaSikshya.Data.Enums
 @using SajhaSikshya.DTOs.Notifications
 @using SajhaSikshya.Extensions
@@ -7,19 +9,20 @@
 @using SajhaSikshya.Services.Interfaces.Verification
 @inject IVerificationQueryService VerificationQueryService
 @inject INotificationQueryService NotificationQueryService
+@inject UserManager<ApplicationUser> UserManager
 @{
-    var initials = "?";
     var fullName = "Guest";
+    string? profilePicturePath = null;
     var isVerified = false;
     var unreadNotificationCount = 0;
     var recentNotifications = new List<NotificationDto>();
     if (User.Identity?.IsAuthenticated == true)
     {
         fullName = User.GetFullName() ?? User.Identity.Name ?? "User";
-        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        initials = parts.Length >= 2
-            ? $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant()
-            : fullName.Length > 0 ? fullName[0].ToString().ToUpperInvariant() : "?";
+        // Read fresh from the database rather than claims — ProfilePicturePath (and, for
+        // the same reason, the live name too) is never embedded in the auth cookie, so
+        // this always reflects the latest saved photo without needing a re-login.
+        profilePicturePath = (await UserManager.GetUserAsync(User))?.ProfilePicturePath;
 
         if (User.IsInRole(Roles.Student))
         {
@@ -105,7 +108,7 @@
         {
             <div class="dropdown">
                 <button type="button" class="btn-profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="avatar-initials">@initials</span>
+                    <partial name="_Avatar" model="(profilePicturePath, fullName)" />
                     <span class="d-none d-lg-inline">@fullName</span>
                     <i data-lucide="chevron-down"></i>
                 </button>
@@ -119,6 +122,10 @@
                     @if (User.IsInRole(Roles.Student))
                     {
                         <li><a class="dropdown-item" asp-area="Student" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
+                    }
+                    else if (User.IsInRole(Roles.Admin))
+                    {
+                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                     }
                     else
                     {

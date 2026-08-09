@@ -4,48 +4,39 @@ using Microsoft.AspNetCore.Mvc;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Data.Entities;
-using SajhaSikshya.Data.Enums;
-using SajhaSikshya.Extensions;
 using SajhaSikshya.Helpers;
 using SajhaSikshya.Services.Interfaces;
-using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.ViewModels.Account;
+using SajhaSikshya.ViewModels.Admin.Profile;
 using SajhaSikshya.ViewModels.Student.Profile;
 
-namespace SajhaSikshya.Areas.Student.Controllers;
+namespace SajhaSikshya.Areas.Admin.Controllers;
 
 /// <summary>
-/// "My Profile" — the private, owner-only profile page. Personal Information and
-/// Security are genuinely owned here (backed by <see cref="ApplicationUser"/>); Seller
-/// Information surfaces the verification module's approved data without duplicating
-/// it (see <see cref="IVerificationQueryService.GetCurrentStatusAsync"/>) — the one
-/// exception is Selling Categories, which is safe to edit in place through
-/// <see cref="IVerificationService.UpdateSellingCategoriesAsync"/> since it's declared
-/// moderation/insights-only metadata, not an identity claim. Changing anything else
-/// about a seller application (Seller Type, Institution, documents) goes through the
-/// existing Resubmit flow instead.
+/// "My Profile" for the signed-in Administrator — the same private, owner-only shape
+/// as <see cref="Areas.Student.Controllers.ProfileController"/> (Personal Information +
+/// Security, reusing the exact same <see cref="PersonalInfoViewModel"/>/
+/// <see cref="ChangePasswordViewModel"/> and the same <see cref="IImageStorageService"/>
+/// photo pipeline), minus the seller/verification section that doesn't apply to an
+/// Admin account. Two separate controllers rather than a shared base class, matching
+/// how every other Admin/Student pair in this codebase (Listings, Dashboard, ...) is
+/// already organized as parallel, not inherited, area controllers.
 /// </summary>
-[Area("Student")]
-[Authorize(Roles = Roles.Student)]
+[Area("Admin")]
+[Authorize(Roles = Roles.Admin)]
 public class ProfileController : Controller
 {
-    private readonly IVerificationQueryService _verificationQueryService;
-    private readonly IVerificationService _verificationService;
     private readonly IAuthService _authService;
     private readonly IImageStorageService _imageStorageService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
 
     public ProfileController(
-        IVerificationQueryService verificationQueryService,
-        IVerificationService verificationService,
         IAuthService authService,
         IImageStorageService imageStorageService,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager)
     {
-        _verificationQueryService = verificationQueryService;
-        _verificationService = verificationService;
         _authService = authService;
         _imageStorageService = imageStorageService;
         _userManager = userManager;
@@ -61,7 +52,7 @@ public class ProfileController : Controller
             return NotFound();
         }
 
-        return View(await BuildViewModelAsync(user));
+        return View(BuildViewModel(user));
     }
 
     [HttpPost]
@@ -76,7 +67,7 @@ public class ProfileController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View(nameof(Index), await BuildViewModelAsync(user, personalInfoOverride: model));
+            return View(nameof(Index), BuildViewModel(user, personalInfoOverride: model));
         }
 
         if (model.ProfilePhoto is not null)
@@ -90,7 +81,7 @@ public class ProfileController : Controller
             if (!saveResult.Succeeded)
             {
                 ModelState.AddModelError(nameof(PersonalInfoViewModel.ProfilePhoto), saveResult.Errors.FirstOrDefault() ?? "The photo could not be uploaded.");
-                return View(nameof(Index), await BuildViewModelAsync(user, personalInfoOverride: model));
+                return View(nameof(Index), BuildViewModel(user, personalInfoOverride: model));
             }
 
             var oldPhotoPath = user.ProfilePicturePath;
@@ -111,10 +102,8 @@ public class ProfileController : Controller
         var updateResult = await _userManager.UpdateAsync(user);
         if (updateResult.Succeeded)
         {
-            // FirstName/LastName are embedded in the auth cookie's claims at sign-in
-            // (ApplicationUserClaimsPrincipalFactory) and otherwise only refresh on next
-            // login — without this, a name change wouldn't show up in the navbar/sidebar
-            // until the user signs out and back in.
+            // Same claims-staleness fix as the Student profile page — see that
+            // controller's identical comment.
             await _signInManager.RefreshSignInAsync(user);
         }
 
@@ -136,7 +125,7 @@ public class ProfileController : Controller
 
         if (!ModelState.IsValid)
         {
-            var vm = await BuildViewModelAsync(user);
+            var vm = BuildViewModel(user);
             vm.ChangePassword = model;
             return View(nameof(Index), vm);
         }
@@ -149,7 +138,7 @@ public class ProfileController : Controller
                 ModelState.AddModelError(string.Empty, error.Description);
             }
 
-            var vm = await BuildViewModelAsync(user);
+            var vm = BuildViewModel(user);
             vm.ChangePassword = model;
             return View(nameof(Index), vm);
         }
@@ -158,24 +147,9 @@ public class ProfileController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateSellingCategories(List<SellingCategory> categories)
+    private static AdminProfileIndexViewModel BuildViewModel(ApplicationUser user, PersonalInfoViewModel? personalInfoOverride = null)
     {
-        var userId = User.GetUserId()!;
-        var result = await _verificationService.UpdateSellingCategoriesAsync(userId, categories);
-
-        TempData[result.Succeeded ? AlertHelper.SuccessKey : AlertHelper.ErrorKey] =
-            result.Succeeded ? "Selling categories updated." : result.Errors.FirstOrDefault();
-
-        return RedirectToAction(nameof(Index));
-    }
-
-    private async Task<ProfileIndexViewModel> BuildViewModelAsync(ApplicationUser user, PersonalInfoViewModel? personalInfoOverride = null)
-    {
-        var current = await _verificationQueryService.GetCurrentStatusAsync(user.Id);
-
-        return new ProfileIndexViewModel
+        return new AdminProfileIndexViewModel
         {
             PersonalInfo = personalInfoOverride ?? new PersonalInfoViewModel
             {
@@ -188,10 +162,11 @@ public class ProfileController : Controller
                 Email = user.Email ?? string.Empty,
                 ProfilePicturePath = user.ProfilePicturePath,
             },
-            Verification = current,
             EmailConfirmed = user.EmailConfirmed,
             PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+            IsActive = user.IsActive,
             MemberSinceUtc = user.CreatedAtUtc,
+            LastLoginAtUtc = user.LastLoginAtUtc,
         };
     }
 }

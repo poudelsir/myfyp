@@ -22,9 +22,13 @@ public class OrderDto
 
     public string BuyerName { get; set; } = string.Empty;
 
+    public string? BuyerProfilePicturePath { get; set; }
+
     public string SellerId { get; set; } = string.Empty;
 
     public string SellerName { get; set; } = string.Empty;
+
+    public string? SellerProfilePicturePath { get; set; }
 
     public OrderStatus Status { get; set; }
 

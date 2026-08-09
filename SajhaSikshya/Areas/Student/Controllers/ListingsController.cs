@@ -82,9 +82,12 @@ public class ListingsController : Controller
         return View(model);
     }
 
+    // See UploadImages below for why the Kestrel request-size limit is disabled here too —
+    // Create can now carry the same up-to-MaximumImages x MaximumImageSizeMB payload inline.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ListingFormViewModel model)
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> Create(ListingFormViewModel model, List<IFormFile>? photos)
     {
         if (!ModelState.IsValid)
         {
@@ -103,6 +106,17 @@ public class ListingsController : Controller
 
             await PopulateDropdownsAsync(model);
             return View(model);
+        }
+
+        if (photos is { Count: > 0 })
+        {
+            var uploadResult = await _listingService.UploadImagesAsync(sellerId, result.Data, photos);
+            if (!uploadResult.Succeeded)
+            {
+                TempData[AlertHelper.ErrorKey] =
+                    $"Listing created, but photos could not be uploaded: {uploadResult.Errors.FirstOrDefault()}. You can add them here.";
+                return RedirectToAction(nameof(Edit), new { id = result.Data });
+            }
         }
 
         TempData[AlertHelper.SuccessKey] = $"Listing '{model.Title}' created and submitted for review.";

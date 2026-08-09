@@ -83,8 +83,16 @@ else
                     @foreach (var item in Model)
                     {
                         <th>
-                            <img src="@(item.ThumbnailImagePath ?? "")" alt="@item.Title" class="marketplace-compare-thumb mb-2"
-                                 onerror="this.style.display='none'" />
+                            @if (!string.IsNullOrEmpty(item.ThumbnailImagePath))
+                            {
+                                <img src="@item.ThumbnailImagePath" alt="@item.Title" class="marketplace-compare-thumb mb-2" />
+                            }
+                            else
+                            {
+                                <div class="marketplace-compare-thumb mb-2 marketplace-card-image-placeholder">
+                                    <i data-lucide="image"></i>
+                                </div>
+                            }
                             <div class="fw-semibold mb-2"><a asp-controller="Marketplace" asp-action="Details" asp-route-slug="@item.Slug">@item.Title</a></div>
                             <form asp-controller="Compare" asp-action="Remove" asp-route-listingId="@item.Id" method="post">
                                 <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />

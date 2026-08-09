@@ -156,7 +156,7 @@
         @if (Model.SellerProfile is not null)
         {
             <a asp-controller="Marketplace" asp-action="Seller" asp-route-sellerId="@Model.SellerProfile.SellerId" class="marketplace-seller-card text-decoration-none text-body">
-                <span class="avatar-initials">@(Model.SellerProfile.SellerName.Length > 0 ? Model.SellerProfile.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+                <partial name="_Avatar" model="(Model.SellerProfile.ProfilePicturePath, Model.SellerProfile.SellerName)" />
                 <div>
                     <p class="mb-0 fw-semibold d-flex align-items-center gap-1">
                         @Model.SellerProfile.SellerName

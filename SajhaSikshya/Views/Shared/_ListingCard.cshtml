@@ -1,11 +1,5 @@
 @using SajhaSikshya.DTOs.Marketplace
 @model ListingSummaryDto
-@{
-    var sellerParts = Model.SellerName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-    var sellerInitials = sellerParts.Length >= 2
-        ? $"{sellerParts[0][0]}{sellerParts[^1][0]}".ToUpperInvariant()
-        : Model.SellerName.Length > 0 ? Model.SellerName[0].ToString().ToUpperInvariant() : "?";
-}
 
 @* The save button must be a sibling of the <a>, not nested inside it — a <form>/
    <button> inside an <a> is invalid HTML (nested interactive elements) and breaks
@@ -41,7 +35,9 @@
             <p class="marketplace-card-meta mb-1">@Model.CategoryName</p>
             <div class="marketplace-card-footer">
                 <span class="marketplace-card-seller text-truncate">
-                    <span class="marketplace-card-seller-avatar">@sellerInitials</span>
+                    <span class="marketplace-card-seller-avatar">
+                        <partial name="_Avatar" model="(Model.SellerProfilePicturePath, Model.SellerName)" />
+                    </span>
                     <span class="text-truncate">@Model.SellerName</span>
                     <partial name="_VerifiedStudentBadge" model="Model.IsSellerVerified" />
                 </span>

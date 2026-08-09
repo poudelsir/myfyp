@@ -555,14 +555,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+/* _Avatar.cshtml's .avatar-photo/.avatar-initials default to a 32px dashboard-sized
+   circle — shrink them to fit this 20px inline card badge wherever the partial is
+   nested inside one of these small seller-identity spots. */
+.marketplace-card-seller-avatar .avatar-photo,
+.marketplace-card-seller-avatar .avatar-initials {
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  background: var(--sajha-gradient-primary);
-  color: #fff;
   font-size: 0.6rem;
-  font-weight: 700;
-  flex-shrink: 0;
 }
 
 /* ---------------------------------------------------------------------- */

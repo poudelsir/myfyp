@@ -58,8 +58,10 @@ public static class OrderMappings
         dto.ListingThumbnailImagePath = order.Listing?.ThumbnailImage?.ImagePath;
         dto.BuyerId = order.BuyerId;
         dto.BuyerName = order.Buyer?.FullName ?? string.Empty;
+        dto.BuyerProfilePicturePath = order.Buyer?.ProfilePicturePath;
         dto.SellerId = order.SellerId;
         dto.SellerName = order.Seller?.FullName ?? string.Empty;
+        dto.SellerProfilePicturePath = order.Seller?.ProfilePicturePath;
         dto.Status = order.Status;
         dto.StatusDisplay = order.Status.GetDisplayName();
         dto.IsDonation = order.IsDonation;

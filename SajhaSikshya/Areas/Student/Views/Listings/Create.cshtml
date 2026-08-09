@@ -1,3 +1,4 @@
+@using SajhaSikshya.Constants
 @using SajhaSikshya.ViewModels.Marketplace
 @model ListingFormViewModel
 @{
@@ -11,12 +12,33 @@
 
 <div class="card" style="max-width: 720px;">
     <div class="card-body">
-        <form asp-action="Create" method="post" novalidate>
+        <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
             @if (!ViewData.ModelState.IsValid)
             {
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
             }
             <partial name="_Form" />
+
+            <div class="mt-4 pt-4 border-top">
+                <h2 class="h6 fw-semibold mb-1">Product Images</h2>
+                <p class="text-secondary small mb-3">
+                    Upload clear photos of your item — optional, but listings with photos get noticed faster.
+                    The first photo becomes the cover image; you can change this later from Edit.
+                </p>
+
+                <div id="stagedImagePreview" class="row g-3 mb-3 d-none"></div>
+
+                <label for="createImageInput" class="marketplace-dropzone" id="createDropzone">
+                    <i data-lucide="upload-cloud"></i>
+                    <span class="mb-1">Drag photos here or click to browse</span>
+                    <span class="text-secondary small">
+                        Up to @ListingConstants.MaximumImages photos &middot;
+                        JPG, PNG or WEBP &middot; Max @ListingConstants.MaximumImageSizeMB MB each
+                    </span>
+                    <input type="file" name="photos" id="createImageInput" accept=".jpg,.jpeg,.png,.webp"
+                           multiple hidden data-max-images="@ListingConstants.MaximumImages" />
+                </label>
+            </div>
         </form>
     </div>
 </div>
@@ -24,5 +46,6 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/listing-form.js" asp-append-version="true"></script>
+    <script src="~/js/listing-create-images.js" asp-append-version="true"></script>
     <script src="~/js/ai-listing.js" asp-append-version="true"></script>
 }

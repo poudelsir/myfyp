@@ -1,0 +1,136 @@
+@using SajhaSikshya.ViewModels.Admin.Profile
+@model AdminProfileIndexViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="mb-4">
+    <h1 class="h4 fw-bold mb-1">My Profile</h1>
+    <p class="text-secondary mb-0">Your administrator account information.</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Personal Information</h2>
+        <form asp-controller="Profile" asp-action="UpdatePersonalInfo" method="post" enctype="multipart/form-data">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <partial name="_Avatar" model="(Model.PersonalInfo.ProfilePicturePath, Model.PersonalInfo.FirstName)" />
+                <div class="flex-grow-1">
+                    <label asp-for="PersonalInfo.ProfilePhoto" class="form-label small mb-1">Profile Photo</label>
+                    <input asp-for="PersonalInfo.ProfilePhoto" type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" />
+                    <span asp-validation-for="PersonalInfo.ProfilePhoto" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-sm-6">
+                    <label asp-for="PersonalInfo.FirstName" class="form-label small">First Name</label>
+                    <input asp-for="PersonalInfo.FirstName" class="form-control" />
+                    <span asp-validation-for="PersonalInfo.FirstName" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="PersonalInfo.LastName" class="form-label small">Last Name</label>
+                    <input asp-for="PersonalInfo.LastName" class="form-control" />
+                    <span asp-validation-for="PersonalInfo.LastName" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label small">Email</label>
+                    <input value="@Model.PersonalInfo.Email" class="form-control" disabled readonly />
+                    <div class="form-text">Contact a system owner to change your email address.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="PersonalInfo.PhoneNumber" class="form-label small">Phone Number</label>
+                    <input asp-for="PersonalInfo.PhoneNumber" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="PersonalInfo.PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="PersonalInfo.Address" class="form-label small">Address <span class="text-secondary fw-normal">(Optional)</span></label>
+                    <input asp-for="PersonalInfo.Address" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="PersonalInfo.Address" class="text-danger small"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="PersonalInfo.Institution" class="form-label small">Institution <span class="text-secondary fw-normal">(Optional)</span></label>
+                    <input asp-for="PersonalInfo.Institution" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="PersonalInfo.Institution" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="PersonalInfo.Bio" class="form-label small">Bio <span class="text-secondary fw-normal">(Optional)</span></label>
+                    <textarea asp-for="PersonalInfo.Bio" class="form-control" rows="3" maxlength="500"></textarea>
+                    <span asp-validation-for="PersonalInfo.Bio" class="text-danger small"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Account Information</h2>
+        <dl class="row small mb-0">
+            <dt class="col-4 col-sm-3 text-secondary">Account Role</dt>
+            <dd class="col-8 col-sm-9"><span class="badge text-bg-primary">System Administrator</span></dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Account Status</dt>
+            <dd class="col-8 col-sm-9">
+                <span class="badge @(Model.IsActive ? "text-bg-success" : "text-bg-secondary")">@(Model.IsActive ? "Active" : "Disabled")</span>
+            </dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Member Since</dt>
+            <dd class="col-8 col-sm-9">@Model.MemberSinceUtc.ToLocalTime().ToString("MMMM d, yyyy")</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Last Login</dt>
+            <dd class="col-8 col-sm-9">@(Model.LastLoginAtUtc.HasValue ? Model.LastLoginAtUtc.Value.ToLocalTime().ToString("MMMM d, yyyy h:mm tt") : "—")</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Email Verified</dt>
+            <dd class="col-8 col-sm-9">@(Model.EmailConfirmed ? "Yes" : "No")</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Phone Verified</dt>
+            <dd class="col-8 col-sm-9">@(Model.PhoneNumberConfirmed ? "Yes" : "No")</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">Security</h2>
+
+        <h3 class="h6 fw-semibold small mb-2">Change Password</h3>
+        <form asp-controller="Profile" asp-action="ChangePassword" method="post" class="mb-4" style="max-width: 480px;">
+            @if (!ViewData.ModelState.IsValid && ViewData.ModelState.Keys.Any(k => k.StartsWith("ChangePassword")))
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+            }
+            <div class="mb-2">
+                <label asp-for="ChangePassword.CurrentPassword" class="form-label small"></label>
+                <input asp-for="ChangePassword.CurrentPassword" class="form-control form-control-sm" />
+                <span asp-validation-for="ChangePassword.CurrentPassword" class="text-danger small"></span>
+            </div>
+            <div class="mb-2">
+                <label asp-for="ChangePassword.NewPassword" class="form-label small"></label>
+                <input asp-for="ChangePassword.NewPassword" class="form-control form-control-sm" />
+                <span asp-validation-for="ChangePassword.NewPassword" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="ChangePassword.ConfirmPassword" class="form-label small"></label>
+                <input asp-for="ChangePassword.ConfirmPassword" class="form-control form-control-sm" />
+                <span asp-validation-for="ChangePassword.ConfirmPassword" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Change Password</button>
+        </form>
+
+        <hr />
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
+            <div>
+                <h3 class="h6 fw-semibold small mb-1">Manage Sessions</h3>
+                <p class="text-secondary small mb-0">View and sign out of your active sessions on other devices.</p>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>Not available yet</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

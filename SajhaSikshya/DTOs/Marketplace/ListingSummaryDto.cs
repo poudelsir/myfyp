@@ -37,6 +37,8 @@ public class ListingSummaryDto
 
     public string SellerName { get; set; } = string.Empty;
 
+    public string? SellerProfilePicturePath { get; set; }
+
     public string? ThumbnailImagePath { get; set; }
 
     public int ViewCount { get; set; }

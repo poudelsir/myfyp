@@ -38,6 +38,7 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Title</th>
                             <th>Seller</th>
                             <th>Category</th>
@@ -52,8 +53,25 @@
                         @foreach (var listing in Model.Page.Items)
                         {
                             <tr>
+                                <td style="width: 48px;">
+                                    @if (!string.IsNullOrEmpty(listing.ThumbnailImagePath))
+                                    {
+                                        <img src="@listing.ThumbnailImagePath" alt="@listing.Title" class="rounded" style="width: 40px; height: 40px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="marketplace-card-image-placeholder rounded" style="width: 40px; height: 40px;">
+                                            <i data-lucide="image"></i>
+                                        </div>
+                                    }
+                                </td>
                                 <td>@listing.Title</td>
-                                <td>@listing.SellerName</td>
+                                <td class="d-flex align-items-center gap-1">
+                                    <span class="marketplace-card-seller-avatar">
+                                        <partial name="_Avatar" model="(listing.SellerProfilePicturePath, listing.SellerName)" />
+                                    </span>
+                                    @listing.SellerName
+                                </td>
                                 <td>@listing.CategoryName</td>
                                 <td>@listing.FormattedPrice</td>
                                 <td>@listing.StockQuantity</td>

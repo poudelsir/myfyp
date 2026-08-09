@@ -34,6 +34,8 @@ public class ListingDto
 
     public string SellerName { get; set; } = string.Empty;
 
+    public string? SellerProfilePicturePath { get; set; }
+
     public int CategoryId { get; set; }
 
     public string CategoryName { get; set; } = string.Empty;

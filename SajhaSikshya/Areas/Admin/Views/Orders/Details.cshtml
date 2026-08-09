@@ -48,9 +48,19 @@
                 <h2 class="h6 fw-semibold mb-3">Parties</h2>
                 <dl class="row small text-secondary mb-0">
                     <dt class="col-4">Buyer</dt>
-                    <dd class="col-8">@Model.BuyerName &lt;@Model.BuyerEmail&gt;</dd>
+                    <dd class="col-8 d-flex align-items-center gap-1">
+                        <span class="marketplace-card-seller-avatar">
+                            <partial name="_Avatar" model="(Model.BuyerProfilePicturePath, Model.BuyerName)" />
+                        </span>
+                        @Model.BuyerName &lt;@Model.BuyerEmail&gt;
+                    </dd>
                     <dt class="col-4">Seller</dt>
-                    <dd class="col-8">@Model.SellerName &lt;@Model.SellerEmail&gt;</dd>
+                    <dd class="col-8 d-flex align-items-center gap-1">
+                        <span class="marketplace-card-seller-avatar">
+                            <partial name="_Avatar" model="(Model.SellerProfilePicturePath, Model.SellerName)" />
+                        </span>
+                        @Model.SellerName &lt;@Model.SellerEmail&gt;
+                    </dd>
                     <dt class="col-4">Requested</dt>
                     <dd class="col-8">@Model.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy h:mm tt")</dd>
                     <dt class="col-4">Payment Method</dt>

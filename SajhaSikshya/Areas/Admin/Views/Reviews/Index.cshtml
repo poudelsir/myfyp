@@ -35,7 +35,10 @@
                     <div class="review-card-header">
                         <div>
                             <partial name="_StarRatingDisplay" model="(double)review.Rating" />
-                            <div class="review-card-meta">
+                            <div class="review-card-meta d-flex align-items-center gap-1">
+                                <span class="marketplace-card-seller-avatar">
+                                    <partial name="_Avatar" model="(review.ReviewerProfilePicturePath, review.ReviewerName)" />
+                                </span>
                                 @review.ReviewerName → @review.RevieweeName · @review.ReviewTypeDisplay · "@review.ListingTitle" · Order @review.OrderReferenceNumber
                             </div>
                         </div>
