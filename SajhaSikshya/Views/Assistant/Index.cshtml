@@ -17,48 +17,53 @@
     </button>
 </div>
 
-<div class="card assistant-card">
-    <div class="card-body d-flex flex-column p-0">
-        <div id="assistantMessages" class="assistant-messages">
-            @if (!Model.History.Any())
-            {
-                <div class="assistant-empty-state">
-                    <i data-lucide="message-circle-question"></i>
-                    <p class="mb-0">Ask me anything about buying, selling, or using SajhaSikshya.</p>
+<div class="assistant-shell">
+    <div id="assistantMessages" class="assistant-messages" role="log" aria-live="polite" aria-label="Conversation with Sajha AI">
+        @if (!Model.History.Any())
+        {
+            <div class="assistant-empty-state" id="assistantEmptyState">
+                <div class="assistant-empty-icon"><i data-lucide="sparkles"></i></div>
+                <h2 class="assistant-empty-title">Sajha AI</h2>
+                <p class="assistant-empty-subtitle">How can I help you today?</p>
+                <div class="assistant-suggestions">
+                    @foreach (var question in Model.SuggestedQuestions)
+                    {
+                        <button type="button" class="assistant-suggestion-chip">@question</button>
+                    }
                 </div>
-            }
-            @foreach (var message in Model.History)
-            {
-                <div class="assistant-message assistant-message-@message.Role">
-                    <div class="assistant-message-bubble" data-raw-text="@message.Text"></div>
-                </div>
-            }
-        </div>
-
-        <div id="assistantTyping" class="assistant-typing d-none">
-            <span></span><span></span><span></span>
-        </div>
-
-        <div id="assistantSuggestions" class="assistant-suggestions @(Model.History.Any() ? "d-none" : "")">
-            <p class="text-secondary small mb-2 px-3">Try asking:</p>
-            <div class="d-flex flex-wrap gap-2 px-3 pb-2">
-                @foreach (var question in Model.SuggestedQuestions)
-                {
-                    <button type="button" class="btn btn-outline-primary btn-sm assistant-suggestion-chip">@question</button>
-                }
             </div>
-        </div>
-
-        <form id="assistantForm" class="assistant-input-bar">
-            @Html.AntiForgeryToken()
-            <input type="text" id="assistantQuestionInput" class="form-control" placeholder="Ask a question…"
-                   autocomplete="off" maxlength="500" />
-            <button type="submit" class="btn btn-primary" id="assistantSendBtn" aria-label="Send">
-                <i data-lucide="send"></i>
-            </button>
-        </form>
+        }
+        @foreach (var message in Model.History)
+        {
+            <div class="assistant-message assistant-message-@message.Role">
+                <div class="assistant-message-bubble" data-raw-text="@message.Text"></div>
+            </div>
+        }
     </div>
+
+    <form id="assistantForm" class="assistant-composer">
+        @Html.AntiForgeryToken()
+        <textarea id="assistantQuestionInput" class="assistant-composer-input" placeholder="Ask Sajha AI anything…"
+                  rows="1" maxlength="500" aria-label="Message"></textarea>
+        <button type="submit" class="assistant-composer-send" id="assistantSendBtn" aria-label="Send message">
+            <i data-lucide="send"></i>
+        </button>
+    </form>
 </div>
+
+<template id="assistantEmptyStateTemplate">
+    <div class="assistant-empty-state" id="assistantEmptyState">
+        <div class="assistant-empty-icon"><i data-lucide="sparkles"></i></div>
+        <h2 class="assistant-empty-title">Sajha AI</h2>
+        <p class="assistant-empty-subtitle">How can I help you today?</p>
+        <div class="assistant-suggestions">
+            @foreach (var question in Model.SuggestedQuestions)
+            {
+                <button type="button" class="assistant-suggestion-chip">@question</button>
+            }
+        </div>
+    </div>
+</template>
 
 @section Scripts {
     <script src="~/js/assistant.js" asp-append-version="true"></script>

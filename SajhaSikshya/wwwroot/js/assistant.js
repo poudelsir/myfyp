@@ -5,6 +5,15 @@
 // markdown-to-HTML converter below rather than pulling in a third-party library for
 // one feature; raw text is always HTML-escaped first, so nothing in a model response
 // can inject markup.
+//
+// Layout is a messenger-style shell (see assistant.css): #assistantMessages is the
+// only scrolling region, the composer stays pinned below it. Auto-scroll is "smart" —
+// it only snaps to the newest message when the reader was already at (or near) the
+// bottom, so scrolling up to re-read an earlier answer doesn't get yanked back down by
+// the next reply.
+const NEAR_BOTTOM_THRESHOLD_PX = 80;
+const COMPOSER_MAX_HEIGHT_PX = 120;
+
 (function () {
     "use strict";
 
@@ -15,11 +24,10 @@
         }
 
         var messagesEl = document.getElementById("assistantMessages");
-        var typingEl = document.getElementById("assistantTyping");
-        var suggestionsEl = document.getElementById("assistantSuggestions");
         var input = document.getElementById("assistantQuestionInput");
         var sendBtn = document.getElementById("assistantSendBtn");
         var resetBtn = document.getElementById("assistantResetBtn");
+        var emptyStateTemplate = document.getElementById("assistantEmptyStateTemplate");
 
         // Render markdown for any history bubbles the server already sent down.
         messagesEl.querySelectorAll(".assistant-message-assistant .assistant-message-bubble").forEach(function (bubble) {
@@ -35,10 +43,26 @@
             sendQuestion(input.value);
         });
 
-        suggestionsEl.querySelectorAll(".assistant-suggestion-chip").forEach(function (chip) {
-            chip.addEventListener("click", function () {
+        // Delegated (not bound per-chip) so it keeps working after Reset swaps in a
+        // freshly-cloned empty state.
+        messagesEl.addEventListener("click", function (event) {
+            var chip = event.target.closest(".assistant-suggestion-chip");
+            if (chip) {
                 sendQuestion(chip.textContent);
-            });
+            }
+        });
+
+        input.addEventListener("input", autoGrowInput);
+
+        input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                if (typeof form.requestSubmit === "function") {
+                    form.requestSubmit();
+                } else {
+                    sendQuestion(input.value);
+                }
+            }
         });
 
         resetBtn.addEventListener("click", function () {
@@ -54,10 +78,10 @@
                 body: body.toString(),
                 credentials: "same-origin",
             }).then(function () {
-                messagesEl.innerHTML =
-                    '<div class="assistant-empty-state"><i data-lucide="message-circle-question"></i>' +
-                    "<p class=\"mb-0\">Ask me anything about buying, selling, or using SajhaSikshya.</p></div>";
-                suggestionsEl.classList.remove("d-none");
+                messagesEl.innerHTML = "";
+                if (emptyStateTemplate) {
+                    messagesEl.appendChild(emptyStateTemplate.content.cloneNode(true));
+                }
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
@@ -70,15 +94,16 @@
                 return;
             }
 
-            var emptyState = messagesEl.querySelector(".assistant-empty-state");
+            var emptyState = document.getElementById("assistantEmptyState");
             if (emptyState) {
                 emptyState.remove();
             }
 
-            appendBubble("user", question);
+            appendBubble("user", question, true);
             input.value = "";
-            suggestionsEl.classList.add("d-none");
+            autoGrowInput();
             setBusy(true);
+            showTyping();
 
             var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
             var body = new URLSearchParams();
@@ -102,17 +127,22 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    appendBubble("assistant", data.reply);
+                    hideTyping();
+                    appendBubble("assistant", data.reply, false);
                 })
                 .catch(function (error) {
-                    appendBubble("assistant", "⚠️ " + (error.message || "Could not reach the assistant right now."));
+                    hideTyping();
+                    appendBubble("assistant", "⚠️ " + (error.message || "Could not reach the assistant right now."), false);
                 })
                 .finally(function () {
                     setBusy(false);
+                    input.focus();
                 });
         }
 
-        function appendBubble(role, rawText) {
+        function appendBubble(role, rawText, forceScroll) {
+            var shouldStick = forceScroll || isNearBottom();
+
             var wrapper = document.createElement("div");
             wrapper.className = "assistant-message assistant-message-" + role;
 
@@ -126,16 +156,53 @@
 
             wrapper.appendChild(bubble);
             messagesEl.appendChild(wrapper);
-            scrollToBottom();
+
+            if (shouldStick) {
+                scrollToBottom();
+            }
+        }
+
+        function showTyping() {
+            var shouldStick = isNearBottom();
+
+            var row = document.createElement("div");
+            row.className = "assistant-message assistant-message-assistant assistant-message-typing";
+            row.id = "assistantTypingBubble";
+
+            var bubble = document.createElement("div");
+            bubble.className = "assistant-message-bubble assistant-typing-bubble";
+            bubble.setAttribute("aria-label", "Sajha AI is thinking");
+
+            var dots = document.createElement("span");
+            dots.className = "assistant-typing-dots";
+            dots.innerHTML = "<span></span><span></span><span></span>";
+            bubble.appendChild(dots);
+
+            row.appendChild(bubble);
+            messagesEl.appendChild(row);
+
+            if (shouldStick) {
+                scrollToBottom();
+            }
+        }
+
+        function hideTyping() {
+            document.getElementById("assistantTypingBubble")?.remove();
         }
 
         function setBusy(isBusy) {
             input.disabled = isBusy;
             sendBtn.disabled = isBusy;
-            typingEl.classList.toggle("d-none", !isBusy);
-            if (isBusy) {
-                scrollToBottom();
-            }
+            sendBtn.classList.toggle("is-loading", isBusy);
+        }
+
+        function autoGrowInput() {
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, COMPOSER_MAX_HEIGHT_PX) + "px";
+        }
+
+        function isNearBottom() {
+            return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < NEAR_BOTTOM_THRESHOLD_PX;
         }
 
         function scrollToBottom() {
