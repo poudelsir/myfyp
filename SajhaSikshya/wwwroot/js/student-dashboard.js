@@ -18,9 +18,9 @@
             return;
         }
 
-        var labels = ["Draft", "Pending", "Active", "Reserved", "Sold", "Donated", "Archived", "Rejected"];
-        var data = [stats.draft, stats.pendingApproval, stats.active, stats.reserved, stats.sold, stats.donated, stats.archived, stats.rejected];
-        var colors = ["#6c757d", "#0dcaf0", "#198754", "#ffc107", "#0d6efd", "#fd7e14", "#adb5bd", "#dc3545"];
+        var labels = ["Draft", "Pending", "Active", "Reserved", "Sold", "Donated", "Archived", "Rejected", "Out of Stock"];
+        var data = [stats.draft, stats.pendingApproval, stats.active, stats.reserved, stats.sold, stats.donated, stats.archived, stats.rejected, stats.outOfStock];
+        var colors = ["#6c757d", "#0dcaf0", "#198754", "#ffc107", "#0d6efd", "#fd7e14", "#adb5bd", "#dc3545", "#d63384"];
 
         new window.Chart(canvas, {
             type: "doughnut",

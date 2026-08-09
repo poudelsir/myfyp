@@ -37,9 +37,11 @@ public interface IOrderService
 
     /// <summary>
     /// Buyer confirms they've collected the item, completing the order. On success,
-    /// moves the listing to <see cref="ListingStatus.Sold"/> (or
-    /// <see cref="ListingStatus.Donated"/> for a donation) in the same transaction.
-    /// Fails unless the order is ReadyForPickup and the caller is its buyer.
+    /// decrements the listing's stock and moves it to <see cref="ListingStatus.Active"/>
+    /// (stock remains) or <see cref="ListingStatus.OutOfStock"/> (stock reaches zero) —
+    /// or <see cref="ListingStatus.Donated"/> for a donation, which stays terminal —
+    /// all in the same transaction. Fails unless the order is ReadyForPickup and the
+    /// caller is its buyer.
     /// </summary>
     Task<ServiceResult> ConfirmPickupAsync(int orderId, string buyerId);
 

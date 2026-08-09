@@ -31,13 +31,17 @@ const MESSAGE_TYPE_FILE = 2;
         wireUnreadBadge(connection);
 
         const chatContainer = document.getElementById("chatContainer");
-        if (chatContainer) {
-            wireConversation(connection, chatContainer);
-        }
+        const afterStart = chatContainer ? wireConversation(connection, chatContainer) : null;
 
-        connection.start().catch(function (err) {
-            console.error("Chat hub connection failed:", err);
-        });
+        connection.start()
+            .then(function () {
+                if (afterStart) {
+                    afterStart();
+                }
+            })
+            .catch(function (err) {
+                console.error("Chat hub connection failed:", err);
+            });
     });
 
     function wireUnreadBadge(connection) {
@@ -181,14 +185,14 @@ const MESSAGE_TYPE_FILE = 2;
             });
         });
 
-        connection.start().then(joinConversation);
-
         wireSendForm(connection, sendForm, messageInput, conversationId);
         wireTypingIndicatorTrigger(connection, messageInput, conversationId);
         wireEditForms(connection, container, conversationId);
         wireDeleteForms(connection, container, conversationId);
         wireAttachmentUpload(container);
         wireImagePreviewModal(container);
+
+        return joinConversation;
     }
 
     function wireAttachmentUpload(container) {

@@ -16,6 +16,7 @@ public class MyListingStatusCountsDto
 
     public int Reserved { get; set; }
 
+    /// <summary>Completed, non-donation orders for this seller — NOT a count of <see cref="Data.Enums.ListingStatus.Sold"/> rows. Since Phase 11.5 (inventory/stock), a completed sale moves a listing to Active (stock remains) or OutOfStock (stock hits 0), never Sold, so a listing can be sold many times over its life; "how many times has this seller sold something" is a completed-order count, not a listing-status count.</summary>
     public int Sold { get; set; }
 
     public int Donated { get; set; }
@@ -23,6 +24,8 @@ public class MyListingStatusCountsDto
     public int Archived { get; set; }
 
     public int Rejected { get; set; }
+
+    public int OutOfStock { get; set; }
 
     public int Total { get; set; }
 }

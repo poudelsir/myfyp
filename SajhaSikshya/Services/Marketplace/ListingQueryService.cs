@@ -154,7 +154,7 @@ public class ListingQueryService : IListingQueryService
         var totalListingCount = await listingRepository.CountAsync(l => l.SellerId == sellerId
             && (l.Status == ListingStatus.Active || l.Status == ListingStatus.Reserved
                 || l.Status == ListingStatus.Sold || l.Status == ListingStatus.Donated
-                || l.Status == ListingStatus.Archived));
+                || l.Status == ListingStatus.Archived || l.Status == ListingStatus.OutOfStock));
 
         return new SellerProfileDto
         {

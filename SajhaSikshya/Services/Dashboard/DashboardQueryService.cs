@@ -82,6 +82,7 @@ public class DashboardQueryService : IDashboardQueryService
 
         var listingRepo = _unitOfWork.Repository<Listing>();
         var aiLogRepo = _unitOfWork.Repository<AIUsageLog>();
+        var orderRepo = _unitOfWork.Repository<Order>();
 
         var verification = await _verificationQueryService.GetCurrentStatusAsync(userId);
         var isVerified = await _verificationQueryService.IsUserVerifiedAsync(userId);
@@ -90,7 +91,7 @@ public class DashboardQueryService : IDashboardQueryService
 
         return new StudentDashboardStatsDto
         {
-            ListingStats = await BuildMyListingStatusCountsAsync(listingRepo, userId),
+            ListingStats = await BuildMyListingStatusCountsAsync(listingRepo, orderRepo, userId),
             BuyerOrderStats = await BuildMyOrderStatusCountsAsync(userId, isBuyerSide: true),
             SellerOrderStats = await BuildMyOrderStatusCountsAsync(userId, isBuyerSide: false),
             SavedListingsCount = savedListings.TotalCount,
@@ -139,7 +140,9 @@ public class DashboardQueryService : IDashboardQueryService
 
             DraftListings = await listingRepo.CountAsync(l => l.Status == ListingStatus.Draft),
             ReservedListings = await listingRepo.CountAsync(l => l.Status == ListingStatus.Reserved),
-            SoldListings = await listingRepo.CountAsync(l => l.Status == ListingStatus.Sold),
+            // Completed non-donation orders, not a ListingStatus.Sold count — see AdminDashboardStatsDto.SoldListings remarks.
+            SoldListings = await orderRepo.CountAsync(completedNotDonation),
+            OutOfStockListings = await listingRepo.CountAsync(l => l.Status == ListingStatus.OutOfStock),
 
             TotalUsers = totalUsers,
             TotalStudents = totalStudents,
@@ -170,16 +173,19 @@ public class DashboardQueryService : IDashboardQueryService
         };
     }
 
-    private static async Task<MyListingStatusCountsDto> BuildMyListingStatusCountsAsync(IGenericRepository<Listing> listingRepo, string userId)
+    private static async Task<MyListingStatusCountsDto> BuildMyListingStatusCountsAsync(
+        IGenericRepository<Listing> listingRepo, IGenericRepository<Order> orderRepo, string userId)
     {
         var draft = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Draft);
         var pending = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.PendingApproval);
         var active = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Active);
         var reserved = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Reserved);
-        var sold = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Sold);
+        // Completed non-donation orders, not a ListingStatus.Sold count — see MyListingStatusCountsDto.Sold remarks.
+        var sold = await orderRepo.CountAsync(o => o.SellerId == userId && o.Status == OrderStatus.Completed && !o.IsDonation);
         var donated = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Donated);
         var archived = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Archived);
         var rejected = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.Rejected);
+        var outOfStock = await listingRepo.CountAsync(l => l.SellerId == userId && l.Status == ListingStatus.OutOfStock);
 
         return new MyListingStatusCountsDto
         {
@@ -191,7 +197,8 @@ public class DashboardQueryService : IDashboardQueryService
             Donated = donated,
             Archived = archived,
             Rejected = rejected,
-            Total = draft + pending + active + reserved + sold + donated + archived + rejected,
+            OutOfStock = outOfStock,
+            Total = draft + pending + active + reserved + donated + archived + rejected + outOfStock,
         };
     }
 

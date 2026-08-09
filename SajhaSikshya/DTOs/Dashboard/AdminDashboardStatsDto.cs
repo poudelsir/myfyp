@@ -22,12 +22,15 @@ public class AdminDashboardStatsDto
 
     public AdminInsightsStatsDto Insights { get; set; } = new();
 
-    /// <summary>The 3 <see cref="Data.Enums.ListingStatus"/> values <see cref="ListingStats"/>/<see cref="Insights"/> don't already cover.</summary>
+    /// <summary>The 4 <see cref="Data.Enums.ListingStatus"/> values <see cref="ListingStats"/>/<see cref="Insights"/> don't already cover.</summary>
     public int DraftListings { get; set; }
 
     public int ReservedListings { get; set; }
 
+    /// <summary>Completed, non-donation orders platform-wide — NOT a count of <see cref="Data.Enums.ListingStatus.Sold"/> rows. Since Phase 11.5 (inventory/stock), a completed sale moves a listing to Active or OutOfStock, never Sold, so this is a sales-activity count, not a listing-status bucket.</summary>
     public int SoldListings { get; set; }
+
+    public int OutOfStockListings { get; set; }
 
     public int TotalUsers { get; set; }
 

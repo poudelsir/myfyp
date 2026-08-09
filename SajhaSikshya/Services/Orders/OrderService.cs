@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SajhaSikshya.Data.Entities.Marketplace;
 using SajhaSikshya.Data.Entities.Orders;
 using SajhaSikshya.Data.Enums;
@@ -88,7 +89,21 @@ public class OrderService : IOrderService
         listing.Status = ListingStatus.Reserved;
         listingRepository.Update(listing);
 
-        await _unitOfWork.SaveChangesAsync();
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Two buyers can pass the hasActiveOrder check above near-simultaneously; the
+            // DB's unique filtered index on (ListingId) for active-status orders is the
+            // real guard against a double-reservation, and rejects the losing INSERT here.
+            // Surface the same friendly message the (much more common) pre-check above
+            // already returns, instead of letting a raw constraint violation bubble up as
+            // an unhandled 500.
+            _logger.LogInformation(ex, "Order creation for listing {ListingId} by buyer {BuyerId} lost a race to another concurrent order.", listingId, buyerId);
+            return ServiceResult<int>.Failure("This listing already has an active order in progress.");
+        }
 
         // ReferenceNumber embeds Id, which SQL Server only assigns once the row above is
         // saved — so it's written in this second, small save rather than the first.
@@ -193,14 +208,26 @@ public class OrderService : IOrderService
         var listing = await listingRepository.GetByIdAsync(order.ListingId);
         if (listing is not null)
         {
-            // Donations keep their existing terminal behavior — one completion, gone.
-            // Sellable listings decrement stock and only hide (OutOfStock) once it runs
-            // out; with stock remaining they go straight back to Active so the same
-            // listing stays purchasable for the next buyer, no re-approval needed.
+            // Stock always reflects the completed sale, regardless of the listing's
+            // current status — an admin archiving it mid-transaction doesn't undo the
+            // pickup that already happened.
             listing.StockQuantity = Math.Max(0, listing.StockQuantity - 1);
-            listing.Status = order.IsDonation
-                ? ListingStatus.Donated
-                : listing.StockQuantity > 0 ? ListingStatus.Active : ListingStatus.OutOfStock;
+
+            // Only recompute visibility if the listing is still in the state this flow
+            // expects (Reserved, set by CreateOrderAsync). If an admin archived it while
+            // the order was in flight, that's a more authoritative, deliberate action —
+            // don't silently resurrect the listing back to Active/OutOfStock underneath it.
+            if (listing.Status == ListingStatus.Reserved)
+            {
+                // Donations keep their existing terminal behavior — one completion, gone.
+                // Sellable listings only hide (OutOfStock) once stock runs out; with stock
+                // remaining they go straight back to Active so the same listing stays
+                // purchasable for the next buyer, no re-approval needed.
+                listing.Status = order.IsDonation
+                    ? ListingStatus.Donated
+                    : listing.StockQuantity > 0 ? ListingStatus.Active : ListingStatus.OutOfStock;
+            }
+
             listingRepository.Update(listing);
         }
 

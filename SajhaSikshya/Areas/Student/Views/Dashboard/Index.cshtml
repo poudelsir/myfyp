@@ -238,6 +238,6 @@ else
 @section Scripts {
     <script type="application/json" id="myListingStatusData">@Html.Raw(JsonSerializer.Serialize(stats.ListingStats, jsonOptions))</script>
     <script type="application/json" id="myOrdersData">@Html.Raw(JsonSerializer.Serialize(new { buyer = stats.BuyerOrderStats, seller = stats.SellerOrderStats }, jsonOptions))</script>
-    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
-    <script src="~/js/student-dashboard.js"></script>
+    <script src="~/lib/chart.js/dist/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/student-dashboard.js" asp-append-version="true"></script>
 }

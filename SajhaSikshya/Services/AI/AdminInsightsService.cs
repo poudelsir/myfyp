@@ -137,30 +137,44 @@ public class AdminInsightsService : IAdminInsightsService
     }
 
     /// <summary>One CountAsync per active category — same "several small bounded queries" precedent used throughout the project (e.g. Review reputation distribution) rather than a new group-by repository method for a single call site.</summary>
+    /// <summary>
+    /// One query for every Active listing's CategoryId, grouped in memory, rather than
+    /// one CountAsync per category — with the marketplace taxonomy now ~65 categories
+    /// deep (departments + subcategories), a per-category round trip here would scale
+    /// linearly with the taxonomy size instead of staying flat.
+    /// </summary>
     private async Task<IReadOnlyList<NameCountDto>> GetTopCategoriesAsync(IGenericRepository<Listing> listingRepo)
     {
         var categories = await _categoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
-        var counts = new List<NameCountDto>();
-        foreach (var category in categories)
-        {
-            var count = await listingRepo.CountAsync(l => l.CategoryId == category.Id && l.Status == ListingStatus.Active);
-            counts.Add(new NameCountDto(category.Name, count));
-        }
+        var activeListings = await listingRepo.FindAsync(l => l.Status == ListingStatus.Active);
+        var countsByCategoryId = activeListings
+            .GroupBy(l => l.CategoryId)
+            .ToDictionary(g => g.Key, g => g.Count());
 
-        return counts.OrderByDescending(c => c.Count).Take(5).ToList();
+        return categories
+            .Select(category => new NameCountDto(category.Name, countsByCategoryId.GetValueOrDefault(category.Id)))
+            .Where(c => c.Count > 0)
+            .OrderByDescending(c => c.Count)
+            .Take(5)
+            .ToList();
     }
 
+    /// <summary>Same batched-then-grouped shape as <see cref="GetTopCategoriesAsync"/>, and for the same reason.</summary>
     private async Task<IReadOnlyList<NameCountDto>> GetTopUniversitiesAsync(IGenericRepository<Listing> listingRepo)
     {
         var universities = await _universityService.GetAllActiveAsync();
-        var counts = new List<NameCountDto>();
-        foreach (var university in universities)
-        {
-            var count = await listingRepo.CountAsync(l => l.UniversityId == university.Id && l.Status == ListingStatus.Active);
-            counts.Add(new NameCountDto(university.Name, count));
-        }
+        var activeListings = await listingRepo.FindAsync(l => l.Status == ListingStatus.Active);
+        var countsByUniversityId = activeListings
+            .Where(l => l.UniversityId.HasValue)
+            .GroupBy(l => l.UniversityId!.Value)
+            .ToDictionary(g => g.Key, g => g.Count());
 
-        return counts.OrderByDescending(c => c.Count).Take(5).ToList();
+        return universities
+            .Select(university => new NameCountDto(university.Name, countsByUniversityId.GetValueOrDefault(university.Id)))
+            .Where(c => c.Count > 0)
+            .OrderByDescending(c => c.Count)
+            .Take(5)
+            .ToList();
     }
 
     /// <summary>Same 5-CountAsync-per-star-then-derive-average shape as <c>ReviewQueryService.GetReputationAsync</c>, just platform-wide instead of per-user.</summary>

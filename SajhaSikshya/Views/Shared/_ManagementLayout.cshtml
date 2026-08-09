@@ -1,3 +1,4 @@
+@using SajhaSikshya.Data.Constants
 @using SajhaSikshya.Extensions
 @using SajhaSikshya.Services.Interfaces.Marketplace
 @inject ICompareService CompareService
@@ -81,7 +82,13 @@
     <script src="~/js/dark-mode.js" asp-append-version="true"></script>
     <script src="~/js/dashboard.js" asp-append-version="true"></script>
     <script src="~/js/notifications.js" asp-append-version="true"></script>
-    <script src="~/js/chat.js" asp-append-version="true"></script>
+    @* Chat is Student-only (ChatHub requires Roles.Student) — this shared layout also
+       serves the Admin area, so loading chat.js unconditionally made every Admin page
+       attempt (and fail, with a console error) a chat hub connection it can never use. *@
+    @if (User.IsInRole(Roles.Student))
+    {
+        <script src="~/js/chat.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -413,9 +413,10 @@
                                                                                                     donated = stats.Insights.DonationListings,
                                                                                                     archived = stats.ListingStats.ArchivedCount,
                                                                                                     rejected = stats.ListingStats.RejectedCount,
+                                                                                                    outOfStock = stats.OutOfStockListings,
                                                                                                 }, jsonOptions))</script>
     <script type="application/json" id="orderStatusData">@Html.Raw(JsonSerializer.Serialize(stats.OrderStats, jsonOptions))</script>
     <script type="application/json" id="reviewRatingData">@Html.Raw(JsonSerializer.Serialize(stats.ReviewRatingDistribution, jsonOptions))</script>
-    <script src="~/lib/chart.js/dist/chart.umd.min.js"></script>
-    <script src="~/js/admin-dashboard.js"></script>
+    <script src="~/lib/chart.js/dist/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
 }
