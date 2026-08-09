@@ -80,6 +80,23 @@ public class ListingFormViewModel
 
     public IEnumerable<SelectListItem> SubjectOptions { get; set; } = Array.Empty<SelectListItem>();
 
+    /// <summary>
+    /// Seller-typed university name — optional free text, matched case-insensitively
+    /// against existing universities or auto-created if new (see
+    /// <see cref="Services.Interfaces.Catalog.IUniversityService.FindOrCreateByNameAsync"/>).
+    /// Independent of <see cref="Subject"/>'s own optional University — a listing belongs
+    /// to whichever university the seller is actually at, which a shared/generic subject
+    /// like "Calculus I" shouldn't dictate. Left blank, the listing keeps whatever
+    /// university (if any) the chosen subject already implies, unchanged from before this
+    /// field existed.
+    /// </summary>
+    [StringLength(200, ErrorMessage = "University name is too long.")]
+    [Display(Name = "University")]
+    public string? UniversityName { get; set; }
+
+    /// <summary>Every active university's name, for the client-side typeahead — the whole list is small enough to embed inline, same reasoning as <see cref="SubcategoryOptions"/>.</summary>
+    public IReadOnlyList<string> UniversityNameOptions { get; set; } = Array.Empty<string>();
+
     /// <summary>Only populated on Edit (a new listing being Created has no id to attach photos to yet); used by Edit.cshtml's image management panel.</summary>
     public IReadOnlyList<ListingImageDto> Images { get; set; } = Array.Empty<ListingImageDto>();
 }

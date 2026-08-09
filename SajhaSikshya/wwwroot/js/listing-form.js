@@ -60,3 +60,39 @@
     departmentSelect.addEventListener("change", function () { applyFilter(false); });
     applyFilter(true);
 })();
+
+// Subject typeahead — the visible input is plain text for searching/filtering via the
+// browser's native <datalist>; the actual submitted SubjectId lives in a hidden input,
+// kept in sync here by looking up the typed text (case-insensitive exact match) against
+// the name->id map _Form.cshtml embeds inline. An unmatched/partial name simply leaves
+// the hidden id blank, which the existing [Range(1,...)] validation already rejects with
+// "Please select a subject" — no new validation message needed.
+(function () {
+    var searchInput = document.getElementById("subjectSearchInput");
+    var hiddenInput = document.getElementById("subjectIdInput");
+    var mapScript = document.getElementById("subjectNameToIdMap");
+    if (!searchInput || !hiddenInput || !mapScript) {
+        return;
+    }
+
+    var nameToId = {};
+    try {
+        nameToId = JSON.parse(mapScript.textContent) || {};
+    } catch (e) {
+        nameToId = {};
+    }
+
+    var lowerNameToId = {};
+    Object.keys(nameToId).forEach(function (name) {
+        lowerNameToId[name.toLowerCase()] = nameToId[name];
+    });
+
+    function syncHiddenId() {
+        var match = lowerNameToId[searchInput.value.trim().toLowerCase()];
+        hiddenInput.value = match || "";
+    }
+
+    searchInput.addEventListener("input", syncHiddenId);
+    searchInput.addEventListener("change", syncHiddenId);
+    syncHiddenId();
+})();

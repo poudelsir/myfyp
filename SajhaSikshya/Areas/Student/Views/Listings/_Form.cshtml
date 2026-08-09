@@ -38,12 +38,36 @@
 <div class="row">
     <div class="col-md-6 mb-3">
         <label asp-for="SubjectId" class="form-label"></label>
-        <select asp-for="SubjectId" asp-items="Model.SubjectOptions" class="form-select">
-            <option value="">— Select a subject —</option>
-        </select>
+        <input type="text" id="subjectSearchInput" class="form-control" list="subjectsDatalist"
+               placeholder="Type to search subjects…" autocomplete="off"
+               value="@(Model.SubjectOptions.FirstOrDefault(o => o.Selected)?.Text)" />
+        <datalist id="subjectsDatalist">
+            @foreach (var subject in Model.SubjectOptions)
+            {
+                <option value="@subject.Text"></option>
+            }
+        </datalist>
+        <input type="hidden" asp-for="SubjectId" id="subjectIdInput" />
         <span asp-validation-for="SubjectId" class="text-danger small"></span>
     </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="UniversityName" class="form-label"></label>
+        <input asp-for="UniversityName" class="form-control" list="universitiesDatalist"
+               placeholder="Type your university (optional)…" autocomplete="off" />
+        <datalist id="universitiesDatalist">
+            @foreach (var universityName in Model.UniversityNameOptions)
+            {
+                <option value="@universityName"></option>
+            }
+        </datalist>
+        <span asp-validation-for="UniversityName" class="text-danger small"></span>
+        <div class="form-text">Not listed? Just type it — we'll add it for you.</div>
+    </div>
 </div>
+
+@* Consumed by listing-form.js's subject-typeahead script — plain inline data, not a
+   @section (see this file's closing comment for why @section can't be used here). *@
+<script type="application/json" id="subjectNameToIdMap">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SubjectOptions.GroupBy(o => o.Text).ToDictionary(g => g.Key, g => g.First().Value)))</script>
 
 <div class="row">
     <div class="col-md-6 mb-3">
@@ -98,12 +122,9 @@
     </div>
 </div>
 
-<div class="d-flex gap-2">
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-</div>
-
-@* Scripts for this form live in wwwroot/js/listing-form.js, referenced from the two
-   views that actually render @section Scripts for this request (Create.cshtml /
-   Edit.cshtml) — a @section defined inside a <partial>-rendered view like this one is
-   never picked up by the outer Layout, so it can't be declared here. *@
+@* Save/Cancel buttons are NOT here — each of Create.cshtml/Edit.cshtml renders its own,
+   positioned after the Product Images section rather than before it. Scripts for this
+   form live in wwwroot/js/listing-form.js, referenced from the two views that actually
+   render @section Scripts for this request (Create.cshtml / Edit.cshtml) — a @section
+   defined inside a <partial>-rendered view like this one is never picked up by the
+   outer Layout, so it can't be declared here. *@

@@ -123,4 +123,71 @@ public class UniversityService : IUniversityService
 
         return ServiceResult.Success();
     }
+
+    public async Task<int> FindOrCreateByNameAsync(string name)
+    {
+        var trimmedName = name.Trim();
+        var repository = _unitOfWork.Repository<University>();
+
+        var existing = await repository.FirstOrDefaultAsync(u => u.Name.ToLower() == trimmedName.ToLower());
+        if (existing is not null)
+        {
+            if (!existing.IsActive)
+            {
+                // The seller is actively using it right now — an admin's earlier
+                // deactivation shouldn't silently keep blocking it from lists/filters.
+                existing.IsActive = true;
+                repository.Update(existing);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return existing.Id;
+        }
+
+        var code = await GenerateUniqueCodeAsync(trimmedName, repository);
+        var university = new University
+        {
+            Name = trimmedName,
+            Code = code,
+            IsActive = true,
+        };
+
+        await repository.AddAsync(university);
+        await _unitOfWork.SaveChangesAsync();
+
+        return university.Id;
+    }
+
+    /// <summary>Initials of each word (e.g. "Purbanchal University" -&gt; "PU"), deduplicated with a numeric suffix on collision — good enough for an internal short code nobody types by hand, unlike the admin-chosen codes <see cref="CreateAsync"/> requires.</summary>
+    private static async Task<string> GenerateUniqueCodeAsync(string name, IGenericRepository<University> repository)
+    {
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var baseCode = words.Length > 1
+            ? string.Concat(words.Select(w => char.ToUpperInvariant(w[0])))
+            : name.ToUpperInvariant();
+
+        if (baseCode.Length > 20)
+        {
+            baseCode = baseCode[..20];
+        }
+
+        if (baseCode.Length < 2)
+        {
+            baseCode = baseCode.PadRight(2, 'X');
+        }
+
+        var candidate = baseCode;
+        var suffix = 1;
+        while (await repository.AnyAsync(u => u.Code == candidate))
+        {
+            suffix++;
+            candidate = $"{baseCode}{suffix}";
+            if (candidate.Length > 20)
+            {
+                candidate = candidate[..20];
+            }
+        }
+
+        return candidate;
+    }
 }

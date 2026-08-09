@@ -72,6 +72,13 @@ public class MarketplaceAssistantService : IMarketplaceAssistantService
             PromptType = MarketplaceAssistantPromptBuilder.PromptType,
             UserId = userId,
             CacheKey = MarketplaceAssistantPromptBuilder.BuildCacheKey(input),
+            // A conversational reply needs nowhere near the shared 4096-token default
+            // (that ceiling exists for Admin Insights/structured-JSON features) — capping
+            // it here bounds worst-case generation time for the one feature users wait on
+            // synchronously in a chat UI. Still 2x the 1024 baseline that originally
+            // caused thinking-token truncation (see GeminiAIService's remarks), so this
+            // stays well clear of reintroducing that bug.
+            MaxOutputTokens = 2048,
         };
 
         var result = await _aiService.GenerateAsync(request);

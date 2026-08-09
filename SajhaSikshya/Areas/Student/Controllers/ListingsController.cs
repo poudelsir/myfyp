@@ -36,6 +36,7 @@ public class ListingsController : Controller
     private readonly IListingQueryService _listingQueryService;
     private readonly ICategoryService _categoryService;
     private readonly ISubjectService _subjectService;
+    private readonly IUniversityService _universityService;
     private readonly IListingAIService _listingAIService;
 
     public ListingsController(
@@ -43,12 +44,14 @@ public class ListingsController : Controller
         IListingQueryService listingQueryService,
         ICategoryService categoryService,
         ISubjectService subjectService,
+        IUniversityService universityService,
         IListingAIService listingAIService)
     {
         _listingService = listingService;
         _listingQueryService = listingQueryService;
         _categoryService = categoryService;
         _subjectService = subjectService;
+        _universityService = universityService;
         _listingAIService = listingAIService;
     }
 
@@ -89,6 +92,13 @@ public class ListingsController : Controller
     [DisableRequestSizeLimit]
     public async Task<IActionResult> Create(ListingFormViewModel model, List<IFormFile>? photos)
     {
+        // Never trust client-only enforcement (the dropzone JS already blocks submitting
+        // with none) — a listing with zero photos must be rejected here too.
+        if (photos is not { Count: > 0 })
+        {
+            ModelState.AddModelError(string.Empty, "Please add at least one photo of your item.");
+        }
+
         if (!ModelState.IsValid)
         {
             await PopulateDropdownsAsync(model);
@@ -108,15 +118,12 @@ public class ListingsController : Controller
             return View(model);
         }
 
-        if (photos is { Count: > 0 })
+        var uploadResult = await _listingService.UploadImagesAsync(sellerId, result.Data, photos!);
+        if (!uploadResult.Succeeded)
         {
-            var uploadResult = await _listingService.UploadImagesAsync(sellerId, result.Data, photos);
-            if (!uploadResult.Succeeded)
-            {
-                TempData[AlertHelper.ErrorKey] =
-                    $"Listing created, but photos could not be uploaded: {uploadResult.Errors.FirstOrDefault()}. You can add them here.";
-                return RedirectToAction(nameof(Edit), new { id = result.Data });
-            }
+            TempData[AlertHelper.ErrorKey] =
+                $"Listing created, but photos could not be uploaded: {uploadResult.Errors.FirstOrDefault()}. You can add them here.";
+            return RedirectToAction(nameof(Edit), new { id = result.Data });
         }
 
         TempData[AlertHelper.SuccessKey] = $"Listing '{model.Title}' created and submitted for review.";
@@ -145,6 +152,7 @@ public class ListingsController : Controller
             SubjectId = listing.SubjectId,
             StockQuantity = listing.StockQuantity,
             Images = listing.Images,
+            UniversityName = listing.UniversityName,
         };
 
         await PopulateDropdownsAsync(model);
@@ -384,6 +392,7 @@ public class ListingsController : Controller
         // passing null returns every active category, which is what a listing's own picker needs.
         var categories = await _categoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
         var subjects = await _subjectService.GetAllActiveAsync();
+        var universities = await _universityService.GetAllActiveAsync();
 
         var departments = categories.Where(c => c.ParentCategoryId is null).OrderBy(c => c.Name).ToList();
         var subcategories = categories.Where(c => c.ParentCategoryId is not null).OrderBy(c => c.Name).ToList();
@@ -405,5 +414,7 @@ public class ListingsController : Controller
         model.SubjectOptions = subjects
             .Select(s => new SelectListItem(s.Name, s.Id.ToString()) { Selected = s.Id == model.SubjectId })
             .ToList();
+
+        model.UniversityNameOptions = universities.Select(u => u.Name).ToList();
     }
 }

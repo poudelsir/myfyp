@@ -6,6 +6,7 @@ using SajhaSikshya.Data.Enums;
 using SajhaSikshya.Data.ValueObjects;
 using SajhaSikshya.Repositories.Interfaces;
 using SajhaSikshya.Services.Interfaces;
+using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Marketplace;
 using SajhaSikshya.Services.Interfaces.Notifications;
 using SajhaSikshya.Services.Notifications;
@@ -25,18 +26,33 @@ public class ListingService : IListingService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IImageStorageService _imageStorageService;
     private readonly INotificationService _notificationService;
+    private readonly IUniversityService _universityService;
     private readonly ILogger<ListingService> _logger;
 
     public ListingService(
         IUnitOfWork unitOfWork,
         IImageStorageService imageStorageService,
         INotificationService notificationService,
+        IUniversityService universityService,
         ILogger<ListingService> logger)
     {
         _unitOfWork = unitOfWork;
         _imageStorageService = imageStorageService;
         _notificationService = notificationService;
+        _universityService = universityService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Resolves the seller's typed university (find-or-create) if they entered one,
+    /// else falls back to the subject's own optional University — the exact behavior
+    /// every listing had before this field existed. See <see cref="ListingFormViewModel.UniversityName"/>.
+    /// </summary>
+    private async Task<int?> ResolveUniversityIdAsync(ListingFormViewModel model, Subject subject)
+    {
+        return string.IsNullOrWhiteSpace(model.UniversityName)
+            ? subject.UniversityId
+            : await _universityService.FindOrCreateByNameAsync(model.UniversityName);
     }
 
     public async Task<ServiceResult<int>> CreateAsync(string sellerId, ListingFormViewModel model)
@@ -84,7 +100,7 @@ public class ListingService : IListingService
             CategoryId = model.CategoryId,
             SubjectId = model.SubjectId,
             AcademicLevelId = subject.AcademicLevelId,
-            UniversityId = subject.UniversityId,
+            UniversityId = await ResolveUniversityIdAsync(model, subject),
         };
 
         await listingRepository.AddAsync(listing);
@@ -136,7 +152,7 @@ public class ListingService : IListingService
         listing.CategoryId = model.CategoryId;
         listing.SubjectId = model.SubjectId;
         listing.AcademicLevelId = subject.AcademicLevelId;
-        listing.UniversityId = subject.UniversityId;
+        listing.UniversityId = await ResolveUniversityIdAsync(model, subject);
         listing.StockQuantity = model.StockQuantity;
 
         // Edited content has to be reviewed again before it's live; a Draft that was
@@ -409,6 +425,11 @@ public class ListingService : IListingService
         if (listing is null)
         {
             return ServiceResult.Failure("Image not found.");
+        }
+
+        if (await imageRepository.CountAsync(i => i.ListingId == listing.Id) <= 1)
+        {
+            return ServiceResult.Failure("A listing must have at least one photo — replace it instead of deleting it, or add another photo first.");
         }
 
         var wasThumbnail = listing.ThumbnailImageId == image.Id;

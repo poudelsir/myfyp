@@ -13,6 +13,8 @@
         var input = document.getElementById("createImageInput");
         var dropzone = document.getElementById("createDropzone");
         var previewContainer = document.getElementById("stagedImagePreview");
+        var requiredError = document.getElementById("imagesRequiredError");
+        var form = document.getElementById("createListingForm");
         if (!input || !dropzone || !previewContainer) {
             return;
         }
@@ -20,6 +22,23 @@
         var maxImages = parseInt(input.dataset.maxImages, 10) || 8;
         var stagedFiles = [];
         var objectUrls = [];
+
+        // The real <input> is visually hidden (the styled dropzone label is what the
+        // seller actually interacts with), so the browser's native "required" validation
+        // bubble would have nothing visible to anchor to and would silently block
+        // submission with no explanation. Validate explicitly here instead, with a
+        // visible message next to the dropzone.
+        if (form) {
+            form.addEventListener("submit", function (event) {
+                if (stagedFiles.length === 0) {
+                    event.preventDefault();
+                    if (requiredError) {
+                        requiredError.classList.remove("d-none");
+                    }
+                    dropzone.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            });
+        }
 
         dropzone.addEventListener("dragover", function (event) {
             event.preventDefault();
@@ -47,6 +66,9 @@
                 }
                 stagedFiles.push(file);
             });
+            if (stagedFiles.length > 0 && requiredError) {
+                requiredError.classList.add("d-none");
+            }
             syncInputFiles();
             render();
         }

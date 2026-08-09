@@ -12,20 +12,7 @@
 
 <div class="card mb-4" style="max-width: 720px;">
     <div class="card-body">
-        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-            }
-            <input type="hidden" asp-for="Id" />
-            <partial name="_Form" />
-        </form>
-    </div>
-</div>
-
-<div class="card" style="max-width: 720px;">
-    <div class="card-body">
-        <h2 class="h6 fw-semibold mb-3">Photos</h2>
+        <h2 class="h6 fw-semibold mb-3">Photos <span class="text-danger">*</span></h2>
 
         @if (Model.Images.Any())
         {
@@ -62,23 +49,32 @@
                                         <input type="file" name="newImage" accept=".jpg,.jpeg,.png,.webp" class="js-replace-input" hidden />
                                     </label>
                                 </form>
-                                <form asp-action="DeleteImage" method="post" class="d-inline js-delete-form" data-confirm="Delete this photo?">
-                                    <input type="hidden" name="imageId" value="@image.Id" />
-                                    <input type="hidden" name="listingId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-light" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </form>
+                                @if (Model.Images.Count > 1)
+                                {
+                                    <form asp-action="DeleteImage" method="post" class="d-inline js-delete-form" data-confirm="Delete this photo?">
+                                        <input type="hidden" name="imageId" value="@image.Id" />
+                                        <input type="hidden" name="listingId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-light" title="Delete">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </form>
+                                }
                             </div>
                         </div>
                     </div>
                 }
             </div>
-            <p class="text-secondary small">Drag photos to reorder them. The starred photo is used as the listing's thumbnail.</p>
+            <p class="text-secondary small">
+                Drag photos to reorder them. The starred photo is used as the listing's thumbnail.
+                @if (Model.Images.Count == 1)
+                {
+                    <text>At least one photo is required, so Delete is hidden on your last remaining photo — use Replace instead.</text>
+                }
+            </p>
         }
         else
         {
-            <p class="text-secondary small">No photos yet — add some below so buyers can see what you're offering.</p>
+            <p class="text-danger small">No photos yet — at least one is required before this listing can be saved.</p>
         }
 
         @if (Model.Images.Count < ListingConstants.MaximumImages)
@@ -104,6 +100,24 @@
         {
             <p class="text-secondary small mb-0">Maximum of @ListingConstants.MaximumImages photos reached.</p>
         }
+    </div>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post" novalidate>
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            }
+            <input type="hidden" asp-for="Id" />
+            <partial name="_Form" />
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
 </div>
 

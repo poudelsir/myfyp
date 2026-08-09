@@ -164,10 +164,6 @@
                        value="@Context.Request.Query["search"]" />
             </form>
 
-            <a asp-controller="Assistant" asp-action="Index" class="btn btn-sm gradient-primary-soft text-primary d-none d-md-inline-flex align-items-center gap-1 flex-shrink-0" title="Ask the AI Assistant">
-                <i data-lucide="sparkles"></i> AI Search
-            </a>
-
             <div class="navbar-spacer"></div>
 
             <button type="button" class="btn-icon" id="darkModeToggleBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
@@ -262,7 +258,7 @@
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
                             @if (!isCurrentUserVerified)
                             {
-                                <li><a class="dropdown-item" asp-area="Student" asp-controller="SavedListings" asp-action="Index"><i data-lucide="heart" class="me-2"></i>Wishlist</a></li>
+                                @* Wishlist isn't repeated here — the persistent heart icon in the top nav already covers it. *@
                                 @if (isSellerApplicationPending)
                                 {
                                     <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Index"><i data-lucide="clock" class="me-2"></i>Seller Application Pending</a></li>

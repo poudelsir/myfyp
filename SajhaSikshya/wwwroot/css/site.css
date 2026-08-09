@@ -7,7 +7,10 @@
 :root {
   /* Brand — royal blue primary, sky-blue accent. The gradient pair is the
      signature "premium AI marketplace" treatment used on the hero, CTAs, and
-     the brand mark; everything else stays flat-color for readability. */
+     the brand mark; everything else stays flat-color for readability.
+     Gradient endpoint carries a touch of violet (not pure blue->lighter-blue)
+     so the same widely-cascading token reads as more colorful without any
+     per-component changes. */
   --sajha-primary: #2563eb;
   --sajha-primary-hover: #1d4ed8;
   --sajha-primary-active: #1e40af;
@@ -16,9 +19,9 @@
   --sajha-accent: #38bdf8;
   --sajha-accent-rgb: 56, 189, 248;
   --sajha-accent-subtle: rgba(56, 189, 248, 0.12);
-  --sajha-gradient-primary: linear-gradient(135deg, #2563eb 0%, #38bdf8 100%);
-  --sajha-gradient-primary-soft: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(56, 189, 248, 0.08) 100%);
-  --sajha-gradient-text: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+  --sajha-gradient-primary: linear-gradient(135deg, #4f46e5 0%, #2563eb 45%, #38bdf8 100%);
+  --sajha-gradient-primary-soft: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(37, 99, 235, 0.08) 45%, rgba(56, 189, 248, 0.08) 100%);
+  --sajha-gradient-text: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
 
   /* Neutral surfaces — very light blue-gray tints for section backgrounds,
      distinct from Bootstrap's own body/tertiary backgrounds. */
