@@ -28,6 +28,8 @@ public class VerificationDto
 
     public string? SellerTypeDisplay { get; set; }
 
+    public string? InstitutionName { get; set; }
+
     public GovernmentIdDocumentType? GovernmentIdDocumentType { get; set; }
 
     public string? GovernmentIdDocumentTypeDisplay { get; set; }

@@ -1,0 +1,12 @@
+@model (string? ProfilePicturePath, string DisplayName)
+@{
+    var initial = Model.DisplayName.Length > 0 ? Model.DisplayName[0].ToString().ToUpperInvariant() : "?";
+}
+@if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+{
+    <img src="@Model.ProfilePicturePath" alt="@Model.DisplayName" class="avatar-photo" />
+}
+else
+{
+    <span class="avatar-initials">@initial</span>
+}

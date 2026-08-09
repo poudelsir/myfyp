@@ -112,4 +112,15 @@ public class AuthService : IAuthService
 
         return await _userManager.ResetPasswordAsync(user, token, newPassword);
     }
+
+    public async Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null)
+        {
+            return IdentityResult.Failed(new IdentityError { Code = "UserNotFound", Description = "Account not found." });
+        }
+
+        return await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+    }
 }

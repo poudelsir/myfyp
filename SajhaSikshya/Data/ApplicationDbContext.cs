@@ -71,6 +71,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(u => u.FirstName).HasMaxLength(100);
             entity.Property(u => u.LastName).HasMaxLength(100);
             entity.Property(u => u.ProfilePicturePath).HasMaxLength(300);
+            entity.Property(u => u.Address).HasMaxLength(300);
+            entity.Property(u => u.Institution).HasMaxLength(150);
+            entity.Property(u => u.Bio).HasMaxLength(500);
 
             // Rename Identity's default table names to a clearer, project-specific schema.
             entity.ToTable("Users");

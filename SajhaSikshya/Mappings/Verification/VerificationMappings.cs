@@ -40,6 +40,7 @@ public static class VerificationMappings
         dto.StudentNumber = verification.StudentNumber;
         dto.SellerType = verification.SellerType;
         dto.SellerTypeDisplay = verification.SellerType?.GetDisplayName();
+        dto.InstitutionName = verification.InstitutionName;
         dto.GovernmentIdDocumentType = verification.GovernmentIdDocumentType;
         dto.GovernmentIdDocumentTypeDisplay = verification.GovernmentIdDocumentType?.GetDisplayName();
         dto.AcademicIdDocumentType = verification.AcademicIdDocumentType;

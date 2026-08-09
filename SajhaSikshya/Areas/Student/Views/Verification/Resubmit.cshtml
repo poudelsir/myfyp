@@ -3,14 +3,31 @@
 @{
     ViewData["Title"] = "Resubmit Verification";
     var previousReason = ViewData["PreviousRejectionReason"] as string;
+    var wasVerified = ViewData["WasVerified"] as bool? ?? false;
 }
 
 <div class="mb-3">
-    <h1 class="h4 fw-bold mb-1">Resubmit Your Seller Application</h1>
-    <p class="text-secondary mb-0">Your previous submission wasn't approved. Review the reason below, then submit updated documents.</p>
+    <h1 class="h4 fw-bold mb-1">@(wasVerified ? "Update Your Seller Application" : "Resubmit Your Seller Application")</h1>
+    <p class="text-secondary mb-0">
+        @if (wasVerified)
+        {
+            <text>Changing your Government ID, Academic Identity, or Seller Type requires a new review. You'll temporarily lose Seller Dashboard access until it's approved again.</text>
+        }
+        else
+        {
+            <text>Your previous submission wasn't approved. Review the reason below, then submit updated documents.</text>
+        }
+    </p>
 </div>
 
-@if (!string.IsNullOrWhiteSpace(previousReason))
+@if (wasVerified)
+{
+    <div class="alert alert-warning d-flex align-items-center gap-2" style="max-width: 720px;">
+        <i data-lucide="triangle-alert" style="width:18px;height:18px;flex-shrink:0;"></i>
+        <div>You are currently a verified seller. Submitting this form will move your account back to <strong>Pending</strong> until an admin reviews the changes.</div>
+    </div>
+}
+else if (!string.IsNullOrWhiteSpace(previousReason))
 {
     <div class="alert alert-warning" style="max-width: 720px;">
         <strong>Why it wasn't approved:</strong> @previousReason

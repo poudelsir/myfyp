@@ -16,6 +16,7 @@ public class StudentVerificationConfiguration : IEntityTypeConfiguration<Student
         builder.Property(v => v.GovernmentIdImagePath).IsRequired().HasMaxLength(300);
         builder.Property(v => v.AcademicIdImagePath).HasMaxLength(300);
         builder.Property(v => v.ProfilePhotoImagePath).HasMaxLength(300);
+        builder.Property(v => v.InstitutionName).HasMaxLength(150);
         builder.Property(v => v.SellingCategoriesCsv).IsRequired().HasMaxLength(200).HasDefaultValue(string.Empty);
         builder.Property(v => v.DeclarationAccepted).IsRequired().HasDefaultValue(false);
         builder.Property(v => v.RejectionReason).HasMaxLength(500);

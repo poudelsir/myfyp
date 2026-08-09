@@ -378,6 +378,16 @@
   flex-shrink: 0;
 }
 
+/* Real avatar photo — same box as .avatar-initials (Views/Shared/_Avatar.cshtml picks
+   one or the other depending on whether the user has a ProfilePicturePath). */
+.avatar-photo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Stat cards                                                              */
 /* ---------------------------------------------------------------------- */

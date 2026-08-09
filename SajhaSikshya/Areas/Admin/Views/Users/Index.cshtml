@@ -1,0 +1,107 @@
+@using SajhaSikshya.Data.Constants
+@using SajhaSikshya.ViewModels.Admin.Users
+@model AdminUserListViewModel
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="mb-3">
+    <h1 class="h4 fw-bold mb-1">Manage Users</h1>
+    <p class="text-secondary mb-0">Search, filter, and review every account on the platform.</p>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 280px;"
+                   placeholder="Search by name or email…" aria-label="Search" />
+            <select name="role" class="form-select" style="max-width: 160px;">
+                <option value="">All Roles</option>
+                <option value="@Roles.Student" selected="@(Model.Role == Roles.Student)">Student</option>
+                <option value="@Roles.Admin" selected="@(Model.Role == Roles.Admin)">Admin</option>
+            </select>
+            <select name="isActive" class="form-select" style="max-width: 160px;">
+                <option value="">All Statuses</option>
+                <option value="true" selected="@(Model.IsActive == true)">Active</option>
+                <option value="false" selected="@(Model.IsActive == false)">Suspended</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i data-lucide="search" class="me-1"></i>Filter
+            </button>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || !string.IsNullOrWhiteSpace(Model.Role) || Model.IsActive.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
+
+        @if (!Model.Page.Items.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">No users match this filter.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Seller Status</th>
+                            <th>Account Status</th>
+                            <th>Joined</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Page.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <partial name="_Avatar" model="(item.ProfilePicturePath, item.FullName)" />
+                                        <span>@item.FullName</span>
+                                    </div>
+                                </td>
+                                <td>@item.Email</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "—" : item.PhoneNumber)</td>
+                                <td>@item.Role</td>
+                                <td>
+                                    @if (item.IsVerifiedSeller)
+                                    {
+                                        <span class="badge text-bg-success">Verified Seller</span>
+                                    }
+                                    else if (item.VerificationStatusDisplay is not null)
+                                    {
+                                        <span class="badge text-bg-secondary">@item.VerificationStatusDisplay</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-secondary small">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge text-bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-danger">Suspended</span>
+                                    }
+                                </td>
+                                <td>@item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
+        }
+    </div>
+</div>

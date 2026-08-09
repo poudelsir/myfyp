@@ -240,13 +240,14 @@
                                 <partial name="_VerifiedStudentBadge" model="isCurrentUserVerified" />
                             </h6>
                         </li>
-                        <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                         @if (isAdmin)
                         {
+                            <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Admin Dashboard</a></li>
                         }
                         else
                         {
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
                             @if (isCurrentUserVerified)
                             {
@@ -254,6 +255,7 @@
                             }
                             else
                             {
+                                <li><a class="dropdown-item" asp-area="Student" asp-controller="SavedListings" asp-action="Index"><i data-lucide="heart" class="me-2"></i>Wishlist</a></li>
                                 <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Submit"><i data-lucide="badge-check" class="me-2"></i>Become a Verified Seller</a></li>
                             }
                         }

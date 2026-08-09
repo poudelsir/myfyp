@@ -105,9 +105,14 @@ public class VerificationController : Controller
         var userId = User.GetUserId()!;
         var current = await _verificationQueryService.GetCurrentStatusAsync(userId);
 
-        // Resubmission only makes sense after a rejection — anything else (no history,
-        // Pending, already Verified) belongs on the dashboard instead.
-        if (current is null || current.Status != VerificationStatus.Rejected)
+        // Resubmission makes sense after a rejection (fix and try again) or from an
+        // already-Verified seller updating their approved application (re-verification —
+        // this new Pending row becomes the "current" row the moment it's inserted, so the
+        // seller loses Seller Dashboard/Create Listing access until it's reviewed again,
+        // the same as any other Pending request; no separate status handling needed since
+        // IsUserVerifiedAsync/VerifiedStudentPolicy already read the latest row live).
+        // Anything else (no history, already Pending) belongs on the dashboard instead.
+        if (current is null || (current.Status != VerificationStatus.Rejected && current.Status != VerificationStatus.Verified))
         {
             return RedirectToAction(nameof(Index));
         }
@@ -115,6 +120,7 @@ public class VerificationController : Controller
         var model = new VerificationSubmissionViewModel();
         await PopulateAccountInfoAsync(model);
         ViewData["PreviousRejectionReason"] = current.RejectionReason;
+        ViewData["WasVerified"] = current.Status == VerificationStatus.Verified;
         return View(model);
     }
 

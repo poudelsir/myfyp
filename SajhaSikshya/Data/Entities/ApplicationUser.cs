@@ -29,6 +29,16 @@ public class ApplicationUser : IdentityUser
     [StringLength(300)]
     public string? ProfilePicturePath { get; set; }
 
+    [StringLength(300)]
+    public string? Address { get; set; }
+
+    /// <summary>Free-text, self-reported school/college/university/company — a profile detail anyone can set, distinct from <see cref="Entities.Verification.StudentVerification.InstitutionName"/> which is the admin-approved seller credential and is never duplicated here.</summary>
+    [StringLength(150)]
+    public string? Institution { get; set; }
+
+    [StringLength(500)]
+    public string? Bio { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime? LastLoginAtUtc { get; set; }

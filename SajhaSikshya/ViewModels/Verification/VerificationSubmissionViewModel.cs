@@ -31,6 +31,10 @@ public class VerificationSubmissionViewModel
     [Required(ErrorMessage = "Please select what best describes you.")]
     public SellerType SellerType { get; set; }
 
+    /// <summary>Optional free-text school/college/university/company name — shown on the Seller Profile alongside Seller Type when provided.</summary>
+    [StringLength(150)]
+    public string? InstitutionName { get; set; }
+
     [MinLength(1, ErrorMessage = "Please select at least one category you plan to sell.")]
     public List<SellingCategory> SellingCategories { get; set; } = new();
 

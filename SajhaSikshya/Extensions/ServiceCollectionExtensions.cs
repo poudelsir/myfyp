@@ -22,11 +22,13 @@ using SajhaSikshya.Services.Interfaces.Marketplace;
 using SajhaSikshya.Services.Interfaces.Notifications;
 using SajhaSikshya.Services.Interfaces.Orders;
 using SajhaSikshya.Services.Interfaces.Reviews;
+using SajhaSikshya.Services.Interfaces.Users;
 using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.Services.Marketplace;
 using SajhaSikshya.Services.Notifications;
 using SajhaSikshya.Services.Orders;
 using SajhaSikshya.Services.Reviews;
+using SajhaSikshya.Services.Users;
 using SajhaSikshya.Services.Verification;
 
 namespace SajhaSikshya.Extensions;
@@ -85,6 +87,13 @@ public static class ServiceCollectionExtensions
             options.TokenLifespan = TimeSpan.FromHours(SecurityConstants.PasswordResetTokenLifespanHours);
         });
 
+        // Makes Suspend User actually take effect on an already-signed-in session — see
+        // SecurityConstants.SecurityStampValidationIntervalMinutes' remarks.
+        services.Configure<SecurityStampValidatorOptions>(options =>
+        {
+            options.ValidationInterval = TimeSpan.FromMinutes(SecurityConstants.SecurityStampValidationIntervalMinutes);
+        });
+
         services.ConfigureApplicationCookie(options =>
         {
             options.LoginPath = "/Account/Login";
@@ -125,6 +134,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICompareService, CompareService>();
         services.AddScoped<IVerificationService, VerificationService>();
         services.AddScoped<IVerificationQueryService, VerificationQueryService>();
+        services.AddScoped<IUserQueryService, UserQueryService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IOrderQueryService, OrderQueryService>();
         services.AddScoped<IChatService, ChatService>();

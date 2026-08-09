@@ -46,4 +46,14 @@ public interface IVerificationService
     /// requirement regardless of which action was taken.
     /// </summary>
     Task<ServiceResult> ReviewAsync(int verificationId, VerificationAction action, string reviewerId, string? reason = null, string? adminNotes = null);
+
+    /// <summary>
+    /// Updates only the Selling Categories on a seller's current (latest) verification
+    /// row — the one field the Seller Profile page allows editing in place, since it's
+    /// declared as moderation/insights-only metadata rather than an identity claim.
+    /// Fails unless the caller's current row is <see cref="Data.Enums.VerificationStatus.Verified"/>;
+    /// every other field (Seller Type, Institution, documents) requires a full
+    /// re-verification via <see cref="ResubmitAsync"/> instead.
+    /// </summary>
+    Task<ServiceResult> UpdateSellingCategoriesAsync(string userId, List<SellingCategory> categories);
 }

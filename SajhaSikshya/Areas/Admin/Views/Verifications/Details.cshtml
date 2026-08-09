@@ -56,6 +56,8 @@
             <dd class="col-8">@(string.IsNullOrWhiteSpace(v.StudentPhoneNumber) ? "—" : v.StudentPhoneNumber)</dd>
             <dt class="col-4">Seller Type</dt>
             <dd class="col-8">@(v.SellerTypeDisplay ?? "—")</dd>
+            <dt class="col-4">Institution</dt>
+            <dd class="col-8">@(string.IsNullOrWhiteSpace(v.InstitutionName) ? "—" : v.InstitutionName)</dd>
             <dt class="col-4">Selling Categories</dt>
             <dd class="col-8">@(v.SellingCategoryDisplays.Any() ? string.Join(", ", v.SellingCategoryDisplays) : "—")</dd>
             <dt class="col-4">Submitted</dt>

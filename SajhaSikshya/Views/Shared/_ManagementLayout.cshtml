@@ -6,6 +6,12 @@
     var compareCount = User.Identity?.IsAuthenticated == true
         ? (await CompareService.GetCompareListingIdsAsync(User.GetUserId()!)).Count
         : Context.Session.GetCompareListingIds().Count;
+
+    // Set by each area's _ViewStart.cshtml (Student -> _StudentSidebar, Admin ->
+    // _AdminSidebar) — this one shared layout replaces what used to be two
+    // byte-identical files (_SellerCenterLayout/_AdminLayout) differing only in which
+    // sidebar partial they rendered.
+    var sidebarPartial = ViewData["SidebarPartial"] as string ?? "_StudentSidebar";
 }
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
@@ -28,7 +34,7 @@
 </head>
 <body data-authenticated="@(User.Identity?.IsAuthenticated == true ? "true" : "false")">
     <div class="app-shell">
-        <partial name="_StudentSidebar" />
+        <partial name="@sidebarPartial" />
 
         <div class="app-main">
             <partial name="_Navbar" />

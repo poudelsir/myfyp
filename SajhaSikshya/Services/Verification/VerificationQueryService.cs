@@ -147,12 +147,27 @@ public class VerificationQueryService : IVerificationQueryService
         return results.FirstOrDefault();
     }
 
+    /// <summary>
+    /// "Verified" means the user's <em>current</em> (most recent by SubmittedAtUtc) row
+    /// is Verified — not "has any row ever been Verified". History is never overwritten
+    /// (see <c>VerificationService</c>'s remarks), so a re-verification resubmission
+    /// after approval inserts a new Pending row while the old Verified row still exists;
+    /// checking "any" would incorrectly keep treating that seller as verified during the
+    /// re-review window, defeating the whole point of re-verification.
+    /// </summary>
     public async Task<bool> IsUserVerifiedAsync(string userId)
     {
         var repository = _unitOfWork.Repository<StudentVerification>();
-        return await repository.AnyAsync(v => v.UserId == userId && v.Status == VerificationStatus.Verified);
+        var page = await repository.GetPagedAsync(
+            1,
+            1,
+            filter: v => v.UserId == userId,
+            orderBy: q => q.OrderByDescending(v => v.SubmittedAtUtc));
+
+        return page.Items.FirstOrDefault()?.Status == VerificationStatus.Verified;
     }
 
+    /// <summary>Batched sibling of <see cref="IsUserVerifiedAsync"/> — same "current row, not any row" semantics, grouped in memory since the generic repository has no group-by primitive.</summary>
     public async Task<IReadOnlySet<string>> GetVerifiedUserIdsAsync(IEnumerable<string> userIds)
     {
         var ids = userIds.Distinct().ToList();
@@ -162,11 +177,12 @@ public class VerificationQueryService : IVerificationQueryService
         }
 
         var repository = _unitOfWork.Repository<StudentVerification>();
-        var verifiedIds = await repository.FindProjectedAsync(
-            filter: v => v.Status == VerificationStatus.Verified && ids.Contains(v.UserId),
-            orderBy: q => q.OrderBy(v => v.UserId),
-            take: ids.Count,
-            selector: v => v.UserId);
+        var rows = await repository.FindAsync(v => ids.Contains(v.UserId));
+
+        var verifiedIds = rows
+            .GroupBy(v => v.UserId)
+            .Where(g => g.OrderByDescending(v => v.SubmittedAtUtc).First().Status == VerificationStatus.Verified)
+            .Select(g => g.Key);
 
         return verifiedIds.ToHashSet();
     }

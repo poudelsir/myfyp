@@ -116,7 +116,14 @@
                             <partial name="_VerifiedStudentBadge" model="isVerified" />
                         </h6>
                     </li>
-                    <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
+                    @if (User.IsInRole(Roles.Student))
+                    {
+                        <li><a class="dropdown-item" asp-area="Student" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
+                    }
+                    else
+                    {
+                        <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
+                    }
                     <li><a class="dropdown-item disabled" href="#" aria-disabled="true"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
                     <li><hr class="dropdown-divider" /></li>
                     <li>

@@ -30,4 +30,15 @@ public static class SecurityConstants
     /// default token lifespan was designed for).
     /// </summary>
     public const int PasswordResetTokenLifespanHours = 2;
+
+    /// <summary>
+    /// How often Identity's <c>SecurityStampValidator</c> re-checks an authenticated
+    /// cookie against the user's current <c>SecurityStamp</c> in the database. Left at
+    /// Identity's (very long) default, an already-signed-in user's cookie keeps working
+    /// even after an admin suspends the account — this closes that gap: suspending a
+    /// user bumps their stamp (<c>UserManager.UpdateSecurityStampAsync</c>), and within
+    /// this interval their next request re-validates, fails, and forces a fresh sign-in
+    /// (which then correctly fails the existing <c>IsActive</c> login check).
+    /// </summary>
+    public const int SecurityStampValidationIntervalMinutes = 5;
 }

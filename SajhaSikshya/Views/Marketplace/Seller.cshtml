@@ -13,8 +13,8 @@
     </ol>
 </nav>
 
-<div class="marketplace-seller-card mb-4" style="max-width: 420px;">
-    <span class="avatar-initials">@(Model.Seller.SellerName.Length > 0 ? Model.Seller.SellerName[0].ToString().ToUpperInvariant() : "?")</span>
+<div class="marketplace-seller-card mb-4" style="max-width: 480px;">
+    <partial name="_Avatar" model="(Model.Seller.ProfilePicturePath, Model.Seller.SellerName)" />
     <div>
         <p class="mb-0 fw-semibold d-flex align-items-center gap-1">
             @Model.Seller.SellerName
@@ -37,8 +37,47 @@
                 <span class="text-secondary small">No reviews yet</span>
             }
         </p>
+
+        @if (Model.Seller.IsVerified && !string.IsNullOrEmpty(Model.Seller.SellerTypeDisplay))
+        {
+            <p class="mb-0 text-secondary small">
+                @Model.Seller.SellerTypeDisplay
+                @if (!string.IsNullOrEmpty(Model.Seller.InstitutionName))
+                {
+                    <text> &middot; @Model.Seller.InstitutionName</text>
+                }
+            </p>
+        }
     </div>
 </div>
+
+<div class="row g-3 mb-4" style="max-width: 480px;">
+    <div class="col-4">
+        <p class="mb-0 h5 fw-bold">@Model.Seller.TotalListingCount</p>
+        <p class="mb-0 text-secondary small">Total Listings</p>
+    </div>
+    <div class="col-4">
+        <p class="mb-0 h5 fw-bold">@Model.Seller.CompletedOrderCount</p>
+        <p class="mb-0 text-secondary small">Completed Orders</p>
+    </div>
+    <div class="col-4">
+        <p class="mb-0 h5 fw-bold">@Model.Seller.ReviewCount</p>
+        <p class="mb-0 text-secondary small">Reviews</p>
+    </div>
+</div>
+
+@if (Model.Seller.IsVerified && Model.Seller.SellingCategoryDisplays.Any())
+{
+    <div class="mb-4">
+        <p class="text-secondary small mb-2">Sells</p>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var category in Model.Seller.SellingCategoryDisplays)
+            {
+                <span class="badge text-bg-secondary fw-normal">@category</span>
+            }
+        </div>
+    </div>
+}
 
 <h2 class="h5 fw-bold mb-3">Listings from @Model.Seller.SellerName</h2>
 <partial name="_ListingCardGrid" model="Model.Listings.Items" view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = "This seller has no active listings right now." }' />

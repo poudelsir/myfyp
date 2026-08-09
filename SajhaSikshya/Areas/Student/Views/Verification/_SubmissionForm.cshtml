@@ -60,12 +60,17 @@
 </div>
 
 <h2 class="h6 fw-semibold mb-3">Seller Type</h2>
-<div class="mb-4">
+<div class="mb-3">
     <label asp-for="SellerType" class="form-label">Which best describes you?</label>
     <select asp-for="SellerType" asp-items="EnumExtensions.GetSelectList<SellerType>()" class="form-select">
         <option value="">— Select an option —</option>
     </select>
     <span asp-validation-for="SellerType" class="text-danger small"></span>
+</div>
+<div class="mb-4">
+    <label asp-for="InstitutionName" class="form-label">Institution / Organization <span class="text-secondary fw-normal">(Optional)</span></label>
+    <input asp-for="InstitutionName" class="form-control" autocomplete="off" placeholder="e.g. Tribhuvan University, XYZ College" />
+    <span asp-validation-for="InstitutionName" class="text-danger small"></span>
 </div>
 
 <h2 class="h6 fw-semibold mb-3">Intended Selling Categories</h2>

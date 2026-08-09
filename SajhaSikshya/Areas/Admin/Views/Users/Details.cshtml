@@ -1,0 +1,207 @@
+@using SajhaSikshya.DTOs.Users
+@using SajhaSikshya.Data.Constants
+@model AdminUserDetailDto
+@{
+    ViewData["Title"] = $"User: {Model.FullName}";
+}
+
+<div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+        <partial name="_Avatar" model="(Model.ProfilePicturePath, Model.FullName)" />
+        <div>
+            <h1 class="h4 fw-bold mb-1 d-flex align-items-center gap-2">
+                @Model.FullName
+                @if (Model.IsVerifiedSeller)
+                {
+                    <span class="badge text-bg-success">Verified Seller</span>
+                }
+                @if (Model.IsActive)
+                {
+                    <span class="badge text-bg-success">Active</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-danger">Suspended</span>
+                }
+            </h1>
+            <p class="text-secondary mb-0 small">@Model.Role &middot; Joined @Model.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")</p>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.IsActive)
+        {
+            <form asp-action="Suspend" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm">
+                    <i data-lucide="user-x" class="me-1"></i>Suspend User
+                </button>
+            </form>
+        }
+        else
+        {
+            <form asp-action="Reactivate" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-success btn-sm">
+                    <i data-lucide="user-check" class="me-1"></i>Reactivate User
+                </button>
+            </form>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i data-lucide="arrow-left" class="me-1"></i>Back to Users
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="tag"></i></div>
+            <div>
+                <p class="stat-card-label">Listings</p>
+                <p class="stat-card-value">@Model.ListingCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="package"></i></div>
+            <div>
+                <p class="stat-card-label">Orders (Buyer / Seller)</p>
+                <p class="stat-card-value">@Model.BuyerOrderCount / @Model.SellerOrderCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="star"></i></div>
+            <div>
+                <p class="stat-card-label">Seller Rating</p>
+                <p class="stat-card-value">@(Model.Reputation is { SellerReviewCount: > 0 } ? Model.Reputation.SellerAverageRating.ToString("0.0") : "—")</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="bell"></i></div>
+            <div>
+                <p class="stat-card-label">Unread Notifications</p>
+                <p class="stat-card-value">@Model.UnreadNotificationCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Personal Information</h2>
+                <dl class="row small mb-0">
+                    <dt class="col-4 text-secondary">Email</dt>
+                    <dd class="col-8">@Model.Email @(Model.EmailConfirmed ? "" : "(unverified)")</dd>
+                    <dt class="col-4 text-secondary">Phone</dt>
+                    <dd class="col-8">@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</dd>
+                    <dt class="col-4 text-secondary">Address</dt>
+                    <dd class="col-8">@(string.IsNullOrWhiteSpace(Model.Address) ? "—" : Model.Address)</dd>
+                    <dt class="col-4 text-secondary">Institution</dt>
+                    <dd class="col-8">@(string.IsNullOrWhiteSpace(Model.Institution) ? "—" : Model.Institution)</dd>
+                    <dt class="col-4 text-secondary">Bio</dt>
+                    <dd class="col-8">@(string.IsNullOrWhiteSpace(Model.Bio) ? "—" : Model.Bio)</dd>
+                    <dt class="col-4 text-secondary">Last Login</dt>
+                    <dd class="col-8">@(Model.LastLoginAtUtc.HasValue ? Model.LastLoginAtUtc.Value.ToLocalTime().ToString("MMM d, yyyy h:mm tt") : "Never")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Seller Information</h2>
+                @if (Model.CurrentVerification is null)
+                {
+                    <p class="text-secondary small mb-0">This user has never submitted a seller application.</p>
+                }
+                else
+                {
+                    <dl class="row small mb-3">
+                        <dt class="col-4 text-secondary">Status</dt>
+                        <dd class="col-8"><partial name="_VerificationStatusBadge" model="Model.CurrentVerification.Status" /></dd>
+                        <dt class="col-4 text-secondary">Seller Type</dt>
+                        <dd class="col-8">@(Model.CurrentVerification.SellerTypeDisplay ?? "—")</dd>
+                        <dt class="col-4 text-secondary">Institution</dt>
+                        <dd class="col-8">@(string.IsNullOrWhiteSpace(Model.CurrentVerification.InstitutionName) ? "—" : Model.CurrentVerification.InstitutionName)</dd>
+                        <dt class="col-4 text-secondary">Categories</dt>
+                        <dd class="col-8">@(Model.CurrentVerification.SellingCategoryDisplays.Any() ? string.Join(", ", Model.CurrentVerification.SellingCategoryDisplays) : "—")</dd>
+                    </dl>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a asp-area="Admin" asp-controller="Verifications" asp-action="Details" asp-route-id="@Model.CurrentVerification.Id" class="btn btn-outline-secondary btn-sm">
+                            <i data-lucide="file-check" class="me-1"></i>View Verification / Documents
+                        </a>
+                        @if (Model.IsVerifiedSeller)
+                        {
+                            <a asp-area="" asp-controller="Marketplace" asp-action="Seller" asp-route-sellerId="@Model.Id" class="btn btn-outline-secondary btn-sm">
+                                <i data-lucide="store" class="me-1"></i>View Seller Profile
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Verification History</h2>
+                @if (!Model.VerificationHistory.Items.Any())
+                {
+                    <p class="text-secondary small mb-0">No verification attempts.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var v in Model.VerificationHistory.Items)
+                                {
+                                    <tr>
+                                        <td>@v.SubmittedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                        <td><partial name="_VerificationStatusBadge" model="v.Status" /></td>
+                                        <td>@(v.RejectionReason ?? "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h6 fw-semibold mb-3">Recent Notifications</h2>
+                @if (!Model.RecentNotifications.Any())
+                {
+                    <p class="text-secondary small mb-0">No notifications yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0 small">
+                        @foreach (var n in Model.RecentNotifications)
+                        {
+                            <li class="mb-2">
+                                <strong>@n.Title</strong>
+                                <span class="text-secondary"> — @n.Message</span>
+                                <div class="text-secondary" style="font-size:0.75rem;">@n.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy h:mm tt")</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

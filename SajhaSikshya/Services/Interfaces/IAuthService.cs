@@ -41,4 +41,11 @@ public interface IAuthService
     /// this path leaks nothing about account existence either.
     /// </summary>
     Task<IdentityResult> ResetPasswordAsync(string email, string token, string newPassword);
+
+    /// <summary>
+    /// Changes an already-authenticated user's password via <c>UserManager.ChangePasswordAsync</c> —
+    /// verifies <paramref name="currentPassword"/> itself (Identity does this internally),
+    /// distinct from the anonymous email-token flow above.
+    /// </summary>
+    Task<IdentityResult> ChangePasswordAsync(string userId, string currentPassword, string newPassword);
 }

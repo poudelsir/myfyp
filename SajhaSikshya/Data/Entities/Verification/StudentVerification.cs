@@ -67,6 +67,10 @@ public class StudentVerification : BaseEntity
     /// <summary>Self-declared applicant category (student/teacher/institution/etc.) — context for admin review and marketplace insights, not an access-control tier. Nullable only for legacy rows.</summary>
     public SellerType? SellerType { get; set; }
 
+    /// <summary>Optional free-text school/college/university/company name the applicant belongs to — shown on the Seller Profile alongside <see cref="SellerType"/> when provided. Never required.</summary>
+    [StringLength(150)]
+    public string? InstitutionName { get; set; }
+
     /// <summary>
     /// Comma-separated int values of <see cref="Data.Enums.SellingCategory"/> the
     /// applicant intends to sell — multi-select, for moderation/insights only. A plain

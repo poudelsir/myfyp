@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SajhaSikshya.Constants;
+using SajhaSikshya.Data.Enums;
 using SajhaSikshya.DTOs.Marketplace;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Marketplace;
+using SajhaSikshya.Services.Interfaces.Orders;
 using SajhaSikshya.Services.Interfaces.Reviews;
 using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.ViewModels.Marketplace;
@@ -41,6 +43,7 @@ public class MarketplaceController : Controller
     private readonly ICompareService _compareService;
     private readonly IVerificationQueryService _verificationQueryService;
     private readonly IReviewQueryService _reviewQueryService;
+    private readonly IOrderQueryService _orderQueryService;
     private readonly ICategoryService _categoryService;
     private readonly IUniversityService _universityService;
     private readonly IAcademicLevelService _academicLevelService;
@@ -54,6 +57,7 @@ public class MarketplaceController : Controller
         ICompareService compareService,
         IVerificationQueryService verificationQueryService,
         IReviewQueryService reviewQueryService,
+        IOrderQueryService orderQueryService,
         ICategoryService categoryService,
         IUniversityService universityService,
         IAcademicLevelService academicLevelService,
@@ -66,6 +70,7 @@ public class MarketplaceController : Controller
         _compareService = compareService;
         _verificationQueryService = verificationQueryService;
         _reviewQueryService = reviewQueryService;
+        _orderQueryService = orderQueryService;
         _categoryService = categoryService;
         _universityService = universityService;
         _academicLevelService = academicLevelService;
@@ -281,6 +286,23 @@ public class MarketplaceController : Controller
         var reputation = await _reviewQueryService.GetReputationAsync(sellerId);
         model.Seller.AverageRating = reputation.SellerAverageRating;
         model.Seller.ReviewCount = reputation.SellerReviewCount;
+
+        var completedOrders = await _orderQueryService.GetSellerOrdersAsync(sellerId, OrderStatus.Completed, 1, 1);
+        model.Seller.CompletedOrderCount = completedOrders.TotalCount;
+
+        // Public-safe fields only, straight off the approved verification snapshot —
+        // never the Government ID/private-document paths, which this DTO never carries.
+        if (model.Seller.IsVerified)
+        {
+            var verification = await _verificationQueryService.GetCurrentStatusAsync(sellerId);
+            if (verification is not null)
+            {
+                model.Seller.SellerTypeDisplay = verification.SellerTypeDisplay;
+                model.Seller.InstitutionName = verification.InstitutionName;
+                model.Seller.SellingCategoryDisplays = verification.SellingCategoryDisplays;
+                model.Seller.VerifiedAtUtc = verification.ReviewedAtUtc;
+            }
+        }
 
         return View(model);
     }

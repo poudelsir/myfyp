@@ -4,5 +4,6 @@
     // by either role — Notifications and the public Reviews/ForUser page — so they still
     // render inside a management shell with the role-appropriate sidebar, same as before
     // the Student/Admin layouts were split apart.
-    Layout = User.IsInRole(Roles.Admin) ? "_AdminLayout" : "_SellerCenterLayout";
+    Layout = "_ManagementLayout";
+    ViewData["SidebarPartial"] = User.IsInRole(Roles.Admin) ? "_AdminSidebar" : "_StudentSidebar";
 }
