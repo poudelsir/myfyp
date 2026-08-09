@@ -139,24 +139,32 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // Structured, step-by-step logging for ops visibility — deliberately never
+        // includes the token, the encoded token, or the reset link itself (the link
+        // query string IS the token's carrier; logging it is equivalent to logging the
+        // token). A support engineer can see that a reset was requested and whether the
+        // email send succeeded without ever being able to reconstruct a working link
+        // from the logs.
+        _logger.LogInformation("Password reset requested for a submitted email address.");
+
         var tokenResult = await _authService.GeneratePasswordResetTokenAsync(model.Email);
         if (tokenResult is not null)
         {
             var (user, token) = tokenResult.Value;
+            _logger.LogInformation("Password reset token generated for user {UserId}.", user.Id);
 
             // Base64Url-encode the raw Identity token before it travels through a URL —
             // the standard Microsoft Identity pattern, since a raw token can contain
             // characters (+, /, =) that don't round-trip safely through a query string.
             var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             var resetLink = Url.Action(nameof(ResetPassword), "Account", new { email = user.Email, token = encodedToken }, Request.Scheme)!;
+            _logger.LogInformation("Password reset URL generated for user {UserId}.", user.Id);
 
-            // Dev/ops visibility: EmailService itself logs-and-skips when SMTP isn't
-            // configured (see its own remarks), so this is the only way to retrieve a
-            // working reset link in an environment without real SMTP. Server-side log
-            // only — never shown to the client.
-            _logger.LogInformation("Password reset link generated for {Email}: {ResetLink}", user.Email, resetLink);
-
-            await _emailService.SendEmailAsync(user.Email!, "Reset your SajhaSikshya password", BuildResetPasswordEmailHtml(user, resetLink));
+            var sent = await _emailService.SendEmailAsync(user.Email!, "Reset your SajhaSikshya password", BuildResetPasswordEmailHtml(user, resetLink));
+            _logger.LogInformation(
+                "Password reset email send {Outcome} for user {UserId}.",
+                sent ? "succeeded" : "failed",
+                user.Id);
         }
 
         // Identical response whether or not the email matched an account — never
