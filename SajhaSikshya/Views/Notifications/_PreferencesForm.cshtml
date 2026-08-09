@@ -1,0 +1,52 @@
+@using SajhaSikshya.DTOs.Notifications
+@model NotificationPreferenceDto
+@{
+    // Reused by the standalone /notifications/preferences page and by the Notifications
+    // tab embedded in both Student and Admin Settings — one form, one POST action
+    // (Controllers/NotificationsController.Preferences), only postUrl/returnUrl differ.
+    var postUrl = ViewData["PreferencesPostUrl"] as string ?? Url.Action("Preferences", "Notifications")!;
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+<form method="post" action="@postUrl">
+    @Html.AntiForgeryToken()
+    @if (!string.IsNullOrEmpty(returnUrl))
+    {
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+    }
+    <div class="form-check form-switch mb-3">
+        <input asp-for="ChatEnabled" class="form-check-input" role="switch" />
+        <label asp-for="ChatEnabled" class="form-check-label">Chat — new messages</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+        <input asp-for="OrdersEnabled" class="form-check-input" role="switch" />
+        <label asp-for="OrdersEnabled" class="form-check-label">Orders — created, confirmed, ready, completed, cancelled</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+        <input asp-for="VerificationEnabled" class="form-check-input" role="switch" />
+        <label asp-for="VerificationEnabled" class="form-check-label">Verification — submission and review updates</label>
+    </div>
+    <div class="form-check form-switch mb-3">
+        <input asp-for="MarketplaceEnabled" class="form-check-input" role="switch" />
+        <label asp-for="MarketplaceEnabled" class="form-check-label">Marketplace — listing approval, rejection, archive, restore</label>
+    </div>
+    <div class="form-check form-switch mb-4">
+        <input asp-for="AnnouncementsEnabled" class="form-check-input" role="switch" />
+        <label asp-for="AnnouncementsEnabled" class="form-check-label">Announcements — system notices from administrators</label>
+    </div>
+
+    <hr />
+
+    <p class="text-secondary small mb-2">Future delivery channels — no email or push is actually sent yet, but your preference is saved for when they are.</p>
+    <div class="form-check form-switch mb-3">
+        <input asp-for="EmailEnabled" class="form-check-input" role="switch" />
+        <label asp-for="EmailEnabled" class="form-check-label">Email notifications <span class="badge text-bg-secondary">Coming soon</span></label>
+    </div>
+    <div class="form-check form-switch mb-4">
+        <input asp-for="PushEnabled" class="form-check-input" role="switch" />
+        <label asp-for="PushEnabled" class="form-check-label">Push notifications <span class="badge text-bg-secondary">Coming soon</span></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <i data-lucide="save" class="me-1"></i>Save Preferences
+    </button>
+</form>

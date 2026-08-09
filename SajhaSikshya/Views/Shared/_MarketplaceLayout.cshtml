@@ -32,6 +32,7 @@
     var fullName = "Guest";
     string? profilePicturePath = null;
     var isCurrentUserVerified = false;
+    var isSellerApplicationPending = false;
     var isStudent = User.IsInRole(Roles.Student);
     var isAdmin = User.IsInRole(Roles.Admin);
     var unreadChatCount = 0;
@@ -47,7 +48,12 @@
         profilePicturePath = (await UserManager.GetUserAsync(User))?.ProfilePicturePath;
         if (isStudent)
         {
-            isCurrentUserVerified = await VerificationQueryService.IsUserVerifiedAsync(userId);
+            // Three real states (never applied / pending / verified) rather than a single
+            // bool, so the nav can say "Seller Application Pending" instead of always
+            // showing "Become a Seller" to someone who's already applied.
+            var verificationStatus = await VerificationQueryService.GetCurrentStatusAsync(userId);
+            isCurrentUserVerified = verificationStatus?.Status == VerificationStatus.Verified;
+            isSellerApplicationPending = verificationStatus?.Status == VerificationStatus.Pending;
             unreadChatCount = await ChatQueryService.GetUnreadCountAsync(userId);
         }
 
@@ -249,18 +255,32 @@
                         else
                         {
                             <li><a class="dropdown-item" asp-area="Student" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
-                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
                             @if (isCurrentUserVerified)
                             {
-                                <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="store" class="me-2"></i>Seller Dashboard</a></li>
+                                <li><a class="dropdown-item" asp-area="Student" asp-controller="Dashboard" asp-action="Index"><i data-lucide="store" class="me-2"></i>Seller Center</a></li>
                             }
-                            else
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Orders" asp-action="Index"><i data-lucide="package" class="me-2"></i>My Orders</a></li>
+                            @if (!isCurrentUserVerified)
                             {
                                 <li><a class="dropdown-item" asp-area="Student" asp-controller="SavedListings" asp-action="Index"><i data-lucide="heart" class="me-2"></i>Wishlist</a></li>
-                                <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Submit"><i data-lucide="badge-check" class="me-2"></i>Become a Verified Seller</a></li>
+                                @if (isSellerApplicationPending)
+                                {
+                                    <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Index"><i data-lucide="clock" class="me-2"></i>Seller Application Pending</a></li>
+                                }
+                                else
+                                {
+                                    <li><a class="dropdown-item" asp-area="Student" asp-controller="Verification" asp-action="Submit"><i data-lucide="badge-check" class="me-2"></i>Become a Seller</a></li>
+                                }
                             }
                         }
-                        <li><a class="dropdown-item" href="/notifications/preferences"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
+                        @if (isAdmin)
+                        {
+                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Settings" asp-action="Index"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
+                        }
+                        else
+                        {
+                            <li><a class="dropdown-item" asp-area="Student" asp-controller="Settings" asp-action="Index"><i data-lucide="settings" class="me-2"></i>Settings</a></li>
+                        }
                         <li><hr class="dropdown-divider" /></li>
                         <li>
                             <form asp-controller="Account" asp-action="Logout" method="post" class="px-0">

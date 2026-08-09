@@ -1,0 +1,73 @@
+@using SajhaSikshya.ViewModels.Student.Profile
+@model PersonalInfoViewModel
+@{
+    // Rendered via <partial name="_PersonalInfoForm" for="PersonalInfo" view-data="..." /> from the
+    // caller, so asp-for="FirstName" etc. below still generate "PersonalInfo.FirstName" field names —
+    // matching the [Bind(Prefix = "PersonalInfo")] both ProfileControllers' UpdatePersonalInfo expects —
+    // without this partial needing to know its own field-name prefix. One form, reused by
+    // Student/Admin Profile AND Student/Admin Settings; only the post/return URLs differ per caller.
+    var postUrl = ViewData["PersonalInfoPostUrl"] as string ?? Url.Action("UpdatePersonalInfo", "Profile")!;
+    var returnUrl = ViewData["ReturnUrl"] as string;
+    var roleLabel = ViewData["RoleLabel"] as string;
+}
+<form method="post" action="@postUrl" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    @if (!string.IsNullOrEmpty(returnUrl))
+    {
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+    }
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <partial name="_Avatar" model="(Model.ProfilePicturePath, Model.FirstName)" />
+        <div class="flex-grow-1">
+            <label asp-for="ProfilePhoto" class="form-label small mb-1">Profile Photo</label>
+            <input asp-for="ProfilePhoto" type="file" class="form-control form-control-sm" accept="image/jpeg,image/png,image/webp" />
+            <span asp-validation-for="ProfilePhoto" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+            <label asp-for="FirstName" class="form-label small">First Name</label>
+            <input asp-for="FirstName" class="form-control" />
+            <span asp-validation-for="FirstName" class="text-danger small"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="LastName" class="form-label small">Last Name</label>
+            <input asp-for="LastName" class="form-control" />
+            <span asp-validation-for="LastName" class="text-danger small"></span>
+        </div>
+        <div class="col-sm-6">
+            <label class="form-label small">Email</label>
+            <input value="@Model.Email" class="form-control" disabled readonly />
+            <div class="form-text">Contact support to change your email address.</div>
+        </div>
+        @if (!string.IsNullOrEmpty(roleLabel))
+        {
+            <div class="col-sm-6">
+                <label class="form-label small">Current Role</label>
+                <input value="@roleLabel" class="form-control" disabled readonly />
+            </div>
+        }
+        <div class="col-sm-6">
+            <label asp-for="PhoneNumber" class="form-label small">Phone Number</label>
+            <input asp-for="PhoneNumber" class="form-control" autocomplete="off" />
+            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="Address" class="form-label small">Address <span class="text-secondary fw-normal">(Optional)</span></label>
+            <input asp-for="Address" class="form-control" autocomplete="off" />
+            <span asp-validation-for="Address" class="text-danger small"></span>
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="Institution" class="form-label small">Institution <span class="text-secondary fw-normal">(Optional)</span></label>
+            <input asp-for="Institution" class="form-control" autocomplete="off" />
+            <span asp-validation-for="Institution" class="text-danger small"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Bio" class="form-label small">Bio <span class="text-secondary fw-normal">(Optional)</span></label>
+            <textarea asp-for="Bio" class="form-control" rows="3" maxlength="500"></textarea>
+            <span asp-validation-for="Bio" class="text-danger small"></span>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+</form>

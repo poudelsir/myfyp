@@ -1,3 +1,4 @@
+@using SajhaSikshya.Data.Enums
 @using SajhaSikshya.Extensions
 @using SajhaSikshya.Services.Interfaces.Chat
 @using SajhaSikshya.Services.Interfaces.Verification
@@ -11,9 +12,13 @@
     var unreadChatCount = User.Identity?.IsAuthenticated == true
         ? await ChatQueryService.GetUnreadCountAsync(currentUserId!)
         : 0;
-    var isVerifiedSeller = User.Identity?.IsAuthenticated == true
-        ? await VerificationQueryService.IsUserVerifiedAsync(currentUserId!)
-        : false;
+    // Three real states (never applied / pending / verified), not just a bool, so
+    // "Become a Seller" doesn't keep showing to someone who already applied.
+    var verificationStatus = User.Identity?.IsAuthenticated == true
+        ? await VerificationQueryService.GetCurrentStatusAsync(currentUserId!)
+        : null;
+    var isVerifiedSeller = verificationStatus?.Status == VerificationStatus.Verified;
+    var isSellerApplicationPending = verificationStatus?.Status == VerificationStatus.Pending;
 }
 <aside class="app-sidebar" id="appSidebar">
     <div class="sidebar-brand">
@@ -70,10 +75,10 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" asp-area="Student" asp-controller="Verification" asp-action="@(isVerifiedSeller ? "Index" : "Submit")">
-                    <i data-lucide="@(isVerifiedSeller ? "shield-check" : "badge-check")"></i>
-                    <span>@(isVerifiedSeller ? "My Verification" : "Become a Verified Seller")</span>
-                    @if (!isVerifiedSeller)
+                <a class="nav-link" asp-area="Student" asp-controller="Verification" asp-action="@(isVerifiedSeller || isSellerApplicationPending ? "Index" : "Submit")">
+                    <i data-lucide="@(isVerifiedSeller ? "shield-check" : isSellerApplicationPending ? "clock" : "badge-check")"></i>
+                    <span>@(isVerifiedSeller ? "My Verification" : isSellerApplicationPending ? "Seller Application Pending" : "Become a Seller")</span>
+                    @if (!isVerifiedSeller && !isSellerApplicationPending)
                     {
                         <span class="badge text-bg-primary rounded-pill ms-auto">New</span>
                     }
@@ -96,9 +101,9 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/notifications/preferences">
-                    <i data-lucide="bell-ring"></i>
-                    <span>Notification Preferences</span>
+                <a class="nav-link" asp-area="Student" asp-controller="Settings" asp-action="Index">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
                 </a>
             </li>
         </ul>

@@ -162,6 +162,7 @@ public class ListingQueryService : IListingQueryService
             SellerName = user.FullName,
             ProfilePicturePath = user.ProfilePicturePath,
             MemberSinceUtc = user.CreatedAtUtc,
+            IsPublicProfile = user.IsPublicProfile,
             ActiveListingCount = activeListingCount,
             TotalListingCount = totalListingCount,
         };

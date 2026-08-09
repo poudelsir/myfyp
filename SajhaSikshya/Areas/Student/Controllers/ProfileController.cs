@@ -66,7 +66,7 @@ public class ProfileController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdatePersonalInfo([Bind(Prefix = "PersonalInfo")] PersonalInfoViewModel model)
+    public async Task<IActionResult> UpdatePersonalInfo([Bind(Prefix = "PersonalInfo")] PersonalInfoViewModel model, string? returnUrl)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
@@ -121,12 +121,12 @@ public class ProfileController : Controller
         TempData[updateResult.Succeeded ? AlertHelper.SuccessKey : AlertHelper.ErrorKey] =
             updateResult.Succeeded ? "Personal information updated." : updateResult.Errors.FirstOrDefault()?.Description;
 
-        return RedirectToAction(nameof(Index));
+        return RedirectBack(returnUrl);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ChangePassword([Bind(Prefix = "ChangePassword")] ChangePasswordViewModel model)
+    public async Task<IActionResult> ChangePassword([Bind(Prefix = "ChangePassword")] ChangePasswordViewModel model, string? returnUrl)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
@@ -155,7 +155,14 @@ public class ProfileController : Controller
         }
 
         TempData[AlertHelper.SuccessKey] = "Password changed successfully.";
-        return RedirectToAction(nameof(Index));
+        return RedirectBack(returnUrl);
+    }
+
+    private IActionResult RedirectBack(string? returnUrl)
+    {
+        return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? Redirect(returnUrl)
+            : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]

@@ -1,0 +1,101 @@
+@using SajhaSikshya.Data.Enums
+@using SajhaSikshya.DTOs.Verification
+@using SajhaSikshya.Extensions
+@model VerificationDto?
+@{
+    // Reused by the Profile page's "Seller Information" section and Settings' "Seller"
+    // tab — same three-state (approved / pending / not started) logic, same actions
+    // (UpdateSellingCategories on ProfileController, the existing Verification
+    // Submit/Resubmit flow), so there is exactly one place this ever needs to change.
+    var verification = Model;
+    var isVerified = verification?.Status == VerificationStatus.Verified;
+    var isPending = verification?.Status == VerificationStatus.Pending;
+}
+
+@if (isVerified)
+{
+    <div class="verification-status-card mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <h2 class="h6 fw-bold mb-0 d-flex align-items-center gap-2">
+                Seller Information
+                <partial name="_VerificationStatusBadge" model="verification!.Status" />
+            </h2>
+            <div class="d-flex gap-2">
+                <a asp-area="Student" asp-controller="Dashboard" asp-action="Index" class="btn btn-primary btn-sm">
+                    <i data-lucide="store" class="me-1"></i>Seller Center
+                </a>
+                <a asp-area="Student" asp-controller="Verification" asp-action="Resubmit" class="btn btn-outline-secondary btn-sm">
+                    <i data-lucide="pencil" class="me-1"></i>Update Application
+                </a>
+            </div>
+        </div>
+
+        <dl class="row small mb-0">
+            <dt class="col-4 col-sm-3 text-secondary">Seller Type</dt>
+            <dd class="col-8 col-sm-9">@(verification!.SellerTypeDisplay ?? "—")</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Institution</dt>
+            <dd class="col-8 col-sm-9">@(string.IsNullOrWhiteSpace(verification.InstitutionName) ? "—" : verification.InstitutionName)</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Academic Identity</dt>
+            <dd class="col-8 col-sm-9">@(verification.HasAcademicId ? (verification.AcademicIdDocumentTypeDisplay ?? "Provided") : "Not provided")</dd>
+
+            <dt class="col-4 col-sm-3 text-secondary">Verification Date</dt>
+            <dd class="col-8 col-sm-9">@(verification.ReviewedAtUtc.HasValue ? verification.ReviewedAtUtc.Value.ToLocalTime().ToString("MMMM d, yyyy") : "—")</dd>
+        </dl>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h6 fw-semibold mb-1">Intended Selling Categories</h2>
+            <p class="text-secondary small mb-3">Used for moderation and marketplace insights — safe to update any time without affecting your seller status.</p>
+
+            <form asp-area="Student" asp-controller="Profile" asp-action="UpdateSellingCategories" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row row-cols-1 row-cols-sm-2 g-2 mb-3">
+                    @foreach (var category in Enum.GetValues<SellingCategory>())
+                    {
+                        var inputId = $"sellerCategory_{category}";
+                        var isChecked = verification!.SellingCategories.Contains(category);
+                        <div class="col">
+                            <div class="form-check">
+                                <input type="checkbox" name="categories" value="@category" class="form-check-input" id="@inputId" checked="@isChecked" />
+                                <label class="form-check-label small" for="@inputId">@category.GetDisplayName()</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Save Categories</button>
+            </form>
+        </div>
+    </div>
+}
+else if (isPending)
+{
+    <div class="verification-status-card mb-4 d-flex align-items-center gap-3 flex-wrap">
+        <div class="verification-status-icon is-pending">
+            <i data-lucide="clock"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h2 class="h6 fw-bold mb-1">Seller Application Pending</h2>
+            <p class="text-secondary mb-0">Your seller application is under review. This usually takes 24–48 hours. Seller management tools unlock once approved.</p>
+        </div>
+        <a asp-area="Student" asp-controller="Verification" asp-action="Index" class="btn btn-outline-secondary btn-sm flex-shrink-0">View Status</a>
+    </div>
+}
+else
+{
+    <div class="donation-banner mb-4">
+        <div class="donation-banner-content">
+            <span class="status-chip status-chip-primary mb-2"><i data-lucide="badge-check"></i> Unlock Selling</span>
+            <h2 class="h5 fw-bold mb-2">Become a Seller</h2>
+            <p class="mb-3">
+                Get verified by our admin team to start listing your own books, track sales, and access seller
+                analytics. Verification is quick — just complete a one-time application.
+            </p>
+            <a asp-area="Student" asp-controller="Verification" asp-action="Submit" class="btn btn-primary">
+                <i data-lucide="badge-check" class="me-1"></i>Become a Seller
+            </a>
+        </div>
+    </div>
+}

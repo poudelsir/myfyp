@@ -1,0 +1,110 @@
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
+@using SajhaSikshya.ViewModels.Student.Settings
+@model StudentSettingsViewModel
+@{
+    ViewData["Title"] = "Settings";
+    var profilePostUrl = Url.Action("UpdatePersonalInfo", "Profile");
+    var passwordPostUrl = Url.Action("ChangePassword", "Profile");
+    var preferencesPostUrl = Url.Action("Preferences", "Notifications", new { area = "" });
+    var roleLabel = Model.Verification?.Status == SajhaSikshya.Data.Enums.VerificationStatus.Verified ? "Verified Seller" : "Student";
+}
+
+<div class="mb-4">
+    <h1 class="h4 fw-bold mb-1">Settings</h1>
+    <p class="text-secondary mb-0">Manage your account, security, notifications, privacy, and seller settings.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <div class="nav flex-column nav-pills settings-nav" id="settingsTabs" role="tablist" aria-orientation="vertical">
+            <button class="nav-link active" id="settings-tab-profile" data-bs-toggle="pill" data-bs-target="#settings-profile" type="button" role="tab" aria-controls="settings-profile" aria-selected="true">
+                <i data-lucide="user" class="me-2"></i>Profile
+            </button>
+            <button class="nav-link" id="settings-tab-security" data-bs-toggle="pill" data-bs-target="#settings-security" type="button" role="tab" aria-controls="settings-security" aria-selected="false">
+                <i data-lucide="lock" class="me-2"></i>Security
+            </button>
+            <button class="nav-link" id="settings-tab-notifications" data-bs-toggle="pill" data-bs-target="#settings-notifications" type="button" role="tab" aria-controls="settings-notifications" aria-selected="false">
+                <i data-lucide="bell" class="me-2"></i>Notifications
+            </button>
+            <button class="nav-link" id="settings-tab-privacy" data-bs-toggle="pill" data-bs-target="#settings-privacy" type="button" role="tab" aria-controls="settings-privacy" aria-selected="false">
+                <i data-lucide="eye-off" class="me-2"></i>Privacy
+            </button>
+            <button class="nav-link" id="settings-tab-seller" data-bs-toggle="pill" data-bs-target="#settings-seller" type="button" role="tab" aria-controls="settings-seller" aria-selected="false">
+                <i data-lucide="store" class="me-2"></i>Seller
+            </button>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="tab-content" id="settingsTabContent">
+            <div class="tab-pane fade show active" id="settings-profile" role="tabpanel" aria-labelledby="settings-tab-profile">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h6 fw-semibold mb-3">Profile</h2>
+                        <partial name="_PersonalInfoForm" for="PersonalInfo" view-data='new ViewDataDictionary(ViewData) { ["PersonalInfoPostUrl"] = profilePostUrl, ["ReturnUrl"] = Url.Action("Index") + "#settings-profile", ["RoleLabel"] = roleLabel }' />
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings-security" role="tabpanel" aria-labelledby="settings-tab-security">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h6 fw-semibold mb-3">Security</h2>
+                        <partial name="_ChangePasswordForm" for="ChangePassword" view-data='new ViewDataDictionary(ViewData) { ["ChangePasswordPostUrl"] = passwordPostUrl, ["ReturnUrl"] = Url.Action("Index") + "#settings-security" }' />
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings-notifications" role="tabpanel" aria-labelledby="settings-tab-notifications">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h6 fw-semibold mb-3">Notification Preferences</h2>
+                        <p class="text-secondary small mb-3">Choose which categories of notifications you want to receive.</p>
+                        <partial name="/Views/Notifications/_PreferencesForm.cshtml" model="Model.NotificationPreferences" view-data='new ViewDataDictionary(ViewData) { ["PreferencesPostUrl"] = preferencesPostUrl, ["ReturnUrl"] = Url.Action("Index") + "#settings-notifications" }' />
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings-privacy" role="tabpanel" aria-labelledby="settings-tab-privacy">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h6 fw-semibold mb-3">Privacy</h2>
+                        <form asp-action="UpdatePrivacy" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="form-check form-switch mb-3">
+                                <input type="checkbox" name="isPublicProfile" value="true" class="form-check-input" role="switch" id="isPublicProfileInput" checked="@Model.IsPublicProfile" />
+                                <label class="form-check-label" for="isPublicProfileInput">Public seller profile</label>
+                                <div class="form-text">When off, other students can't open your seller profile page (<code>/marketplace/seller/...</code>) — your listings still appear normally in the marketplace and search.</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Save Privacy Settings</button>
+                        </form>
+                        <hr />
+                        <p class="text-secondary small mb-0">
+                            Your government ID, verification documents, private phone number, email, and address are never shown on any public page, regardless of this setting.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="settings-seller" role="tabpanel" aria-labelledby="settings-tab-seller">
+                <partial name="_SellerStatusPanel" model="Model.Verification" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            "use strict";
+            var hash = window.location.hash;
+            if (hash) {
+                var trigger = document.getElementById("settings-tab-" + hash.replace("#settings-", ""));
+                if (trigger && window.bootstrap) {
+                    window.bootstrap.Tab.getOrCreateInstance(trigger).show();
+                }
+            }
+        })();
+    </script>
+}

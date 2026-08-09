@@ -74,6 +74,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(u => u.Address).HasMaxLength(300);
             entity.Property(u => u.Institution).HasMaxLength(150);
             entity.Property(u => u.Bio).HasMaxLength(500);
+            // EF migrations don't read C# property initializers for defaultValue — must be
+            // explicit here, or existing rows would migrate to false instead of true.
+            entity.Property(u => u.IsPublicProfile).HasDefaultValue(true);
 
             // Rename Identity's default table names to a clearer, project-specific schema.
             entity.ToTable("Users");

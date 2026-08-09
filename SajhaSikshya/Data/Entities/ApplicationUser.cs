@@ -49,6 +49,15 @@ public class ApplicationUser : IdentityUser
     /// </summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// Settings &gt; Privacy toggle. When false, <c>MarketplaceController.Seller</c> hides
+    /// this user's public seller profile from everyone except themselves and Admins —
+    /// their listings/marketplace presence are unaffected, only the profile page itself.
+    /// Defaults true (matches today's always-visible behavior) so existing users see no
+    /// change until they opt out.
+    /// </summary>
+    public bool IsPublicProfile { get; set; } = true;
+
     [NotMapped]
     public string FullName => $"{FirstName} {LastName}".Trim();
 }

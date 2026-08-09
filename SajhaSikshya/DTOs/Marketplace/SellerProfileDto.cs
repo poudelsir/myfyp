@@ -12,6 +12,9 @@ public class SellerProfileDto
 
     public DateTime MemberSinceUtc { get; set; }
 
+    /// <summary>Settings &gt; Privacy toggle — see <see cref="Data.Entities.ApplicationUser.IsPublicProfile"/>. <c>MarketplaceController.Seller</c> hides the page entirely from non-owner, non-Admin viewers when this is false; it is never used to hide fields within an already-permitted view.</summary>
+    public bool IsPublicProfile { get; set; }
+
     public int ActiveListingCount { get; set; }
 
     /// <summary>All-time listings that ever went live (Active/Reserved/Sold/Donated/Archived) — unlike <see cref="ActiveListingCount"/>, not limited to currently-active ones.</summary>

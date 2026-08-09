@@ -558,3 +558,48 @@
     margin-left: var(--sajha-sidebar-width-collapsed);
   }
 }
+
+/* ---------------------------------------------------------------------- */
+/* Settings page (Student + Admin) — vertical tab nav, stacked on every    */
+/* breakpoint (see Areas/*/Views/Settings/Index.cshtml) so mobile never    */
+/* needs horizontal scrolling to reach a section.                          */
+/* ---------------------------------------------------------------------- */
+
+.settings-nav {
+  gap: 0.35rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.settings-nav .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--sajha-radius);
+  color: var(--bs-body-color);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.settings-nav .nav-link:hover {
+  background-color: var(--bs-tertiary-bg);
+}
+
+.settings-nav .nav-link.active {
+  background-image: var(--sajha-gradient-primary);
+  color: #fff;
+}
+
+@media (max-width: 991.98px) {
+  .settings-nav {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .settings-nav .nav-link {
+    flex: 1 1 calc(50% - 0.35rem);
+    justify-content: center;
+  }
+}

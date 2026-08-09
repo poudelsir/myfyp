@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SajhaSikshya.Constants;
+using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Data.Enums;
 using SajhaSikshya.DTOs.Marketplace;
 using SajhaSikshya.Extensions;
@@ -269,6 +270,15 @@ public class MarketplaceController : Controller
     {
         var profile = await _listingQueryService.GetSellerProfileAsync(sellerId);
         if (profile is null)
+        {
+            return NotFound();
+        }
+
+        // Settings > Privacy: a seller who opted out of a public profile is only visible
+        // to themselves and Admins — everyone else gets the same 404 as a nonexistent
+        // seller, never a distinguishable "this profile is private" message.
+        var isOwnerOrAdmin = User.GetUserId() == sellerId || User.IsInRole(Roles.Admin);
+        if (!profile.IsPublicProfile && !isOwnerOrAdmin)
         {
             return NotFound();
         }

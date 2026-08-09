@@ -80,11 +80,13 @@ public class NotificationsController : Controller
 
     [HttpPost("preferences")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Preferences(NotificationPreferenceDto preferences)
+    public async Task<IActionResult> Preferences(NotificationPreferenceDto preferences, string? returnUrl)
     {
         await _notificationService.UpdatePreferencesAsync(User.GetUserId()!, preferences);
         TempData[AlertHelper.SuccessKey] = "Notification preferences saved.";
-        return RedirectToAction(nameof(Preferences));
+        return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? Redirect(returnUrl)
+            : RedirectToAction(nameof(Preferences));
     }
 
     private IActionResult RedirectBack(string? returnUrl)
