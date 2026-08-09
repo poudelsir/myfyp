@@ -25,16 +25,22 @@ public class ListingQueryService : IListingQueryService
         _userManager = userManager;
     }
 
-    public async Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, int pageNumber, int pageSize)
+    public async Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int pageNumber, int pageSize)
     {
         var repository = _unitOfWork.Repository<Listing>();
+
+        // Precompute outside the expression tree — same reasoning as GetAllForAdminAsync.
+        var hasSearchTerm = !string.IsNullOrWhiteSpace(searchTerm);
+
+        Expression<Func<Listing, bool>> filter = l =>
+            l.SellerId == sellerId
+            && (!status.HasValue || l.Status == status.Value)
+            && (!hasSearchTerm || l.Title.Contains(searchTerm!));
 
         var page = await repository.GetPagedAsync(
             pageNumber,
             pageSize,
-            filter: string.IsNullOrWhiteSpace(searchTerm)
-                ? l => l.SellerId == sellerId
-                : l => l.SellerId == sellerId && l.Title.Contains(searchTerm),
+            filter: filter,
             orderBy: q => q.OrderByDescending(l => l.CreatedAtUtc),
             include: IncludeListingDetails);
 
@@ -131,15 +137,26 @@ public class ListingQueryService : IListingQueryService
             return null;
         }
 
-        var activeListingCount = await _unitOfWork.Repository<Listing>()
+        var listingRepository = _unitOfWork.Repository<Listing>();
+        var activeListingCount = await listingRepository
             .CountAsync(l => l.SellerId == sellerId && l.Status == ListingStatus.Active);
+
+        // Anything that ever actually went live at some point — excludes Draft/PendingApproval
+        // (never published) and Rejected (never approved), unlike ActiveListingCount which
+        // only counts what's live right now.
+        var totalListingCount = await listingRepository.CountAsync(l => l.SellerId == sellerId
+            && (l.Status == ListingStatus.Active || l.Status == ListingStatus.Reserved
+                || l.Status == ListingStatus.Sold || l.Status == ListingStatus.Donated
+                || l.Status == ListingStatus.Archived));
 
         return new SellerProfileDto
         {
             SellerId = user.Id,
             SellerName = user.FullName,
+            ProfilePicturePath = user.ProfilePicturePath,
             MemberSinceUtc = user.CreatedAtUtc,
             ActiveListingCount = activeListingCount,
+            TotalListingCount = totalListingCount,
         };
     }
 

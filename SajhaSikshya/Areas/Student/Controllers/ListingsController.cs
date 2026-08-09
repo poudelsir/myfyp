@@ -14,8 +14,8 @@ using SajhaSikshya.Services.AI.Prompts;
 using SajhaSikshya.Services.Interfaces.AI;
 using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Marketplace;
-using SajhaSikshya.ViewModels.Admin.Shared;
 using SajhaSikshya.ViewModels.Marketplace;
+using SajhaSikshya.ViewModels.Student.Marketplace;
 
 namespace SajhaSikshya.Areas.Student.Controllers;
 
@@ -53,11 +53,11 @@ public class ListingsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? searchTerm, int pageNumber = 1)
+    public async Task<IActionResult> Index(string? searchTerm, ListingStatus? status, int pageNumber = 1)
     {
         var sellerId = User.GetUserId()!;
-        var page = await _listingQueryService.GetMyListingsAsync(sellerId, searchTerm, pageNumber, PageSize);
-        return View(new AdminListViewModel<ListingDto> { Page = page, SearchTerm = searchTerm });
+        var page = await _listingQueryService.GetMyListingsAsync(sellerId, searchTerm, status, pageNumber, PageSize);
+        return View(new StudentListingListViewModel { Page = page, SearchTerm = searchTerm, Status = status });
     }
 
     [HttpGet]
@@ -115,6 +115,7 @@ public class ListingsController : Controller
             Condition = listing.Condition,
             CategoryId = listing.CategoryId,
             SubjectId = listing.SubjectId,
+            StockQuantity = listing.StockQuantity,
             Images = listing.Images,
         };
 
@@ -200,6 +201,17 @@ public class ListingsController : Controller
         var result = await _listingService.RestoreAsync(sellerId, id);
         TempData[result.Succeeded ? AlertHelper.SuccessKey : AlertHelper.ErrorKey] =
             result.Succeeded ? "Listing restored." : result.Errors.FirstOrDefault();
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Restock(int id, int stockQuantity)
+    {
+        var sellerId = User.GetUserId()!;
+        var result = await _listingService.UpdateStockAsync(sellerId, id, stockQuantity);
+        TempData[result.Succeeded ? AlertHelper.SuccessKey : AlertHelper.ErrorKey] =
+            result.Succeeded ? "Stock updated." : result.Errors.FirstOrDefault();
         return RedirectToAction(nameof(Index));
     }
 

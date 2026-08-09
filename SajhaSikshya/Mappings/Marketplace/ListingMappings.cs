@@ -90,6 +90,7 @@ public static class ListingMappings
             ConditionDisplay = listing.Condition.GetDisplayName(),
             Status = listing.Status,
             StatusDisplay = listing.Status.GetDisplayName(),
+            StockQuantity = listing.StockQuantity,
             SellerId = listing.SellerId,
             SellerName = listing.Seller?.FullName ?? string.Empty,
             CategoryId = listing.CategoryId,

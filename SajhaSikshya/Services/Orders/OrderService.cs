@@ -193,7 +193,14 @@ public class OrderService : IOrderService
         var listing = await listingRepository.GetByIdAsync(order.ListingId);
         if (listing is not null)
         {
-            listing.Status = order.IsDonation ? ListingStatus.Donated : ListingStatus.Sold;
+            // Donations keep their existing terminal behavior — one completion, gone.
+            // Sellable listings decrement stock and only hide (OutOfStock) once it runs
+            // out; with stock remaining they go straight back to Active so the same
+            // listing stays purchasable for the next buyer, no re-approval needed.
+            listing.StockQuantity = Math.Max(0, listing.StockQuantity - 1);
+            listing.Status = order.IsDonation
+                ? ListingStatus.Donated
+                : listing.StockQuantity > 0 ? ListingStatus.Active : ListingStatus.OutOfStock;
             listingRepository.Update(listing);
         }
 

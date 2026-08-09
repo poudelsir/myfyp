@@ -28,6 +28,8 @@ public class ListingDto
 
     public string StatusDisplay { get; set; } = string.Empty;
 
+    public int StockQuantity { get; set; }
+
     public string SellerId { get; set; } = string.Empty;
 
     public string SellerName { get; set; } = string.Empty;

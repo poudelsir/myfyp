@@ -99,4 +99,14 @@ public class ListingsController : Controller
             result.Succeeded ? "Listing deleted." : result.Errors.FirstOrDefault();
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStock(int id, int stockQuantity)
+    {
+        var result = await _listingService.AdminUpdateStockAsync(id, stockQuantity);
+        TempData[result.Succeeded ? AlertHelper.SuccessKey : AlertHelper.ErrorKey] =
+            result.Succeeded ? "Stock updated." : result.Errors.FirstOrDefault();
+        return RedirectToAction(nameof(Details), new { id });
+    }
 }

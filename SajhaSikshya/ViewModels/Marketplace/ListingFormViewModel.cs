@@ -38,6 +38,17 @@ public class ListingFormViewModel
     [Display(Name = "This is a free donation")]
     public bool IsDonation { get; set; }
 
+    /// <summary>
+    /// Zero is allowed at this annotation level (that's how an Edit/Restock call marks a
+    /// listing manually out of stock); Create additionally requires at least 1, enforced
+    /// server-side in <see cref="Services.Marketplace.ListingService.CreateAsync"/> since
+    /// the same field/form serves both Create and Edit with different minimums.
+    /// </summary>
+    [Required(ErrorMessage = "Please enter a stock quantity.")]
+    [Range(0, ListingConstants.MaximumStockQuantity, ErrorMessage = "Stock must be between 0 and {2}.")]
+    [Display(Name = "Stock Quantity")]
+    public int StockQuantity { get; set; }
+
     [Required(ErrorMessage = "Please select the item's condition.")]
     [Display(Name = "Condition")]
     public BookCondition Condition { get; set; }

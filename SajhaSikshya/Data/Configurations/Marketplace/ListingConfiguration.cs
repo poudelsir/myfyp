@@ -15,6 +15,7 @@ public class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.Property(l => l.Slug).IsRequired().HasMaxLength(180);
         builder.Property(l => l.Description).IsRequired().HasMaxLength(2000);
         builder.Property(l => l.ModerationReason).HasMaxLength(500);
+        builder.Property(l => l.StockQuantity).IsRequired().HasDefaultValue(1);
 
         builder.HasIndex(l => l.Slug)
             .IsUnique()

@@ -120,7 +120,7 @@ public class UserQueryService : IUserQueryService
         var currentVerification = await _verificationQueryService.GetCurrentStatusAsync(userId);
         var isVerifiedSeller = await _verificationQueryService.IsUserVerifiedAsync(userId);
 
-        var listingCount = (await _listingQueryService.GetMyListingsAsync(userId, null, 1, 1)).TotalCount;
+        var listingCount = (await _listingQueryService.GetMyListingsAsync(userId, null, null, 1, 1)).TotalCount;
         var buyerOrderCount = (await _orderQueryService.GetBuyerOrdersAsync(userId, null, 1, 1)).TotalCount;
         var sellerOrderCount = (await _orderQueryService.GetSellerOrdersAsync(userId, null, 1, 1)).TotalCount;
         var reputation = await _reviewQueryService.GetReputationAsync(userId);

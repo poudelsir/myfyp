@@ -1,3 +1,4 @@
+@using SajhaSikshya.Constants
 @using SajhaSikshya.Data.Enums
 @using SajhaSikshya.DTOs.Marketplace
 @model ListingDto
@@ -14,6 +15,7 @@
         ListingStatus.Donated => "text-bg-primary",
         ListingStatus.Archived => "text-bg-secondary",
         ListingStatus.Rejected => "text-bg-danger",
+        ListingStatus.OutOfStock => "text-bg-danger",
         _ => "text-bg-secondary",
     };
 }
@@ -87,6 +89,8 @@
             <dd class="col-8">@Model.CreatedAtUtc.ToLocalTime().ToString("MMMM d, yyyy")</dd>
             <dt class="col-4">Views</dt>
             <dd class="col-8">@Model.ViewCount</dd>
+            <dt class="col-4">Stock</dt>
+            <dd class="col-8">@Model.StockQuantity</dd>
         </dl>
 
         <h2 class="h6 fw-semibold">Description</h2>
@@ -103,6 +107,16 @@
                     <div class="mt-1"><strong>Reason:</strong> @Model.ModerationReason</div>
                 }
             </div>
+        }
+
+        @if (Model.Status is ListingStatus.Active or ListingStatus.OutOfStock)
+        {
+            <form asp-action="UpdateStock" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2 mb-3">
+                <label for="stockQuantityInput" class="form-label small mb-0">Stock</label>
+                <input id="stockQuantityInput" type="number" name="stockQuantity" value="@Model.StockQuantity" min="0" max="@ListingConstants.MaximumStockQuantity"
+                       class="form-control form-control-sm" style="width: 100px;" />
+                <button type="submit" class="btn btn-sm btn-outline-primary">Update Stock</button>
+            </form>
         }
 
         <div class="d-flex flex-wrap gap-2">

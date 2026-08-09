@@ -40,4 +40,10 @@ public static class ListingConstants
     /// beyond secondhand books/study materials.
     /// </summary>
     public const decimal MaximumPrice = 100000m;
+
+    /// <summary>Lowest allowed stock quantity on an edit/restock action. Zero is allowed — that's how a listing is manually marked out of stock.</summary>
+    public const int MinimumStockQuantity = 0;
+
+    /// <summary>Highest allowed stock quantity. A sanity ceiling against data-entry mistakes, not a real inventory cap.</summary>
+    public const int MaximumStockQuantity = 1000;
 }

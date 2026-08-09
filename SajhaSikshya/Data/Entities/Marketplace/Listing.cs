@@ -37,6 +37,9 @@ public class Listing : BaseEntity
 
     public ListingStatus Status { get; set; } = ListingStatus.Draft;
 
+    /// <summary>Units available for sale. Decremented on each completed order (see <see cref="Services.Orders.OrderService.ConfirmPickupAsync"/>); reaching zero moves <see cref="Status"/> to <see cref="ListingStatus.OutOfStock"/>, hiding the listing from public marketplace/search surfaces without deleting it.</summary>
+    public int StockQuantity { get; set; } = 1;
+
     [Required]
     public string SellerId { get; set; } = string.Empty;
 

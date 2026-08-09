@@ -1,11 +1,11 @@
+@using SajhaSikshya.Constants
 @using SajhaSikshya.Data.Enums
 @using SajhaSikshya.DTOs.Marketplace
-@using SajhaSikshya.ViewModels.Admin.Shared
-@model AdminListViewModel<ListingDto>
+@using SajhaSikshya.Extensions
+@using SajhaSikshya.ViewModels.Student.Marketplace
+@model StudentListingListViewModel
 @{
     ViewData["Title"] = "My Listings";
-    ViewData["SearchTerm"] = Model.SearchTerm;
-    ViewData["SearchPlaceholder"] = "Search your listings…";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -20,7 +20,20 @@
 
 <div class="card">
     <div class="card-body">
-        <partial name="_AdminSearchBox" />
+        <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3">
+            <input type="search" name="searchTerm" value="@Model.SearchTerm" class="form-control" style="max-width: 280px;"
+                   placeholder="Search your listings…" aria-label="Search" />
+            <select name="status" class="form-select" style="max-width: 200px;" asp-items="EnumExtensions.GetSelectList<ListingStatus>(Model.Status)">
+                <option value="">All Statuses</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">
+                <i data-lucide="search" class="me-1"></i>Filter
+            </button>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || Model.Status.HasValue)
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            }
+        </form>
 
         @if (!Model.Page.Items.Any())
         {
@@ -36,6 +49,7 @@
                             <th>Category / Subject</th>
                             <th>Price</th>
                             <th>Condition</th>
+                            <th>Stock</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -60,10 +74,19 @@
                                     }
                                 </td>
                                 <td><span class="badge marketplace-badge-condition">@listing.ConditionDisplay</span></td>
+                                <td>@listing.StockQuantity</td>
                                 <td><span class="badge @StatusBadgeClass(listing.Status)">@listing.StatusDisplay</span></td>
                                 <td class="text-end">
                                     <a asp-action="Preview" asp-route-id="@listing.Id" class="btn btn-sm btn-outline-secondary">Preview</a>
                                     <a asp-action="Edit" asp-route-id="@listing.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    @if (listing.Status is ListingStatus.Active or ListingStatus.OutOfStock)
+                                    {
+                                        <form asp-action="Restock" asp-route-id="@listing.Id" method="post" class="d-inline-flex align-items-center gap-1">
+                                            <input type="number" name="stockQuantity" value="@listing.StockQuantity" min="0" max="@ListingConstants.MaximumStockQuantity"
+                                                   class="form-control form-control-sm" style="width: 80px;" aria-label="Stock quantity" />
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Restock</button>
+                                        </form>
+                                    }
                                     @if (listing.Status == ListingStatus.Archived)
                                     {
                                         <form asp-action="Restore" asp-route-id="@listing.Id" method="post" class="d-inline">
@@ -88,7 +111,7 @@
                 </table>
             </div>
 
-            <partial name="_Pagination" model="Model.Page" />
+            <partial name="_QueryPreservingPagination" model="Model.Page" />
         }
     </div>
 </div>
@@ -104,6 +127,7 @@
         ListingStatus.Donated => "text-bg-primary",
         ListingStatus.Archived => "text-bg-secondary",
         ListingStatus.Rejected => "text-bg-danger",
+        ListingStatus.OutOfStock => "text-bg-danger",
         _ => "text-bg-secondary",
     };
 }

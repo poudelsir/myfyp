@@ -41,4 +41,8 @@ public enum ListingStatus
     /// <summary>Rejected during admin review and sent back to the seller with feedback.</summary>
     [Display(Name = "Rejected", Description = "Rejected during admin review.")]
     Rejected = 7,
+
+    /// <summary>Stock reached zero; hidden from all public marketplace/search/AI surfaces but stays visible to the seller and admin. Auto-restored to Active when the seller or admin sets a new stock quantity above zero.</summary>
+    [Display(Name = "Out of Stock", Description = "Stock reached zero; hidden from the marketplace until restocked.")]
+    OutOfStock = 8,
 }

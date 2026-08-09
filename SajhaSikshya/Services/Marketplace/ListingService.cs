@@ -58,6 +58,11 @@ public class ListingService : IListingService
             return ServiceResult<int>.Failure(priceValidationError);
         }
 
+        if (model.StockQuantity < 1)
+        {
+            return ServiceResult<int>.Failure("Please enter an initial stock quantity of at least 1.");
+        }
+
         var listingRepository = _unitOfWork.Repository<Listing>();
         var slug = await Slug.MakeUniqueAsync(model.Title, async candidate =>
             await listingRepository.AnyAsync(l => l.Slug == candidate));
@@ -74,6 +79,7 @@ public class ListingService : IListingService
             // draft" action anywhere in the seller UI (Create has one Save button), so
             // every submission is, in practice, a submission for review.
             Status = ListingStatus.PendingApproval,
+            StockQuantity = model.StockQuantity,
             SellerId = sellerId,
             CategoryId = model.CategoryId,
             SubjectId = model.SubjectId,
@@ -131,10 +137,13 @@ public class ListingService : IListingService
         listing.SubjectId = model.SubjectId;
         listing.AcademicLevelId = subject.AcademicLevelId;
         listing.UniversityId = subject.UniversityId;
+        listing.StockQuantity = model.StockQuantity;
 
         // Edited content has to be reviewed again before it's live; a Draft that was
-        // never submitted yet simply stays a Draft.
-        if (listing.Status is ListingStatus.Active or ListingStatus.Rejected)
+        // never submitted yet simply stays a Draft. OutOfStock is included here too —
+        // otherwise editing an out-of-stock listing's content would skip re-moderation,
+        // and a later restock would silently republish unreviewed content as Active.
+        if (listing.Status is ListingStatus.Active or ListingStatus.Rejected or ListingStatus.OutOfStock)
         {
             listing.Status = ListingStatus.PendingApproval;
         }
@@ -196,6 +205,56 @@ public class ListingService : IListingService
         }
 
         return result;
+    }
+
+    public async Task<ServiceResult> UpdateStockAsync(string sellerId, int id, int newStockQuantity)
+    {
+        var listing = await GetOwnedListingAsync(sellerId, id);
+        if (listing is null)
+        {
+            return ServiceResult.Failure("Listing not found.");
+        }
+
+        if (listing.Status is not (ListingStatus.Active or ListingStatus.OutOfStock))
+        {
+            return ServiceResult.Failure("Stock can only be updated while a listing is active or out of stock.");
+        }
+
+        var error = ApplyStockChange(listing, newStockQuantity);
+        if (error is not null)
+        {
+            return ServiceResult.Failure(error);
+        }
+
+        _unitOfWork.Repository<Listing>().Update(listing);
+        await _unitOfWork.SaveChangesAsync();
+
+        return ServiceResult.Success();
+    }
+
+    public async Task<ServiceResult> AdminUpdateStockAsync(int id, int newStockQuantity)
+    {
+        var listing = await _unitOfWork.Repository<Listing>().GetByIdAsync(id);
+        if (listing is null)
+        {
+            return ServiceResult.Failure("Listing not found.");
+        }
+
+        if (listing.Status is not (ListingStatus.Active or ListingStatus.OutOfStock))
+        {
+            return ServiceResult.Failure("Stock can only be updated while a listing is active or out of stock.");
+        }
+
+        var error = ApplyStockChange(listing, newStockQuantity);
+        if (error is not null)
+        {
+            return ServiceResult.Failure(error);
+        }
+
+        _unitOfWork.Repository<Listing>().Update(listing);
+        await _unitOfWork.SaveChangesAsync();
+
+        return ServiceResult.Success();
     }
 
     public async Task<ServiceResult> ModerateListingAsync(int listingId, ModerationAction action, string moderatorId, string? reason = null)
@@ -611,6 +670,33 @@ public class ListingService : IListingService
         _unitOfWork.Repository<Listing>().Update(listing);
 
         return ServiceResult.Success();
+    }
+
+    /// <summary>
+    /// Shared stock-quantity validation and auto Active/OutOfStock flip, used by
+    /// <see cref="UpdateStockAsync"/> and <see cref="AdminUpdateStockAsync"/> — the single
+    /// place a restock or manual zero-out recomputes visibility, so the two entry points
+    /// can't drift out of sync. Does not save.
+    /// </summary>
+    private static string? ApplyStockChange(Listing listing, int newStockQuantity)
+    {
+        if (newStockQuantity < ListingConstants.MinimumStockQuantity || newStockQuantity > ListingConstants.MaximumStockQuantity)
+        {
+            return $"Stock quantity must be between {ListingConstants.MinimumStockQuantity} and {ListingConstants.MaximumStockQuantity}.";
+        }
+
+        listing.StockQuantity = newStockQuantity;
+
+        if (listing.Status == ListingStatus.OutOfStock && newStockQuantity > 0)
+        {
+            listing.Status = ListingStatus.Active;
+        }
+        else if (listing.Status == ListingStatus.Active && newStockQuantity == 0)
+        {
+            listing.Status = ListingStatus.OutOfStock;
+        }
+
+        return null;
     }
 
     private static string? ValidatePrice(decimal priceAmount, bool isDonation)

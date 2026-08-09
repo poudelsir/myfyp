@@ -33,6 +33,18 @@ public interface IListingService
     Task<ServiceResult> RestoreAsync(string sellerId, int id);
 
     /// <summary>
+    /// Seller-scoped stock update — the "Restock" action and the general "update stock
+    /// at any time" capability are the same call. Only allowed while the listing is
+    /// Active or OutOfStock. Setting a positive quantity on an OutOfStock listing
+    /// republishes it (back to Active) immediately, no admin approval; setting it to
+    /// zero on an Active listing hides it (moves to OutOfStock).
+    /// </summary>
+    Task<ServiceResult> UpdateStockAsync(string sellerId, int id, int newStockQuantity);
+
+    /// <summary>Admin-scoped equivalent of <see cref="UpdateStockAsync"/> — no ownership check, mirrors <see cref="ModerateListingAsync"/>'s unrestricted-by-design fetch-by-id pattern.</summary>
+    Task<ServiceResult> AdminUpdateStockAsync(int id, int newStockQuantity);
+
+    /// <summary>
     /// Validates and saves each file (delegating to <see cref="Interfaces.IImageStorageService"/>),
     /// enforcing <see cref="Constants.ListingConstants.MaximumImages"/> per listing. If any file in
     /// the batch fails, every file already saved earlier in the same call is deleted and no
