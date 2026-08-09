@@ -8,7 +8,9 @@ using SajhaSikshya.DTOs;
 using SajhaSikshya.DTOs.Marketplace;
 using SajhaSikshya.Mappings.Marketplace;
 using SajhaSikshya.Repositories.Interfaces;
+using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Marketplace;
+using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.ViewModels.Marketplace;
 
 namespace SajhaSikshya.Services.Marketplace;
@@ -45,10 +47,14 @@ public class ListingSearchService : IListingSearchService
         typeof(string).GetMethod(nameof(string.Concat), new[] { typeof(string), typeof(string) })!;
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICategoryService _categoryService;
+    private readonly IVerificationQueryService _verificationQueryService;
 
-    public ListingSearchService(IUnitOfWork unitOfWork)
+    public ListingSearchService(IUnitOfWork unitOfWork, ICategoryService categoryService, IVerificationQueryService verificationQueryService)
     {
         _unitOfWork = unitOfWork;
+        _categoryService = categoryService;
+        _verificationQueryService = verificationQueryService;
     }
 
     public async Task<PagedResult<ListingSummaryDto>> SearchAsync(ListingSearchCriteria criteria, int pageSize)
@@ -61,13 +67,29 @@ public class ListingSearchService : IListingSearchService
         var (minPrice, maxPrice) = NormalizePriceRange(criteria.MinPrice, criteria.MaxPrice);
         var recentSinceUtc = DateTime.UtcNow.AddDays(-SearchConstants.RecentlyAddedDays);
 
+        // Precomputed outside ApplyFilters/the expression tree — same reasoning as
+        // hasSearchTerm: a HashSet<T>.Contains() capture translates to EF Core's IN
+        // clause cleanly, but the async lookups themselves can't happen inside a lambda.
+        var matchingCategoryIds = criteria.CategoryId.HasValue
+            ? await _categoryService.GetCategoryAndDescendantIdsAsync(criteria.CategoryId.Value)
+            : null;
+
+        var verifiedSellerIds = criteria.VerifiedSellerOnly
+            ? await _verificationQueryService.GetAllCurrentlyVerifiedUserIdsAsync()
+            : null;
+
         IQueryable<Listing> ApplyFilters(IQueryable<Listing> query)
         {
             query = query.Where(l => l.Status == ListingStatus.Active);
 
-            if (criteria.CategoryId.HasValue)
+            if (matchingCategoryIds is not null)
             {
-                query = query.Where(l => l.CategoryId == criteria.CategoryId.Value);
+                query = query.Where(l => matchingCategoryIds.Contains(l.CategoryId));
+            }
+
+            if (verifiedSellerIds is not null)
+            {
+                query = query.Where(l => verifiedSellerIds.Contains(l.SellerId));
             }
 
             if (criteria.UniversityId.HasValue)

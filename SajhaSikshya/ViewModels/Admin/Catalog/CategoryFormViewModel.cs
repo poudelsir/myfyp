@@ -28,5 +28,14 @@ public class CategoryFormViewModel
     [Display(Name = "Active")]
     public bool IsActive { get; set; } = true;
 
+    /// <summary>Lucide icon name (e.g. "book-open"), shown on the Home page department tile.</summary>
+    [StringLength(50)]
+    [Display(Name = "Icon (optional)")]
+    public string? IconName { get; set; }
+
+    [StringLength(300)]
+    [Display(Name = "Description (optional)")]
+    public string? Description { get; set; }
+
     public IEnumerable<SelectListItem> ParentCategoryOptions { get; set; } = Array.Empty<SelectListItem>();
 }

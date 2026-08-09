@@ -187,6 +187,20 @@ public class VerificationQueryService : IVerificationQueryService
         return verifiedIds.ToHashSet();
     }
 
+    /// <summary>Same "current row, not any row" semantics as <see cref="GetVerifiedUserIdsAsync"/>, but over every verification row rather than a given candidate set.</summary>
+    public async Task<IReadOnlySet<string>> GetAllCurrentlyVerifiedUserIdsAsync()
+    {
+        var repository = _unitOfWork.Repository<StudentVerification>();
+        var rows = await repository.GetAllAsync();
+
+        var verifiedIds = rows
+            .GroupBy(v => v.UserId)
+            .Where(g => g.OrderByDescending(v => v.SubmittedAtUtc).First().Status == VerificationStatus.Verified)
+            .Select(g => g.Key);
+
+        return verifiedIds.ToHashSet();
+    }
+
     private static PagedResult<VerificationDto> ToPagedDto(PagedResult<StudentVerification> page) => new()
     {
         Items = page.Items.Select(v => v.ToDto()).ToList(),

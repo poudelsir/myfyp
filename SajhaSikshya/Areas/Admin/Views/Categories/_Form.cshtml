@@ -28,6 +28,19 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="IconName" class="form-label"></label>
+        <input asp-for="IconName" class="form-control" placeholder="e.g. book-open (lucide.dev icon name)" />
+        <span asp-validation-for="IconName" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger small"></span>
+    </div>
+</div>
+
 <div class="mb-4 form-check form-switch">
     <input asp-for="IsActive" class="form-check-input" role="switch" />
     <label asp-for="IsActive" class="form-check-label"></label>

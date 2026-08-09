@@ -1296,6 +1296,18 @@
   font-size: 0.9rem;
 }
 
+.home-category-count {
+  font-size: 0.78rem;
+  color: var(--bs-secondary-color);
+  margin-top: -0.35rem;
+}
+
+.home-category-description {
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+  margin-top: -0.25rem;
+}
+
 .home-university-city {
   margin-top: -0.35rem;
 }

@@ -42,4 +42,7 @@ public interface IVerificationQueryService
 
     /// <summary>Out of <paramref name="userIds"/>, the subset that are currently Verified — one batched query, used to stamp the "Verified Student" badge across a whole page of listing cards/sellers without checking each one individually.</summary>
     Task<IReadOnlySet<string>> GetVerifiedUserIdsAsync(IEnumerable<string> userIds);
+
+    /// <summary>Every currently-Verified user id, with no candidate set to narrow against — unlike <see cref="GetVerifiedUserIdsAsync"/>, this scans all verification rows (O(all rows), not O(candidates)). Used by the Marketplace "Verified Seller" filter, where the candidate set would otherwise be "every seller in the catalog."</summary>
+    Task<IReadOnlySet<string>> GetAllCurrentlyVerifiedUserIdsAsync();
 }

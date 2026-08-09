@@ -18,4 +18,8 @@ public class CategoryDto
     public bool IsActive { get; set; }
 
     public int SubcategoryCount { get; set; }
+
+    public string? IconName { get; set; }
+
+    public string? Description { get; set; }
 }

@@ -48,6 +48,9 @@ public class ListingSearchCriteria
     [FromQuery(Name = "hasImages")]
     public bool OnlyWithImages { get; set; }
 
+    [FromQuery(Name = "verifiedSeller")]
+    public bool VerifiedSellerOnly { get; set; }
+
     [FromQuery(Name = "sort")]
     public ListingSortOption Sort { get; set; } = ListingSortOption.Newest;
 
@@ -66,5 +69,6 @@ public class ListingSearchCriteria
         || MaxPrice.HasValue
         || DonationOnly
         || RecentlyAddedOnly
-        || OnlyWithImages;
+        || OnlyWithImages
+        || VerifiedSellerOnly;
 }

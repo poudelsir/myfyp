@@ -26,6 +26,7 @@ public static class ApplicationBuilderExtensions
             await context.Database.MigrateAsync();
             await DbInitializer.SeedAsync(services);
             await CatalogSeeder.SeedAsync(services);
+            await MarketplaceTaxonomySeeder.SeedAsync(services);
         }
         catch (Exception ex)
         {

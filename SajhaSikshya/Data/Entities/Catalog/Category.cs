@@ -22,4 +22,12 @@ public class Category : BaseLookupEntity
 
     /// <summary>Manual sort order for UI listings.</summary>
     public int DisplayOrder { get; set; }
+
+    /// <summary>Lucide icon name (e.g. "book-open") shown on the Home page department tile. Null falls back to a generic icon in the view.</summary>
+    [StringLength(50)]
+    public string? IconName { get; set; }
+
+    /// <summary>Short optional tagline shown on the Home page department tile.</summary>
+    [StringLength(300)]
+    public string? Description { get; set; }
 }

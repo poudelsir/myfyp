@@ -10,6 +10,7 @@ using SajhaSikshya.DTOs.Marketplace;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Mappings.Marketplace;
 using SajhaSikshya.Repositories.Interfaces;
+using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Marketplace;
 
 namespace SajhaSikshya.Services.Marketplace;
@@ -18,23 +19,29 @@ public class ListingQueryService : IListingQueryService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ICategoryService _categoryService;
 
-    public ListingQueryService(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
+    public ListingQueryService(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ICategoryService categoryService)
     {
         _unitOfWork = unitOfWork;
         _userManager = userManager;
+        _categoryService = categoryService;
     }
 
-    public async Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int pageNumber, int pageSize)
+    public async Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int? categoryId, int pageNumber, int pageSize)
     {
         var repository = _unitOfWork.Repository<Listing>();
 
         // Precompute outside the expression tree — same reasoning as GetAllForAdminAsync.
         var hasSearchTerm = !string.IsNullOrWhiteSpace(searchTerm);
+        var matchingCategoryIds = categoryId.HasValue
+            ? await _categoryService.GetCategoryAndDescendantIdsAsync(categoryId.Value)
+            : null;
 
         Expression<Func<Listing, bool>> filter = l =>
             l.SellerId == sellerId
             && (!status.HasValue || l.Status == status.Value)
+            && (matchingCategoryIds == null || matchingCategoryIds.Contains(l.CategoryId))
             && (!hasSearchTerm || l.Title.Contains(searchTerm!));
 
         var page = await repository.GetPagedAsync(

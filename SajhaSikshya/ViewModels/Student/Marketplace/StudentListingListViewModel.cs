@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SajhaSikshya.Data.Enums;
 using SajhaSikshya.DTOs;
 using SajhaSikshya.DTOs.Marketplace;
@@ -18,4 +19,8 @@ public class StudentListingListViewModel
     public string? SearchTerm { get; set; }
 
     public ListingStatus? Status { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    public IEnumerable<SelectListItem> CategoryOptions { get; set; } = Array.Empty<SelectListItem>();
 }

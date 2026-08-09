@@ -17,12 +17,25 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
+        <label asp-for="DepartmentId" class="form-label"></label>
+        <select asp-for="DepartmentId" asp-items="Model.DepartmentOptions" class="form-select" id="departmentSelect">
+            <option value="">— Select a department —</option>
+        </select>
+    </div>
+    <div class="col-md-6 mb-3">
         <label asp-for="CategoryId" class="form-label"></label>
-        <select asp-for="CategoryId" asp-items="Model.CategoryOptions" class="form-select">
-            <option value="">— Select a category —</option>
+        <select asp-for="CategoryId" class="form-select" id="subcategorySelect">
+            <option value="">— Select a department first —</option>
+            @foreach (var subcategory in Model.SubcategoryOptions)
+            {
+                <option value="@subcategory.Id" data-parent-id="@subcategory.ParentCategoryId" selected="@(subcategory.Id == Model.CategoryId)">@subcategory.Name</option>
+            }
         </select>
         <span asp-validation-for="CategoryId" class="text-danger small"></span>
     </div>
+</div>
+
+<div class="row">
     <div class="col-md-6 mb-3">
         <label asp-for="SubjectId" class="form-label"></label>
         <select asp-for="SubjectId" asp-items="Model.SubjectOptions" class="form-select">
@@ -90,26 +103,7 @@
     <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
 </div>
 
-@section Scripts {
-    <script>
-        // Free/donation listings don't need a price — lock it at 0 client-side for a
-        // cleaner UX. Uses readonly (not disabled) so the field still posts; the server
-        // still authoritatively re-derives Price from IsDonation regardless either way
-        // (see ListingService), this is just presentation.
-        (function () {
-            "use strict";
-            var donationToggle = document.getElementById("isDonationInput");
-            var priceInput = document.getElementById("priceInput");
-
-            function syncPriceState() {
-                priceInput.readOnly = donationToggle.checked;
-                if (donationToggle.checked) {
-                    priceInput.value = "0";
-                }
-            }
-
-            donationToggle?.addEventListener("change", syncPriceState);
-            syncPriceState();
-        })();
-    </script>
-}
+@* Scripts for this form live in wwwroot/js/listing-form.js, referenced from the two
+   views that actually render @section Scripts for this request (Create.cshtml /
+   Edit.cshtml) — a @section defined inside a <partial>-rendered view like this one is
+   never picked up by the outer Layout, so it can't be declared here. *@

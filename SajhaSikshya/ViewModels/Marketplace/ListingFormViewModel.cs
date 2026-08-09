@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Enums;
+using SajhaSikshya.DTOs.Catalog;
 using SajhaSikshya.DTOs.Marketplace;
 
 namespace SajhaSikshya.ViewModels.Marketplace;
@@ -53,9 +54,14 @@ public class ListingFormViewModel
     [Display(Name = "Condition")]
     public BookCondition Condition { get; set; }
 
-    [Required(ErrorMessage = "Please select a category.")]
-    [Range(1, int.MaxValue, ErrorMessage = "Please select a category.")]
-    [Display(Name = "Category")]
+    /// <summary>
+    /// The submitted value is always the chosen SUBCATEGORY (leaf) — <see cref="DepartmentId"/>
+    /// is a client-side-only narrowing aid for the Subcategory picker, never itself stored on
+    /// the listing. See <see cref="Areas.Student.Controllers.ListingsController.PopulateDropdownsAsync"/>.
+    /// </summary>
+    [Required(ErrorMessage = "Please select a subcategory.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Please select a subcategory.")]
+    [Display(Name = "Subcategory")]
     public int CategoryId { get; set; }
 
     [Required(ErrorMessage = "Please select a subject.")]
@@ -63,7 +69,14 @@ public class ListingFormViewModel
     [Display(Name = "Subject")]
     public int SubjectId { get; set; }
 
-    public IEnumerable<SelectListItem> CategoryOptions { get; set; } = Array.Empty<SelectListItem>();
+    /// <summary>Not bound/submitted — derived server-side from <see cref="CategoryId"/>'s parent on Edit, or set by the seller's client-side selection purely to narrow the Subcategory dropdown.</summary>
+    [Display(Name = "Department")]
+    public int? DepartmentId { get; set; }
+
+    public IEnumerable<SelectListItem> DepartmentOptions { get; set; } = Array.Empty<SelectListItem>();
+
+    /// <summary>Every active subcategory (children only, all departments) — filtered client-side to the selected <see cref="DepartmentId"/> rather than round-tripped via AJAX, since the whole taxonomy is small (~65 rows).</summary>
+    public IReadOnlyList<CategoryDto> SubcategoryOptions { get; set; } = Array.Empty<CategoryDto>();
 
     public IEnumerable<SelectListItem> SubjectOptions { get; set; } = Array.Empty<SelectListItem>();
 

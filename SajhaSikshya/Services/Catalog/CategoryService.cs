@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SajhaSikshya.Data.Entities.Catalog;
 using SajhaSikshya.Data.Entities.Marketplace;
+using SajhaSikshya.Data.Enums;
 using SajhaSikshya.DTOs;
 using SajhaSikshya.DTOs.Catalog;
 using SajhaSikshya.Mappings.Catalog;
@@ -77,6 +78,50 @@ public class CategoryService : ICategoryService
             .ToList();
     }
 
+    public async Task<IReadOnlySet<int>> GetCategoryAndDescendantIdsAsync(int categoryId)
+    {
+        var repository = _unitOfWork.Repository<Category>();
+        var allCategories = await repository.GetAllAsync();
+        return CollectSelfAndDescendants(categoryId, allCategories);
+    }
+
+    public async Task<IReadOnlyList<CategoryWithCountDto>> GetTopLevelCategoriesWithListingCountsAsync()
+    {
+        var categoryRepository = _unitOfWork.Repository<Category>();
+        var allCategories = await categoryRepository.GetAllAsync();
+        var departments = allCategories
+            .Where(c => c.IsActive && c.ParentCategoryId is null)
+            .OrderBy(c => c.DisplayOrder)
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        // One query for every Active listing's category, grouped in memory — avoids an
+        // N+1 count query per department (there are only ~6, but this stays cheap even
+        // as the taxonomy grows).
+        var activeListings = await _unitOfWork.Repository<Listing>().FindAsync(l => l.Status == ListingStatus.Active);
+        var countsByCategoryId = activeListings
+            .GroupBy(l => l.CategoryId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return departments
+            .Select(department =>
+            {
+                var descendantIds = CollectSelfAndDescendants(department.Id, allCategories);
+                var listingCount = descendantIds.Sum(id => countsByCategoryId.GetValueOrDefault(id));
+
+                return new CategoryWithCountDto
+                {
+                    Id = department.Id,
+                    Name = department.Name,
+                    Slug = department.Slug,
+                    IconName = department.IconName,
+                    Description = department.Description,
+                    ListingCount = listingCount,
+                };
+            })
+            .ToList();
+    }
+
     public async Task<ServiceResult<int>> CreateAsync(CategoryFormViewModel model)
     {
         var slug = SlugHelper.Generate(string.IsNullOrWhiteSpace(model.Slug) ? model.Name : model.Slug);
@@ -104,6 +149,8 @@ public class CategoryService : ICategoryService
             ParentCategoryId = model.ParentCategoryId,
             DisplayOrder = model.DisplayOrder,
             IsActive = model.IsActive,
+            IconName = string.IsNullOrWhiteSpace(model.IconName) ? null : model.IconName.Trim(),
+            Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim(),
         };
 
         await repository.AddAsync(category);
@@ -158,6 +205,8 @@ public class CategoryService : ICategoryService
         category.ParentCategoryId = model.ParentCategoryId;
         category.DisplayOrder = model.DisplayOrder;
         category.IsActive = model.IsActive;
+        category.IconName = string.IsNullOrWhiteSpace(model.IconName) ? null : model.IconName.Trim();
+        category.Description = string.IsNullOrWhiteSpace(model.Description) ? null : model.Description.Trim();
 
         repository.Update(category);
         await _unitOfWork.SaveChangesAsync();

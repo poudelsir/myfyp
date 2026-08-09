@@ -15,7 +15,7 @@ namespace SajhaSikshya.Services.Interfaces.Marketplace;
 /// </summary>
 public interface IListingQueryService
 {
-    Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int pageNumber, int pageSize);
+    Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int? categoryId, int pageNumber, int pageSize);
 
     /// <summary>Used by the Edit form, Preview page, and the image-management panel's redisplay-on-error path — returns null if the listing doesn't exist or isn't owned by <paramref name="sellerId"/>.</summary>
     Task<ListingDto?> GetForSellerAsync(string sellerId, int id);

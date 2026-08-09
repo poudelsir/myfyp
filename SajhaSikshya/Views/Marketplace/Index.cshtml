@@ -195,6 +195,11 @@
                                    checked="@Model.Criteria.OnlyWithImages" />
                             <label class="form-check-label small" for="filterHasImages">Only With Photos</label>
                         </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="verifiedSeller" value="true" class="form-check-input" id="filterVerifiedSeller"
+                                   checked="@Model.Criteria.VerifiedSellerOnly" />
+                            <label class="form-check-label small" for="filterVerifiedSeller">Verified Sellers Only</label>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Apply Filters</button>
@@ -259,6 +264,10 @@
                     @if (Model.Criteria.OnlyWithImages)
                     {
                         <a href="@RemoveFilterUrl("hasImages")" class="marketplace-chip">With Photos <i data-lucide="x"></i></a>
+                    }
+                    @if (Model.Criteria.VerifiedSellerOnly)
+                    {
+                        <a href="@RemoveFilterUrl("verifiedSeller")" class="marketplace-chip">Verified Sellers Only <i data-lucide="x"></i></a>
                     }
                     <a asp-action="Index" class="marketplace-chip marketplace-chip-clear">Clear All <i data-lucide="x"></i></a>
                 </div>

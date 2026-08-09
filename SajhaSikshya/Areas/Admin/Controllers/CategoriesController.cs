@@ -83,6 +83,8 @@ public class CategoriesController : Controller
             ParentCategoryId = category.ParentCategoryId,
             DisplayOrder = category.DisplayOrder,
             IsActive = category.IsActive,
+            IconName = category.IconName,
+            Description = category.Description,
         };
 
         await PopulateParentOptionsAsync(model, excludeCategoryId: id);

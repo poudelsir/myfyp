@@ -53,11 +53,25 @@ public class ListingsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? searchTerm, ListingStatus? status, int pageNumber = 1)
+    public async Task<IActionResult> Index(string? searchTerm, ListingStatus? status, int? categoryId, int pageNumber = 1)
     {
         var sellerId = User.GetUserId()!;
-        var page = await _listingQueryService.GetMyListingsAsync(sellerId, searchTerm, status, pageNumber, PageSize);
-        return View(new StudentListingListViewModel { Page = page, SearchTerm = searchTerm, Status = status });
+        var page = await _listingQueryService.GetMyListingsAsync(sellerId, searchTerm, status, categoryId, pageNumber, PageSize);
+
+        var departments = await _categoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
+        var categoryOptions = departments
+            .Where(c => c.ParentCategoryId is null)
+            .OrderBy(c => c.Name)
+            .Select(c => new SelectListItem(c.Name, c.Id.ToString()) { Selected = c.Id == categoryId });
+
+        return View(new StudentListingListViewModel
+        {
+            Page = page,
+            SearchTerm = searchTerm,
+            Status = status,
+            CategoryId = categoryId,
+            CategoryOptions = categoryOptions,
+        });
     }
 
     [HttpGet]
@@ -357,9 +371,22 @@ public class ListingsController : Controller
         var categories = await _categoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null);
         var subjects = await _subjectService.GetAllActiveAsync();
 
-        model.CategoryOptions = categories
-            .Select(c => new SelectListItem(c.Name, c.Id.ToString()) { Selected = c.Id == model.CategoryId })
+        var departments = categories.Where(c => c.ParentCategoryId is null).OrderBy(c => c.Name).ToList();
+        var subcategories = categories.Where(c => c.ParentCategoryId is not null).OrderBy(c => c.Name).ToList();
+
+        // On Edit, the listing already has a leaf CategoryId — derive which department it
+        // belongs to so the Department select starts on the right value (the Subcategory
+        // select itself is filtered/populated entirely client-side, see _Form.cshtml).
+        if (model.CategoryId > 0)
+        {
+            model.DepartmentId = subcategories.FirstOrDefault(c => c.Id == model.CategoryId)?.ParentCategoryId;
+        }
+
+        model.DepartmentOptions = departments
+            .Select(c => new SelectListItem(c.Name, c.Id.ToString()) { Selected = c.Id == model.DepartmentId })
             .ToList();
+
+        model.SubcategoryOptions = subcategories;
 
         model.SubjectOptions = subjects
             .Select(s => new SelectListItem(s.Name, s.Id.ToString()) { Selected = s.Id == model.SubjectId })

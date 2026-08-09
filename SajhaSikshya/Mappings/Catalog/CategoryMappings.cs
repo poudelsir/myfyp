@@ -18,6 +18,8 @@ public static class CategoryMappings
             DisplayOrder = category.DisplayOrder,
             IsActive = category.IsActive,
             SubcategoryCount = category.Subcategories?.Count ?? 0,
+            IconName = category.IconName,
+            Description = category.Description,
         };
     }
 }
