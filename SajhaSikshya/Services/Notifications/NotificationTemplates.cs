@@ -41,6 +41,9 @@ public static class NotificationTemplates
     public static (string Title, string Message) VerificationSubmitted() =>
         ("Verification submitted", "Your student verification request has been submitted and is pending review.");
 
+    public static (string Title, string Message) NewVerificationRequest(string studentName) =>
+        ("New verification request", $"{studentName} submitted a new student verification request for review.");
+
     public static (string Title, string Message) VerificationApproved() =>
         ("Verification approved", "Congratulations! Your student verification has been approved.");
 

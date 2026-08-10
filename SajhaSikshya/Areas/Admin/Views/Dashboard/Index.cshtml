@@ -7,112 +7,70 @@
     var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h4 fw-bold mb-1">Admin Dashboard</h1>
-        <p class="text-secondary mb-0">Platform activity at a glance.</p>
-    </div>
-    <a asp-controller="Listings" asp-action="Index" class="btn btn-primary">
-        <i data-lucide="shield-check" class="me-1"></i>Go to Moderation Queue
-    </a>
+<div class="mb-4">
+    <h1 class="h4 fw-bold mb-1">Admin Dashboard</h1>
+    <p class="text-secondary mb-0">Platform activity at a glance.</p>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
-            <div>
-                <p class="stat-card-label">Pending Review</p>
-                <p class="stat-card-value">@stats.ListingStats.PendingCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
-            <div>
-                <p class="stat-card-label">Approved (Active)</p>
-                <p class="stat-card-value">@stats.ListingStats.ApprovedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="x-circle"></i></div>
-            <div>
-                <p class="stat-card-label">Rejected</p>
-                <p class="stat-card-value">@stats.ListingStats.RejectedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="archive"></i></div>
-            <div>
-                <p class="stat-card-label">Archived</p>
-                <p class="stat-card-value">@stats.ListingStats.ArchivedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
-            <div>
-                <p class="stat-card-label">Total Listings</p>
-                <p class="stat-card-value">@stats.ListingStats.TotalListings</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
-            <div>
-                <p class="stat-card-label">Donation Listings</p>
-                <p class="stat-card-value">@stats.ListingStats.DonationCount</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-@if (stats.ListingStats.PendingCount > 0)
+@if (stats.ListingStats.PendingCount > 0 || stats.VerificationStats.PendingCount > 0 || stats.ReportedReviewCount > 0)
 {
-    <div class="card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="bell"></i></div>
-                <div>
-                    <h2 class="h6 fw-semibold mb-1">@stats.ListingStats.PendingCount listing@(stats.ListingStats.PendingCount == 1 ? "" : "s") waiting for review</h2>
-                    <p class="text-secondary mb-0">Sellers can't reach the marketplace until you approve or reject their submissions.</p>
+    <div class="d-flex flex-column gap-3 mb-4">
+        @if (stats.ListingStats.PendingCount > 0)
+        {
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="bell"></i></div>
+                        <div>
+                            <h2 class="h6 fw-semibold mb-1">@stats.ListingStats.PendingCount listing@(stats.ListingStats.PendingCount == 1 ? "" : "s") waiting for review</h2>
+                            <p class="text-secondary mb-0">Sellers can't reach the marketplace until you approve or reject their submissions.</p>
+                        </div>
+                    </div>
+                    <a asp-controller="Listings" asp-action="Index" asp-route-status="PendingApproval" class="btn btn-outline-primary flex-shrink-0">
+                        Review Now
+                    </a>
                 </div>
             </div>
-            <a asp-controller="Listings" asp-action="Index" asp-route-status="PendingApproval" class="btn btn-outline-primary flex-shrink-0">
-                Review Now
-            </a>
-        </div>
+        }
+
+        @if (stats.VerificationStats.PendingCount > 0)
+        {
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="shield-question"></i></div>
+                        <div>
+                            <h2 class="h6 fw-semibold mb-1">@stats.VerificationStats.PendingCount verification request@(stats.VerificationStats.PendingCount == 1 ? "" : "s") waiting for review</h2>
+                            <p class="text-secondary mb-0">Students requesting seller status can't sell until you approve their verification.</p>
+                        </div>
+                    </div>
+                    <a asp-controller="Verifications" asp-action="Index" class="btn btn-outline-primary flex-shrink-0">
+                        Review Now
+                    </a>
+                </div>
+            </div>
+        }
+
+        @if (stats.ReportedReviewCount > 0)
+        {
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="flag"></i></div>
+                        <div>
+                            <h2 class="h6 fw-semibold mb-1">@stats.ReportedReviewCount review@(stats.ReportedReviewCount == 1 ? "" : "s") reported</h2>
+                            <p class="text-secondary mb-0">Students have flagged these reviews for moderator attention.</p>
+                        </div>
+                    </div>
+                    <a asp-controller="Reviews" asp-action="Index" class="btn btn-outline-danger flex-shrink-0">
+                        Review Now
+                    </a>
+                </div>
+            </div>
+        }
     </div>
 }
 
-@if (stats.ReportedReviewCount > 0)
-{
-    <div class="card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="flag"></i></div>
-                <div>
-                    <h2 class="h6 fw-semibold mb-1">@stats.ReportedReviewCount review@(stats.ReportedReviewCount == 1 ? "" : "s") reported</h2>
-                    <p class="text-secondary mb-0">Students have flagged these reviews for moderator attention.</p>
-                </div>
-            </div>
-            <a asp-controller="Reviews" asp-action="Index" class="btn btn-outline-danger flex-shrink-0">
-                Review Now
-            </a>
-        </div>
-    </div>
-}
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 fw-bold mb-0">Users</h2>
-</div>
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
@@ -125,79 +83,23 @@
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="graduation-cap"></i></div>
+            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="list"></i></div>
             <div>
-                <p class="stat-card-label">Students</p>
-                <p class="stat-card-value">@stats.TotalStudents</p>
+                <p class="stat-card-label">Active Listings</p>
+                <p class="stat-card-value">@stats.ListingStats.ApprovedCount</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card">
-            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="shield"></i></div>
+            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="package"></i></div>
             <div>
-                <p class="stat-card-label">Admins</p>
-                <p class="stat-card-value">@stats.TotalAdmins</p>
+                <p class="stat-card-label">Total Orders</p>
+                <p class="stat-card-value">@stats.OrderStats.TotalOrders</p>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="user-check"></i></div>
-            <div>
-                <p class="stat-card-label">Active Users</p>
-                <p class="stat-card-value">@stats.ActiveUsers</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 fw-bold mb-0">Orders &amp; Revenue</h2>
-    <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-primary btn-sm">
-        <i data-lucide="package" class="me-1"></i>Go to Orders
-    </a>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
-            <div>
-                <p class="stat-card-label">Pending</p>
-                <p class="stat-card-value">@stats.OrderStats.PendingCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="package-check"></i></div>
-            <div>
-                <p class="stat-card-label">Confirmed</p>
-                <p class="stat-card-value">@stats.OrderStats.ConfirmedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
-            <div>
-                <p class="stat-card-label">Completed</p>
-                <p class="stat-card-value">@stats.OrderStats.CompletedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="x-circle"></i></div>
-            <div>
-                <p class="stat-card-label">Cancelled</p>
-                <p class="stat-card-value">@stats.OrderStats.CancelledCount</p>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
         <div class="stat-card">
             <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="banknote"></i></div>
             <div>
@@ -206,200 +108,382 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="trending-up"></i></div>
-            <div>
-                <p class="stat-card-label">Revenue This Month</p>
-                <p class="stat-card-value">@(new SajhaSikshya.Data.ValueObjects.Money(stats.RevenueThisMonth, stats.RevenueCurrency))</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="calendar"></i></div>
-            <div>
-                <p class="stat-card-label">Revenue Last Month</p>
-                <p class="stat-card-value">@(new SajhaSikshya.Data.ValueObjects.Money(stats.RevenueLastMonth, stats.RevenueCurrency))</p>
-            </div>
-        </div>
-    </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 fw-bold mb-0">Donations &amp; Chat</h2>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
-            <div>
-                <p class="stat-card-label">Donation Listings</p>
-                <p class="stat-card-value">@stats.Insights.DonationListings</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="gift"></i></div>
-            <div>
-                <p class="stat-card-label">Donation Orders</p>
-                <p class="stat-card-value">@stats.OrderStats.DonationCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="message-square"></i></div>
-            <div>
-                <p class="stat-card-label">Conversations</p>
-                <p class="stat-card-value">@stats.TotalConversations</p>
-                <p class="text-secondary small mb-0">@stats.ConversationsThisMonth this month</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="messages-square"></i></div>
-            <div>
-                <p class="stat-card-label">Messages</p>
-                <p class="stat-card-value">@stats.TotalMessages</p>
-                <p class="text-secondary small mb-0">@stats.MessagesThisMonth this month</p>
-            </div>
-        </div>
-    </div>
-</div>
+<ul class="nav nav-tabs mb-3" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dashboard-tab-listings" data-bs-toggle="tab" data-bs-target="#dashboard-listings" type="button" role="tab" aria-controls="dashboard-listings" aria-selected="true">Listings</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab-users" data-bs-toggle="tab" data-bs-target="#dashboard-users" type="button" role="tab" aria-controls="dashboard-users" aria-selected="false">Users</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab-orders" data-bs-toggle="tab" data-bs-target="#dashboard-orders" type="button" role="tab" aria-controls="dashboard-orders" aria-selected="false">Orders &amp; Revenue</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab-donations" data-bs-toggle="tab" data-bs-target="#dashboard-donations" type="button" role="tab" aria-controls="dashboard-donations" aria-selected="false">Donations &amp; Chat</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab-verification" data-bs-toggle="tab" data-bs-target="#dashboard-verification" type="button" role="tab" aria-controls="dashboard-verification" aria-selected="false">Verification</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab-analytics" data-bs-toggle="tab" data-bs-target="#dashboard-analytics" type="button" role="tab" aria-controls="dashboard-analytics" aria-selected="false">Analytics</button>
+    </li>
+</ul>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 fw-bold mb-0">Student Verification</h2>
-    <a asp-controller="Verifications" asp-action="Index" class="btn btn-outline-primary btn-sm">
-        <i data-lucide="shield-check" class="me-1"></i>Go to Verification Queue
-    </a>
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
-            <div>
-                <p class="stat-card-label">Pending</p>
-                <p class="stat-card-value">@stats.VerificationStats.PendingCount</p>
-            </div>
+<div class="tab-content" id="dashboardTabContent">
+    <div class="tab-pane fade show active" id="dashboard-listings" role="tabpanel" aria-labelledby="dashboard-tab-listings">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h6 fw-semibold mb-0">Listing Status</h2>
+            <a asp-controller="Listings" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                <i data-lucide="shield-check" class="me-1"></i>Go to Moderation Queue
+            </a>
         </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="shield-check"></i></div>
-            <div>
-                <p class="stat-card-label">Approved</p>
-                <p class="stat-card-value">@stats.VerificationStats.ApprovedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="shield-x"></i></div>
-            <div>
-                <p class="stat-card-label">Rejected</p>
-                <p class="stat-card-value">@stats.VerificationStats.RejectedCount</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card">
-            <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="percent"></i></div>
-            <div>
-                <p class="stat-card-label">Approval Rate</p>
-                <p class="stat-card-value">@stats.VerificationStats.ApprovalRatePercent.ToString("0.#")%</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-@if (stats.VerificationStats.AverageReviewTimeHours.HasValue || stats.VerificationStats.RecentReviews.Any())
-{
-    <div class="row g-3 mb-4">
-        @if (stats.VerificationStats.AverageReviewTimeHours.HasValue)
-        {
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3 class="h6 fw-semibold mb-1">Average Review Time</h3>
-                        <p class="h4 fw-bold mb-0">@stats.VerificationStats.AverageReviewTimeHours.Value.ToString("0.#")h</p>
+        <div class="row g-3">
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+                    <div>
+                        <p class="stat-card-label">Pending Review</p>
+                        <p class="stat-card-value">@stats.ListingStats.PendingCount</p>
                     </div>
                 </div>
             </div>
-        }
-        @if (stats.VerificationStats.RecentReviews.Any())
-        {
-            <div class="col-md-8">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h3 class="h6 fw-semibold mb-3">Recent Reviews</h3>
-                        <ul class="list-unstyled mb-0">
-                            @foreach (var review in stats.VerificationStats.RecentReviews)
-                            {
-                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                    <span>
-                                        <a asp-controller="Verifications" asp-action="Details" asp-route-id="@review.Id">@review.StudentName</a>
-                                        <span class="text-secondary small">— @review.UniversityName</span>
-                                    </span>
-                                    <partial name="_VerificationStatusBadge" model="review.Status" />
-                                </li>
-                            }
-                        </ul>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
+                    <div>
+                        <p class="stat-card-label">Approved (Active)</p>
+                        <p class="stat-card-value">@stats.ListingStats.ApprovedCount</p>
                     </div>
                 </div>
             </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="x-circle"></i></div>
+                    <div>
+                        <p class="stat-card-label">Rejected</p>
+                        <p class="stat-card-value">@stats.ListingStats.RejectedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="archive"></i></div>
+                    <div>
+                        <p class="stat-card-label">Archived</p>
+                        <p class="stat-card-value">@stats.ListingStats.ArchivedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="list"></i></div>
+                    <div>
+                        <p class="stat-card-label">Total Listings</p>
+                        <p class="stat-card-value">@stats.ListingStats.TotalListings</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="heart-handshake"></i></div>
+                    <div>
+                        <p class="stat-card-label">Donation Listings</p>
+                        <p class="stat-card-value">@stats.ListingStats.DonationCount</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="dashboard-users" role="tabpanel" aria-labelledby="dashboard-tab-users">
+        <div class="row g-3">
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="users"></i></div>
+                    <div>
+                        <p class="stat-card-label">Total Users</p>
+                        <p class="stat-card-value">@stats.TotalUsers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="graduation-cap"></i></div>
+                    <div>
+                        <p class="stat-card-label">Students</p>
+                        <p class="stat-card-value">@stats.TotalStudents</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="shield"></i></div>
+                    <div>
+                        <p class="stat-card-label">Admins</p>
+                        <p class="stat-card-value">@stats.TotalAdmins</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="user-check"></i></div>
+                    <div>
+                        <p class="stat-card-label">Active Users</p>
+                        <p class="stat-card-value">@stats.ActiveUsers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="dashboard-orders" role="tabpanel" aria-labelledby="dashboard-tab-orders">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h6 fw-semibold mb-0">Orders</h2>
+            <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                <i data-lucide="package" class="me-1"></i>Go to Orders
+            </a>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+                    <div>
+                        <p class="stat-card-label">Pending</p>
+                        <p class="stat-card-value">@stats.OrderStats.PendingCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="package-check"></i></div>
+                    <div>
+                        <p class="stat-card-label">Confirmed</p>
+                        <p class="stat-card-value">@stats.OrderStats.ConfirmedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="check-circle"></i></div>
+                    <div>
+                        <p class="stat-card-label">Completed</p>
+                        <p class="stat-card-value">@stats.OrderStats.CompletedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="x-circle"></i></div>
+                    <div>
+                        <p class="stat-card-label">Cancelled</p>
+                        <p class="stat-card-value">@stats.OrderStats.CancelledCount</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="h6 fw-semibold mb-3">Revenue</h2>
+        <div class="row g-3">
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="banknote"></i></div>
+                    <div>
+                        <p class="stat-card-label">Total Revenue</p>
+                        <p class="stat-card-value">@(new SajhaSikshya.Data.ValueObjects.Money(stats.TotalRevenue, stats.RevenueCurrency))</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="trending-up"></i></div>
+                    <div>
+                        <p class="stat-card-label">Revenue This Month</p>
+                        <p class="stat-card-value">@(new SajhaSikshya.Data.ValueObjects.Money(stats.RevenueThisMonth, stats.RevenueCurrency))</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-secondary-subtle text-secondary"><i data-lucide="calendar"></i></div>
+                    <div>
+                        <p class="stat-card-label">Revenue Last Month</p>
+                        <p class="stat-card-value">@(new SajhaSikshya.Data.ValueObjects.Money(stats.RevenueLastMonth, stats.RevenueCurrency))</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="dashboard-donations" role="tabpanel" aria-labelledby="dashboard-tab-donations">
+        <div class="row g-3">
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-warning-subtle text-warning"><i data-lucide="gift"></i></div>
+                    <div>
+                        <p class="stat-card-label">Donation Orders</p>
+                        <p class="stat-card-value">@stats.OrderStats.DonationCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="message-square"></i></div>
+                    <div>
+                        <p class="stat-card-label">Conversations</p>
+                        <p class="stat-card-value">@stats.TotalConversations</p>
+                        <p class="text-secondary small mb-0">@stats.ConversationsThisMonth this month</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-4">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="messages-square"></i></div>
+                    <div>
+                        <p class="stat-card-label">Messages</p>
+                        <p class="stat-card-value">@stats.TotalMessages</p>
+                        <p class="text-secondary small mb-0">@stats.MessagesThisMonth this month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-secondary small mt-3 mb-0">Donation listing counts are on the <strong>Listings</strong> tab.</p>
+    </div>
+
+    <div class="tab-pane fade" id="dashboard-verification" role="tabpanel" aria-labelledby="dashboard-tab-verification">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h6 fw-semibold mb-0">Student Verification</h2>
+            <a asp-controller="Verifications" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                <i data-lucide="shield-check" class="me-1"></i>Go to Verification Queue
+            </a>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-info-subtle text-info"><i data-lucide="clock"></i></div>
+                    <div>
+                        <p class="stat-card-label">Pending</p>
+                        <p class="stat-card-value">@stats.VerificationStats.PendingCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-success-subtle text-success"><i data-lucide="shield-check"></i></div>
+                    <div>
+                        <p class="stat-card-label">Approved</p>
+                        <p class="stat-card-value">@stats.VerificationStats.ApprovedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-danger-subtle text-danger"><i data-lucide="shield-x"></i></div>
+                    <div>
+                        <p class="stat-card-label">Rejected</p>
+                        <p class="stat-card-value">@stats.VerificationStats.RejectedCount</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-card-icon bg-primary-subtle text-primary"><i data-lucide="percent"></i></div>
+                    <div>
+                        <p class="stat-card-label">Approval Rate</p>
+                        <p class="stat-card-value">@stats.VerificationStats.ApprovalRatePercent.ToString("0.#")%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (stats.VerificationStats.AverageReviewTimeHours.HasValue || stats.VerificationStats.RecentReviews.Any())
+        {
+            <div class="row g-3">
+                @if (stats.VerificationStats.AverageReviewTimeHours.HasValue)
+                {
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h6 fw-semibold mb-1">Average Review Time</h3>
+                                <p class="h4 fw-bold mb-0">@stats.VerificationStats.AverageReviewTimeHours.Value.ToString("0.#")h</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (stats.VerificationStats.RecentReviews.Any())
+                {
+                    <div class="col-md-8">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h3 class="h6 fw-semibold mb-3">Recent Reviews</h3>
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var review in stats.VerificationStats.RecentReviews)
+                                    {
+                                        <li class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                            <span>
+                                                <a asp-controller="Verifications" asp-action="Details" asp-route-id="@review.Id">@review.StudentName</a>
+                                                <span class="text-secondary small">— @review.UniversityName</span>
+                                            </span>
+                                            <partial name="_VerificationStatusBadge" model="review.Status" />
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         }
     </div>
-}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h5 fw-bold mb-0">Analytics</h2>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card chart-card h-100">
-            <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Registration Growth</h3>
-                <canvas id="registrationGrowthChart" height="220"></canvas>
-                <p id="registrationGrowthEmpty" class="dashboard-empty-state d-none mb-0">No registrations yet.</p>
+    <div class="tab-pane fade" id="dashboard-analytics" role="tabpanel" aria-labelledby="dashboard-tab-analytics">
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card chart-card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-3">Registration Growth</h3>
+                        <canvas id="registrationGrowthChart" height="220"></canvas>
+                        <p id="registrationGrowthEmpty" class="dashboard-empty-state d-none mb-0">No registrations yet.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card chart-card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-3">Listing Status Breakdown</h3>
+                        <canvas id="listingStatusChart" height="220"></canvas>
+                        <p id="listingStatusEmpty" class="dashboard-empty-state d-none mb-0">No listings yet.</p>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card chart-card h-100">
-            <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Listing Status Breakdown</h3>
-                <canvas id="listingStatusChart" height="220"></canvas>
-                <p id="listingStatusEmpty" class="dashboard-empty-state d-none mb-0">No listings yet.</p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card chart-card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-3">Order Status Breakdown</h3>
+                        <canvas id="orderStatusChart" height="220"></canvas>
+                        <p id="orderStatusEmpty" class="dashboard-empty-state d-none mb-0">No orders yet.</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-6">
-        <div class="card chart-card h-100">
-            <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Order Status Breakdown</h3>
-                <canvas id="orderStatusChart" height="220"></canvas>
-                <p id="orderStatusEmpty" class="dashboard-empty-state d-none mb-0">No orders yet.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card chart-card h-100">
-            <div class="card-body">
-                <h3 class="h6 fw-semibold mb-3">Review Rating Distribution</h3>
-                <canvas id="reviewRatingChart" height="220"></canvas>
-                <p id="reviewRatingEmpty" class="dashboard-empty-state d-none mb-0">No reviews yet.</p>
+            <div class="col-md-6">
+                <div class="card chart-card h-100">
+                    <div class="card-body">
+                        <h3 class="h6 fw-semibold mb-3">Review Rating Distribution</h3>
+                        <canvas id="reviewRatingChart" height="220"></canvas>
+                        <p id="reviewRatingEmpty" class="dashboard-empty-state d-none mb-0">No reviews yet.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<partial name="_RecentActivityFeed" model="stats.RecentActivity" />
+<div class="mt-4">
+    <partial name="_RecentActivityFeed" model="stats.RecentActivity" />
+</div>
 
 @section Scripts {
     <script type="application/json" id="registrationGrowthData">@Html.Raw(JsonSerializer.Serialize(stats.RegistrationGrowth, jsonOptions))</script>

@@ -2,14 +2,34 @@
 // immediately from data the server already embedded — no fetch(), no loading state.
 // Distinct from admin-insights.js, which backs the separate AI-narrated /Admin/Insights
 // page and additionally loads a Gemini summary via fetch().
+//
+// The charts live inside the "Analytics" Bootstrap tab-pane, which is hidden
+// (display: none) at DOMContentLoaded — Chart.js reads a 0x0 canvas at construction
+// time in that state and never recovers on its own once the pane becomes visible, so
+// every chart is resize()'d again on the tab's shown.bs.tab event.
 (function () {
     "use strict";
 
+    var charts = [];
+
     document.addEventListener("DOMContentLoaded", function () {
-        renderRegistrationGrowthChart();
-        renderListingStatusChart();
-        renderOrderStatusChart();
-        renderReviewRatingChart();
+        charts = [
+            renderRegistrationGrowthChart(),
+            renderListingStatusChart(),
+            renderOrderStatusChart(),
+            renderReviewRatingChart(),
+        ];
+
+        var analyticsTab = document.getElementById("dashboard-tab-analytics");
+        if (analyticsTab) {
+            analyticsTab.addEventListener("shown.bs.tab", function () {
+                charts.forEach(function (chart) {
+                    if (chart) {
+                        chart.resize();
+                    }
+                });
+            });
+        }
     });
 
     function renderRegistrationGrowthChart() {
@@ -20,10 +40,10 @@
         var total = (growth || []).reduce(function (sum, item) { return sum + item.count; }, 0);
         if (!window.Chart || !canvas || !growth || growth.length === 0 || total === 0) {
             toggleEmpty(canvas, empty);
-            return;
+            return null;
         }
 
-        new window.Chart(canvas, {
+        return new window.Chart(canvas, {
             type: "line",
             data: {
                 labels: growth.map(function (item) { return item.name; }),
@@ -52,14 +72,14 @@
         var total = stats ? Object.keys(stats).reduce(function (sum, key) { return sum + stats[key]; }, 0) : 0;
         if (!window.Chart || !canvas || total === 0) {
             toggleEmpty(canvas, empty);
-            return;
+            return null;
         }
 
         var labels = ["Draft", "Pending", "Active", "Reserved", "Sold", "Donated", "Archived", "Rejected", "Out of Stock"];
         var data = [stats.draft, stats.pending, stats.active, stats.reserved, stats.sold, stats.donated, stats.archived, stats.rejected, stats.outOfStock];
         var colors = ["#6c757d", "#0dcaf0", "#198754", "#ffc107", "#0d6efd", "#fd7e14", "#adb5bd", "#dc3545", "#d63384"];
 
-        new window.Chart(canvas, {
+        return new window.Chart(canvas, {
             type: "doughnut",
             data: {
                 labels: labels,
@@ -79,14 +99,14 @@
 
         if (!window.Chart || !canvas || !stats || stats.totalOrders === 0) {
             toggleEmpty(canvas, empty);
-            return;
+            return null;
         }
 
         var labels = ["Pending", "Confirmed", "Ready for Pickup", "Completed", "Cancelled"];
         var data = [stats.pendingCount, stats.confirmedCount, stats.readyForPickupCount, stats.completedCount, stats.cancelledCount];
         var colors = ["#0dcaf0", "#0d6efd", "#ffc107", "#198754", "#dc3545"];
 
-        new window.Chart(canvas, {
+        return new window.Chart(canvas, {
             type: "doughnut",
             data: {
                 labels: labels,
@@ -107,10 +127,10 @@
         var total = (distribution || []).reduce(function (sum, count) { return sum + count; }, 0);
         if (!window.Chart || !canvas || !distribution || total === 0) {
             toggleEmpty(canvas, empty);
-            return;
+            return null;
         }
 
-        new window.Chart(canvas, {
+        return new window.Chart(canvas, {
             type: "bar",
             data: {
                 labels: ["1 star", "2 stars", "3 stars", "4 stars", "5 stars"],

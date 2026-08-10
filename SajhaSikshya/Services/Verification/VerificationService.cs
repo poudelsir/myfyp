@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using SajhaSikshya.Constants;
+using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Data.Entities;
 using SajhaSikshya.Data.Entities.Verification;
 using SajhaSikshya.Data.Enums;
@@ -28,7 +29,10 @@ namespace SajhaSikshya.Services.Verification;
 /// Both a submission and an admin's review notify the student (Phase 8.2) via
 /// <see cref="_notificationService"/> — a submission is a self-confirmation receipt,
 /// a review's exact wording depends on which <see cref="VerificationAction"/> the
-/// reviewer took.
+/// reviewer took. A submission also broadcasts to every Admin (the same
+/// <see cref="INotificationService.CreateBroadcastAsync"/> pattern
+/// <c>ReviewService.ReportAsync</c> uses for a flagged review) so the review queue
+/// doesn't rely on an admin noticing it on their own.
 /// </summary>
 public class VerificationService : IVerificationService
 {
@@ -169,6 +173,10 @@ public class VerificationService : IVerificationService
 
         var (submittedTitle, submittedMessage) = NotificationTemplates.VerificationSubmitted();
         await _notificationService.CreateAsync(userId, NotificationType.Verification, submittedTitle, submittedMessage, VerificationLink, createdBy: userId);
+
+        var student = await _userManager.FindByIdAsync(userId);
+        var (adminTitle, adminMessage) = NotificationTemplates.NewVerificationRequest(student?.FullName ?? "A student");
+        await _notificationService.CreateBroadcastAsync(NotificationType.Verification, adminTitle, adminMessage, AdminVerificationQueueLink, userId, targetRole: Roles.Admin);
 
         return ServiceResult<int>.Success(verification.Id);
     }
@@ -311,4 +319,5 @@ public class VerificationService : IVerificationService
     }
 
     private const string VerificationLink = "/Student/Verification";
+    private const string AdminVerificationQueueLink = "/Admin/Verifications";
 }
