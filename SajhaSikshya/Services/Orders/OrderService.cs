@@ -42,7 +42,7 @@ public class OrderService : IOrderService
         _logger = logger;
     }
 
-    public async Task<ServiceResult<int>> CreateOrderAsync(string buyerId, int listingId)
+    public async Task<ServiceResult<int>> CreateOrderAsync(string buyerId, int listingId, PaymentMethod paymentMethod = PaymentMethod.CashOnPickup)
     {
         var listingRepository = _unitOfWork.Repository<Listing>();
         var listing = await listingRepository.GetByIdAsync(listingId);
@@ -108,7 +108,10 @@ public class OrderService : IOrderService
         // ReferenceNumber embeds Id, which SQL Server only assigns once the row above is
         // saved — so it's written in this second, small save rather than the first.
         order.ReferenceNumber = $"ORD-{order.CreatedAtUtc.Year}-{order.Id:D6}";
-        order.PaymentMethod = order.IsDonation ? PaymentMethod.Unknown : PaymentMethod.CashOnPickup;
+        order.PaymentMethod = order.IsDonation ? PaymentMethod.Unknown : paymentMethod;
+        order.PaymentStatus = order.PaymentMethod is PaymentMethod.ESewa or PaymentMethod.Khalti
+            ? PaymentStatus.Pending
+            : PaymentStatus.NotApplicable;
         orderRepository.Update(order);
         await _unitOfWork.SaveChangesAsync();
 

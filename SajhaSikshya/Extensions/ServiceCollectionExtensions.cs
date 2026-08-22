@@ -14,6 +14,7 @@ using SajhaSikshya.Services.Catalog;
 using SajhaSikshya.Services.Chat;
 using SajhaSikshya.Services.Interfaces;
 using SajhaSikshya.Services.Dashboard;
+using SajhaSikshya.Services.Email;
 using SajhaSikshya.Services.Interfaces.AI;
 using SajhaSikshya.Services.Interfaces.Catalog;
 using SajhaSikshya.Services.Interfaces.Chat;
@@ -27,6 +28,8 @@ using SajhaSikshya.Services.Interfaces.Verification;
 using SajhaSikshya.Services.Marketplace;
 using SajhaSikshya.Services.Notifications;
 using SajhaSikshya.Services.Orders;
+using SajhaSikshya.Services.Interfaces.Payments;
+using SajhaSikshya.Services.Payments;
 using SajhaSikshya.Services.Reviews;
 using SajhaSikshya.Services.Users;
 using SajhaSikshya.Services.Verification;
@@ -123,6 +126,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IImageStorageService, ImageStorageService>();
 
+        // Outbox: controllers enqueue (instant, never blocks on SMTP) and
+        // EmailOutboxWorker drains the queue in the background with its own retry
+        // policy. EmailQueue is registered once as a singleton and exposed under both
+        // types so the worker can reach its ChannelReader while callers only ever see
+        // the narrow IEmailQueue.EnqueueAsync surface.
+        services.AddSingleton<EmailQueue>();
+        services.AddSingleton<IEmailQueue>(sp => sp.GetRequiredService<EmailQueue>());
+        services.AddHostedService<EmailOutboxWorker>();
+
         services.AddScoped<IUniversityService, UniversityService>();
         services.AddScoped<IAcademicLevelService, AcademicLevelService>();
         services.AddScoped<ISubjectService, SubjectService>();
@@ -137,6 +149,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserQueryService, UserQueryService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IPaymentGatewayService, SimulatedPaymentGatewayService>();
         services.AddScoped<IOrderQueryService, OrderQueryService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<IChatQueryService, ChatQueryService>();

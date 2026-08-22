@@ -160,10 +160,13 @@ public class MarketplaceController : Controller
     [HttpGet("")]
     public async Task<IActionResult> Index([FromQuery] ListingSearchCriteria criteria)
     {
+        var searchResult = await _listingSearchService.SearchAsync(criteria, PageSize);
+
         var model = new MarketplaceHomeViewModel
         {
             Criteria = criteria,
-            Browse = await _listingSearchService.SearchAsync(criteria, PageSize),
+            Browse = searchResult.Page,
+            UsedRelaxedSearch = searchResult.UsedRelaxedSearch,
             BrowseCategories = await _categoryService.GetEligibleParentCategoriesAsync(excludeCategoryId: null),
             BrowseUniversities = await _universityService.GetAllActiveAsync(),
             BrowseAcademicLevels = await _academicLevelService.GetAllActiveAsync(),

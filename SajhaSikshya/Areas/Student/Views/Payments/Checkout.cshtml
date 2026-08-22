@@ -1,0 +1,60 @@
+@using SajhaSikshya.Data.Enums
+@model SajhaSikshya.DTOs.Orders.OrderDetailDto
+@{
+    ViewData["Title"] = "Simulated Checkout";
+    var isKhalti = Model.PaymentMethod == PaymentMethod.Khalti;
+    var brandName = isKhalti ? "Khalti" : "eSewa";
+    var brandColor = isKhalti ? "#5C2D91" : "#60BB46";
+    var failed = Model.PaymentStatus == PaymentStatus.Failed;
+}
+
+<div class="mx-auto" style="max-width: 480px;">
+    <div class="alert alert-warning d-flex align-items-start gap-2 mb-4" role="status">
+        <i data-lucide="flask-conical" class="flex-shrink-0 mt-1"></i>
+        <div>
+            <strong>Simulated payment.</strong> No real gateway is connected and no money
+            actually moves — this screen exists to demonstrate the payment flow end to end.
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header text-white d-flex align-items-center gap-2" style="background-color: @brandColor;">
+            <i data-lucide="wallet"></i>
+            <span class="fw-semibold">@brandName Checkout (Simulated)</span>
+        </div>
+        <div class="card-body">
+            @if (failed)
+            {
+                <div class="alert alert-danger py-2 mb-3">Your last attempt failed. You can retry below.</div>
+            }
+
+            <dl class="row mb-4">
+                <dt class="col-5 text-muted">Order</dt>
+                <dd class="col-7 text-end">@Model.ReferenceNumber</dd>
+
+                <dt class="col-5 text-muted">Item</dt>
+                <dd class="col-7 text-end">@Model.ListingTitle</dd>
+
+                <dt class="col-5 text-muted">Amount</dt>
+                <dd class="col-7 text-end fw-bold fs-5">@Model.FormattedPrice</dd>
+            </dl>
+
+            <form asp-action="Complete" asp-route-orderId="@Model.Id" method="post" class="mb-2">
+                <button type="submit" class="btn w-100 text-white" style="background-color: @brandColor;">
+                    <i data-lucide="check-circle" class="me-1"></i>Simulate Successful Payment
+                </button>
+            </form>
+            <form asp-action="Fail" asp-route-orderId="@Model.Id" method="post" class="mb-3">
+                <button type="submit" class="btn btn-outline-danger w-100">
+                    <i data-lucide="x-circle" class="me-1"></i>Simulate Failed Payment
+                </button>
+            </form>
+
+            <p class="text-muted small mb-0">
+                Prefer to pay in person instead? Cancel this request from
+                <a asp-controller="Orders" asp-action="Details" asp-route-id="@Model.Id">Order @Model.ReferenceNumber</a>
+                and place a new one with Cash on Pickup.
+            </p>
+        </div>
+    </div>
+</div>

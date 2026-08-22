@@ -103,6 +103,41 @@
             </div>
         </div>
 
+        @if (Model.PaymentStatus != PaymentStatus.NotApplicable)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-3">Payment</h2>
+                    <dl class="row small text-secondary mb-0">
+                        <dt class="col-4">Method</dt>
+                        <dd class="col-8">@Model.PaymentMethodDisplay</dd>
+                        <dt class="col-4">Status</dt>
+                        <dd class="col-8">
+                            <span class="badge @(Model.PaymentStatus switch
+                                                 {
+                                                     PaymentStatus.Completed => "bg-success",
+                                                     PaymentStatus.Failed => "bg-danger",
+                                                     _ => "bg-warning text-dark",
+                                                 })">
+                                @Model.PaymentStatusDisplay
+                            </span>
+                        </dd>
+                        @if (Model.PaymentTransactionId is not null)
+                        {
+                            <dt class="col-4">Transaction</dt>
+                            <dd class="col-8"><code>@Model.PaymentTransactionId</code></dd>
+                        }
+                    </dl>
+                    @if (isBuyer && Model.PaymentStatus is PaymentStatus.Pending or PaymentStatus.Failed)
+                    {
+                        <a asp-controller="Payments" asp-action="Checkout" asp-route-orderId="@Model.Id" class="btn btn-sm btn-primary mt-3">
+                            <i data-lucide="wallet" class="me-1"></i>Complete Payment
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
         @if (Model.Status == OrderStatus.Pending && isSeller)
         {
             <div class="d-flex flex-wrap gap-2">

@@ -1,0 +1,92 @@
+@using SajhaSikshya.DTOs.Marketplace
+@model IReadOnlyList<ListingPerformanceDto>
+@{
+    ViewData["Title"] = "My Listings Performance";
+    var totalViews = Model.Sum(r => r.ViewCount);
+    var totalSaves = Model.Sum(r => r.SavedCount);
+    var totalCompleted = Model.Sum(r => r.CompletedOrderCount);
+    var overallConversion = totalViews > 0 ? Math.Round(totalCompleted * 100.0 / totalViews, 1) : 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <h1 class="h4 fw-bold mb-1">My Listings Performance</h1>
+        <p class="text-secondary mb-0">How students are engaging with everything you've listed.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i data-lucide="arrow-left" class="me-1"></i>Back to My Listings
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-secondary small">Total Views</div>
+            <div class="h4 fw-bold mb-0">@totalViews</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-secondary small">Total Saves</div>
+            <div class="h4 fw-bold mb-0">@totalSaves</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-secondary small">Completed Sales</div>
+            <div class="h4 fw-bold mb-0">@totalCompleted</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-secondary small">Overall Conversion</div>
+            <div class="h4 fw-bold mb-0">@overallConversion%</div>
+        </div></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <p class="text-secondary text-center py-4 mb-0">You haven't listed anything yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th class="text-end">Views</th>
+                            <th class="text-end">Saves</th>
+                            <th class="text-end">Completed Sales</th>
+                            <th class="text-end">Conversion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model)
+                        {
+                            <tr>
+                                <td class="d-flex align-items-center gap-2">
+                                    @if (!string.IsNullOrEmpty(row.ThumbnailImagePath))
+                                    {
+                                        <img src="@row.ThumbnailImagePath" alt="@row.Title" style="width:40px;height:40px;object-fit:cover;border-radius:var(--sajha-radius);" />
+                                    }
+                                    <div>
+                                        <div class="fw-semibold">@row.Title</div>
+                                        <div class="text-secondary small">@row.StatusDisplay</div>
+                                    </div>
+                                </td>
+                                <td class="text-end"><i data-lucide="eye" style="width:14px;height:14px;" class="me-1 text-secondary"></i>@row.ViewCount</td>
+                                <td class="text-end"><i data-lucide="heart" style="width:14px;height:14px;" class="me-1 text-secondary"></i>@row.SavedCount</td>
+                                <td class="text-end">@row.CompletedOrderCount</td>
+                                <td class="text-end">@row.ConversionRatePercent%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

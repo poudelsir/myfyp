@@ -110,6 +110,41 @@ body {
   box-shadow: var(--sajha-shadow-glow);
 }
 
+/* Keyboard-only focus ring, site-wide. The rules above already give Bootstrap's own
+   form controls and buttons a focus glow, but plain links, icon-only buttons, sidebar
+   nav items, and custom tabbable elements (cards, the compare FAB, etc.) had no visible
+   focus state at all before this — invisible to anyone navigating by keyboard.
+   :focus-visible (not :focus) so a mouse click still doesn't paint a ring, only Tab. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--sajha-primary);
+  outline-offset: 2px;
+}
+
+/* Off-screen until focused (Tab from the very top of the page) — lets a keyboard user
+   jump straight past the sidebar/navbar to the page's actual content instead of
+   tabbing through every nav link first. Every dashboard and marketplace page targets
+   #mainContent (see _ManagementLayout.cshtml / _MarketplaceLayout.cshtml). */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 0.5rem;
+  z-index: 2000;
+  padding: 0.6rem 1rem;
+  background: var(--sajha-primary);
+  color: #fff;
+  border-radius: var(--sajha-radius-sm);
+  transition: top var(--sajha-transition-fast);
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+}
+
 a {
   color: var(--sajha-primary);
   transition: color var(--sajha-transition-fast);

@@ -21,13 +21,13 @@ namespace SajhaSikshya.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthService _authService;
-    private readonly IEmailService _emailService;
+    private readonly IEmailQueue _emailQueue;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(IAuthService authService, IEmailService emailService, ILogger<AccountController> logger)
+    public AccountController(IAuthService authService, IEmailQueue emailQueue, ILogger<AccountController> logger)
     {
         _authService = authService;
-        _emailService = emailService;
+        _emailQueue = emailQueue;
         _logger = logger;
     }
 
@@ -160,11 +160,8 @@ public class AccountController : Controller
             var resetLink = Url.Action(nameof(ResetPassword), "Account", new { email = user.Email, token = encodedToken }, Request.Scheme)!;
             _logger.LogInformation("Password reset URL generated for user {UserId}.", user.Id);
 
-            var sent = await _emailService.SendEmailAsync(user.Email!, "Reset your SajhaSikshya password", BuildResetPasswordEmailHtml(user, resetLink));
-            _logger.LogInformation(
-                "Password reset email send {Outcome} for user {UserId}.",
-                sent ? "succeeded" : "failed",
-                user.Id);
+            await _emailQueue.EnqueueAsync(new QueuedEmail(user.Email!, "Reset your SajhaSikshya password", BuildResetPasswordEmailHtml(user, resetLink)));
+            _logger.LogInformation("Password reset email queued for user {UserId}.", user.Id);
         }
 
         // Identical response whether or not the email matched an account — never

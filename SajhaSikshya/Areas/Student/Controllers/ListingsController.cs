@@ -79,6 +79,14 @@ public class ListingsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Performance()
+    {
+        var sellerId = User.GetUserId()!;
+        var rows = await _listingQueryService.GetMyListingPerformanceAsync(sellerId);
+        return View(rows);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Create()
     {
         var model = new ListingFormViewModel();

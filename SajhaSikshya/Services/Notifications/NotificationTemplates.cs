@@ -38,6 +38,9 @@ public static class NotificationTemplates
     public static (string Title, string Message) OrderCancelled(string listingTitle, string reason) =>
         ("Order cancelled", $"The order for \"{listingTitle}\" was cancelled. Reason: {reason}");
 
+    public static (string Title, string Message) PaymentReceived(string listingTitle, string paymentMethodDisplay) =>
+        ("Payment received", $"The buyer paid online via {paymentMethodDisplay} for \"{listingTitle}\".");
+
     public static (string Title, string Message) VerificationSubmitted() =>
         ("Verification submitted", "Your student verification request has been submitted and is pending review.");
 

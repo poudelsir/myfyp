@@ -56,4 +56,7 @@ public interface IListingQueryService
 
     /// <summary>Aggregate counts for the Admin Dashboard.</summary>
     Task<ListingModerationStatsDto> GetModerationStatsAsync();
+
+    /// <summary>Every listing a seller owns (any status, bounded to a generous cap), each with its view count, save count, and completed-order count — the "My Listings Performance" page.</summary>
+    Task<IReadOnlyList<ListingPerformanceDto>> GetMyListingPerformanceAsync(string sellerId);
 }

@@ -241,8 +241,8 @@ public class DashboardQueryService : IDashboardQueryService
                 UniversityId = verification.UniversityId,
                 Sort = ListingSortOption.Newest,
             };
-            var page = await _listingSearchService.SearchAsync(criteria, overFetch);
-            return page.Items.Where(l => l.SellerId != userId).Take(RecommendedListingsCap).ToList();
+            var result = await _listingSearchService.SearchAsync(criteria, overFetch);
+            return result.Page.Items.Where(l => l.SellerId != userId).Take(RecommendedListingsCap).ToList();
         }
 
         var recent = await _listingQueryService.GetRecentListingsAsync(overFetch);

@@ -22,9 +22,13 @@ public interface IListingSearchService
     /// <see cref="ListingSearchCriteria.SearchTerm"/> is set, results are ranked by
     /// keyword relevance (see the implementation's remarks) and
     /// <see cref="ListingSearchCriteria.Sort"/> is ignored; otherwise results are ordered
-    /// per <see cref="ListingSearchCriteria.Sort"/>.
+    /// per <see cref="ListingSearchCriteria.Sort"/>. If every keyword must match and that
+    /// finds nothing, automatically relaxes to "any keyword matches" (still
+    /// relevance-ranked) rather than returning a dead end —
+    /// <see cref="ListingSearchResultDto.UsedRelaxedSearch"/> tells the caller which one
+    /// it actually got back.
     /// </summary>
-    Task<PagedResult<ListingSummaryDto>> SearchAsync(ListingSearchCriteria criteria, int pageSize);
+    Task<ListingSearchResultDto> SearchAsync(ListingSearchCriteria criteria, int pageSize);
 
     /// <summary>
     /// The "My Saved Listings" grid: a Student's saved, still-Active listings, most

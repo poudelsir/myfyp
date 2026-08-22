@@ -57,7 +57,7 @@ public class ListingSearchService : IListingSearchService
         _verificationQueryService = verificationQueryService;
     }
 
-    public async Task<PagedResult<ListingSummaryDto>> SearchAsync(ListingSearchCriteria criteria, int pageSize)
+    public async Task<ListingSearchResultDto> SearchAsync(ListingSearchCriteria criteria, int pageSize)
     {
         var repository = _unitOfWork.Repository<Listing>();
 
@@ -78,7 +78,7 @@ public class ListingSearchService : IListingSearchService
             ? await _verificationQueryService.GetAllCurrentlyVerifiedUserIdsAsync()
             : null;
 
-        IQueryable<Listing> ApplyFilters(IQueryable<Listing> query)
+        IQueryable<Listing> ApplyFilters(IQueryable<Listing> query, bool requireAllWords)
         {
             query = query.Where(l => l.Status == ListingStatus.Active);
 
@@ -140,23 +140,36 @@ public class ListingSearchService : IListingSearchService
                 query = query.Where(l => l.ThumbnailImageId != null);
             }
 
-            // Each word ANDs onto the query as its own .Where() — a listing must contain
-            // every word somewhere across the searched fields, not necessarily the same
-            // field or contiguously (so "calculus notes" still matches a title like
-            // "Calculus I Notes"). Chaining .Where() calls like this (rather than trying
-            // to express "all words" as one Expression) is fully EF-Core-translatable
-            // because each individual lambda stays simple.
-            foreach (var word in searchWords)
+            if (requireAllWords)
             {
-                var w = word;
-                query = query.Where(l =>
-                    l.Title.Contains(w)
-                    || l.Description.Contains(w)
-                    || l.Category.Name.Contains(w)
-                    || l.Subject.Name.Contains(w)
-                    || (l.University != null && l.University.Name.Contains(w))
-                    || (l.Seller.FirstName + " " + l.Seller.LastName).Contains(w)
-                    || l.Slug.Contains(w));
+                // Each word ANDs onto the query as its own .Where() — a listing must
+                // contain every word somewhere across the searched fields, not
+                // necessarily the same field or contiguously (so "calculus notes" still
+                // matches a title like "Calculus I Notes"). Chaining .Where() calls like
+                // this (rather than trying to express "all words" as one Expression) is
+                // fully EF-Core-translatable because each individual lambda stays simple.
+                foreach (var word in searchWords)
+                {
+                    var w = word;
+                    query = query.Where(l =>
+                        l.Title.Contains(w)
+                        || l.Description.Contains(w)
+                        || l.Category.Name.Contains(w)
+                        || l.Subject.Name.Contains(w)
+                        || (l.University != null && l.University.Name.Contains(w))
+                        || (l.Seller.FirstName + " " + l.Seller.LastName).Contains(w)
+                        || l.Slug.Contains(w));
+                }
+            }
+            else if (searchWords.Count > 0)
+            {
+                // The relaxed fallback (see SearchAsync's remarks): a listing matches if
+                // ANY word matches anywhere — the opposite combination of the same
+                // per-field checks above, built dynamically (word count isn't known at
+                // compile time) the same way BuildRelevanceExpression below builds its
+                // per-word score expression, so it stays one EF-Core-translatable
+                // expression tree rather than a LINQ call EF Core can't push to SQL.
+                query = query.Where(BuildAnyWordMatchExpression(searchWords));
             }
 
             return query;
@@ -185,15 +198,34 @@ public class ListingSearchService : IListingSearchService
             };
         }
 
+        var pageNumber = Math.Max(criteria.PageNumber, 1);
+
         var page = await repository.SearchPagedProjectedAsync(
-            Math.Max(criteria.PageNumber, 1),
+            pageNumber,
             pageSize,
-            filter: ApplyFilters,
+            filter: q => ApplyFilters(q, requireAllWords: true),
             orderBy: ApplyOrder,
             selector: ListingMappings.ToSummaryProjection);
 
+        // Every keyword had to match somewhere and nothing did — rather than hand the
+        // buyer an empty grid, relax to "any keyword matches" (still relevance-ranked,
+        // so a listing hitting more words still ranks above one hitting only one) and
+        // let the caller know via UsedRelaxedSearch so the page can label these as
+        // related results instead of silently pretending they were an exact match.
+        var usedRelaxedSearch = false;
+        if (hasSearchTerm && page.TotalCount == 0)
+        {
+            page = await repository.SearchPagedProjectedAsync(
+                pageNumber,
+                pageSize,
+                filter: q => ApplyFilters(q, requireAllWords: false),
+                orderBy: ApplyOrder,
+                selector: ListingMappings.ToSummaryProjection);
+            usedRelaxedSearch = page.TotalCount > 0;
+        }
+
         ListingMappings.ApplyDisplayFields(page.Items);
-        return page;
+        return new ListingSearchResultDto { Page = page, UsedRelaxedSearch = usedRelaxedSearch };
     }
 
     public async Task<PagedResult<ListingSummaryDto>> GetMySavedListingsAsync(string userId, int pageNumber, int pageSize)
@@ -374,6 +406,56 @@ public class ListingSearchService : IListingSearchService
         }
 
         return Expression.Lambda<Func<Listing, int>>(totalScore!, listingParameter);
+    }
+
+    /// <summary>
+    /// Builds <c>l =&gt; (title.Contains(word1) || description.Contains(word1) || ...) ||
+    /// (title.Contains(word2) || ...) || ...</c> — the relaxed fallback's "any word,
+    /// any field" match, over the same seven fields <see cref="BuildRelevanceExpression"/>
+    /// scores. Built the same dynamic-<see cref="Expression"/> way for the same reason:
+    /// the word count isn't known until runtime, so this can't be a fixed lambda.
+    /// </summary>
+    private static Expression<Func<Listing, bool>> BuildAnyWordMatchExpression(IReadOnlyList<string> words)
+    {
+        var listingParameter = Expression.Parameter(typeof(Listing), "l");
+
+        Expression? anyMatch = null;
+
+        foreach (var word in words)
+        {
+            var wordConstant = Expression.Constant(word);
+
+            var titleContains = Expression.Call(Expression.Property(listingParameter, nameof(Listing.Title)), StringContainsMethod, wordConstant);
+            var descriptionContains = Expression.Call(Expression.Property(listingParameter, nameof(Listing.Description)), StringContainsMethod, wordConstant);
+            var slugContains = Expression.Call(Expression.Property(listingParameter, nameof(Listing.Slug)), StringContainsMethod, wordConstant);
+
+            var categoryName = Expression.Property(Expression.Property(listingParameter, nameof(Listing.Category)), nameof(Category.Name));
+            var categoryContains = Expression.Call(categoryName, StringContainsMethod, wordConstant);
+
+            var subjectName = Expression.Property(Expression.Property(listingParameter, nameof(Listing.Subject)), nameof(Subject.Name));
+            var subjectContains = Expression.Call(subjectName, StringContainsMethod, wordConstant);
+
+            var universityProperty = Expression.Property(listingParameter, nameof(Listing.University));
+            var universityNotNull = Expression.NotEqual(universityProperty, Expression.Constant(null, typeof(University)));
+            var universityNameContains = Expression.Call(Expression.Property(universityProperty, nameof(University.Name)), StringContainsMethod, wordConstant);
+            var universityContains = Expression.AndAlso(universityNotNull, universityNameContains);
+
+            var sellerFullName = Expression.Call(
+                StringConcatMethod,
+                Expression.Call(
+                    StringConcatMethod,
+                    Expression.Property(Expression.Property(listingParameter, nameof(Listing.Seller)), "FirstName"),
+                    Expression.Constant(" ")),
+                Expression.Property(Expression.Property(listingParameter, nameof(Listing.Seller)), "LastName"));
+            var sellerContains = Expression.Call(sellerFullName, StringContainsMethod, wordConstant);
+
+            var wordMatch = new Expression[] { titleContains, descriptionContains, categoryContains, subjectContains, universityContains, sellerContains, slugContains }
+                .Aggregate(Expression.OrElse);
+
+            anyMatch = anyMatch is null ? wordMatch : Expression.OrElse(anyMatch, wordMatch);
+        }
+
+        return Expression.Lambda<Func<Listing, bool>>(anyMatch!, listingParameter);
     }
 
     /// <summary>Builds <c>fieldAccess.Contains(word) ? weight : 0</c> for a single field.</summary>

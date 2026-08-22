@@ -23,8 +23,13 @@ public interface IOrderService
     /// listing isn't Active, belongs to the requesting buyer, or already has an
     /// active (Pending/Confirmed/ReadyForPickup) order against it. On success, moves
     /// the listing to <see cref="ListingStatus.Reserved"/> in the same transaction.
+    /// <paramref name="paymentMethod"/> is ignored for a donation (always recorded as
+    /// <see cref="PaymentMethod.Unknown"/>); for a sale it's <see cref="PaymentMethod.CashOnPickup"/>
+    /// unless the buyer opted into the simulated <see cref="PaymentMethod.ESewa"/>/<see cref="PaymentMethod.Khalti"/>
+    /// checkout, in which case the order is created with <see cref="PaymentStatus.Pending"/>
+    /// and the caller should route the buyer to <c>Payments/Checkout</c> next.
     /// </summary>
-    Task<ServiceResult<int>> CreateOrderAsync(string buyerId, int listingId);
+    Task<ServiceResult<int>> CreateOrderAsync(string buyerId, int listingId, PaymentMethod paymentMethod = PaymentMethod.CashOnPickup);
 
     /// <summary>Seller accepts a Pending request, moving it to Confirmed. Fails unless the order is Pending and the caller is its seller.</summary>
     Task<ServiceResult> AcceptOrderAsync(int orderId, string sellerId);

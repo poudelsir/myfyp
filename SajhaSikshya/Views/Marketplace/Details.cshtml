@@ -104,9 +104,18 @@
             <div class="mb-3 d-flex flex-wrap gap-2">
                 @if (isStudent)
                 {
-                    <form asp-area="Student" asp-controller="Orders" asp-action="Create" method="post">
+                    <form asp-area="Student" asp-controller="Orders" asp-action="Create" method="post" class="d-flex flex-wrap gap-2 align-items-center">
                         <input type="hidden" name="listingId" value="@listing.Id" />
                         <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                        @if (!listing.IsDonation)
+                        {
+                            <label class="visually-hidden" for="paymentMethodSelect">Payment method</label>
+                            <select name="paymentMethod" id="paymentMethodSelect" class="form-select form-select-lg w-auto" aria-label="Payment method">
+                                <option value="@PaymentMethod.CashOnPickup">Cash on Pickup</option>
+                                <option value="@PaymentMethod.ESewa">Pay with eSewa (simulated)</option>
+                                <option value="@PaymentMethod.Khalti">Pay with Khalti (simulated)</option>
+                            </select>
+                        }
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i data-lucide="@(listing.IsDonation ? "gift" : "shopping-bag")" class="me-1"></i>
                             @(listing.IsDonation ? "Request Donation" : "Request to Buy")

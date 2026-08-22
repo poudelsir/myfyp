@@ -15,10 +15,17 @@ public class OrderDetailDto : OrderDto
 
     public string? CancellationReason { get; set; }
 
-    /// <summary>Schema preparation for a future payment module — not yet processed or rendered anywhere beyond this detail view's data.</summary>
     public PaymentMethod PaymentMethod { get; set; }
 
     public string PaymentMethodDisplay { get; set; } = string.Empty;
+
+    public PaymentStatus PaymentStatus { get; set; }
+
+    public string PaymentStatusDisplay { get; set; } = string.Empty;
+
+    public string? PaymentTransactionId { get; set; }
+
+    public DateTime? PaymentCompletedAtUtc { get; set; }
 
     public string ListingDescription { get; set; } = string.Empty;
 

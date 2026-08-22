@@ -27,6 +27,10 @@ public static class OrderMappings
             SellerEmail = order.Seller?.Email ?? string.Empty,
             PaymentMethod = order.PaymentMethod,
             PaymentMethodDisplay = order.PaymentMethod.GetDisplayName(),
+            PaymentStatus = order.PaymentStatus,
+            PaymentStatusDisplay = order.PaymentStatus.GetDisplayName(),
+            PaymentTransactionId = order.PaymentTransactionId,
+            PaymentCompletedAtUtc = order.PaymentCompletedAtUtc,
             StatusHistory = order.StatusHistory
                 .OrderBy(h => h.ChangedAtUtc)
                 .Select(h => h.ToDto())

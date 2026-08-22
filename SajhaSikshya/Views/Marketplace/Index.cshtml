@@ -191,6 +191,14 @@
             </div>
         </div>
 
+        @if (Model.UsedRelaxedSearch)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2 mb-3" role="status">
+                <i data-lucide="info" class="flex-shrink-0"></i>
+                <span>No exact match for “@Model.Criteria.SearchTerm” — showing the closest related listings instead.</span>
+            </div>
+        }
+
         <div class="marketplace-results-toolbar">
             <form method="get" asp-action="Index" class="marketplace-inline-filters">
                 <input type="text" name="search" value="@Model.Criteria.SearchTerm" placeholder="Search listings" class="form-control form-control-sm" />

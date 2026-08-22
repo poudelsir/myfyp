@@ -19,6 +19,9 @@ public class MarketplaceHomeViewModel
 
     public PagedResult<ListingSummaryDto> Browse { get; set; } = new();
 
+    /// <summary>True when a strict "every keyword must match" search found nothing and <see cref="Browse"/> is showing the relaxed "any keyword matches" fallback instead — see <c>IListingSearchService.SearchAsync</c>'s remarks.</summary>
+    public bool UsedRelaxedSearch { get; set; }
+
     /// <summary>Every bound filter/sort/paging input for this request — also what gets echoed back into the search bar, filter sidebar, and sort dropdown so the page reflects the URL it was loaded from.</summary>
     public ListingSearchCriteria Criteria { get; set; } = new();
 

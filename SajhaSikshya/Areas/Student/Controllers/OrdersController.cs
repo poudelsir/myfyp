@@ -64,15 +64,22 @@ public class OrdersController : Controller
     [Authorize(Policy = AuthorizationPolicies.VerifiedStudent)]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("write-actions")]
-    public async Task<IActionResult> Create(int listingId, string? returnUrl)
+    public async Task<IActionResult> Create(int listingId, string? returnUrl, PaymentMethod paymentMethod = PaymentMethod.CashOnPickup)
     {
         var buyerId = User.GetUserId()!;
-        var result = await _orderService.CreateOrderAsync(buyerId, listingId);
+        var result = await _orderService.CreateOrderAsync(buyerId, listingId, paymentMethod);
 
         if (!result.Succeeded)
         {
             TempData[AlertHelper.ErrorKey] = result.Errors.FirstOrDefault();
             return RedirectBack(returnUrl);
+        }
+
+        // An online method routes straight to the simulated gateway instead of the
+        // order details page — the buyer chose to pay now, not at pickup.
+        if (paymentMethod is PaymentMethod.ESewa or PaymentMethod.Khalti)
+        {
+            return RedirectToAction("Checkout", "Payments", new { orderId = result.Data });
         }
 
         TempData[AlertHelper.SuccessKey] = "Request sent! The seller will review it shortly.";

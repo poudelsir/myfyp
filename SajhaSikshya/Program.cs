@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Hubs;
@@ -8,11 +9,24 @@ using SajhaSikshya.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------------------------------------------------------------------
-// Logging
+// Logging — structured (Serilog) rather than the plain console/debug providers this
+// replaced. Every log line now carries machine-parseable properties (RequestId,
+// UserId once enriched by ASP.NET Core's own request logging, etc.) instead of a flat
+// string, and errors/warnings persist to a rolling file so a production issue can be
+// diagnosed after the console/terminal that produced it is long gone. Configuration
+// (minimum level, overrides) lives in appsettings*.json under "Serilog" so a deploy can
+// raise verbosity without a code change.
 // ---------------------------------------------------------------------------
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "logs/sajhasikshya-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14,
+        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information));
 
 // ---------------------------------------------------------------------------
 // Persistence, Identity and application configuration (Extensions/ServiceCollectionExtensions.cs)
@@ -84,6 +98,8 @@ var app = builder.Build();
 // ---------------------------------------------------------------------------
 // Middleware pipeline
 // ---------------------------------------------------------------------------
+app.UseSerilogRequestLogging();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())

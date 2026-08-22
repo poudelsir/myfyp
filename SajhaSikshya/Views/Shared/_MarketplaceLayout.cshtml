@@ -108,6 +108,7 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body data-authenticated="@(isAuthenticated ? "true" : "false")">
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <div class="utility-bar">
         <div class="container-fluid d-flex align-items-center justify-content-between gap-2 flex-wrap">
             <span class="utility-bar-message">
@@ -351,7 +352,7 @@
         </div>
     </header>
 
-    <main class="marketplace-main">
+    <main class="marketplace-main" id="mainContent">
         <div class="container-fluid py-4">
             @if (TempData[SajhaSikshya.Helpers.AlertHelper.SuccessKey] is string successMessage)
             {

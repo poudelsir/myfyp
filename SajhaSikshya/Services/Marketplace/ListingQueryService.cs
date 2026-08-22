@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SajhaSikshya.Data.Entities;
 using SajhaSikshya.Data.Entities.Marketplace;
+using SajhaSikshya.Data.Entities.Orders;
 using SajhaSikshya.Data.Enums;
 using SajhaSikshya.Data.ValueObjects;
 using SajhaSikshya.DTOs;
@@ -255,6 +256,66 @@ public class ListingQueryService : IListingQueryService
             ArchivedCount = await repository.CountAsync(l => l.Status == ListingStatus.Archived),
             DonationCount = await repository.CountAsync(l => l.IsDonation),
         };
+    }
+
+    public async Task<IReadOnlyList<ListingPerformanceDto>> GetMyListingPerformanceAsync(string sellerId)
+    {
+        const int MaximumListings = 500;
+
+        var listingRepository = _unitOfWork.Repository<Listing>();
+        var listings = await listingRepository.FindProjectedAsync(
+            filter: l => l.SellerId == sellerId,
+            orderBy: q => q.OrderByDescending(l => l.ViewCount),
+            take: MaximumListings,
+            selector: l => new
+            {
+                l.Id,
+                l.Title,
+                l.Status,
+                l.ViewCount,
+                ThumbnailImagePath = l.ThumbnailImage != null ? l.ThumbnailImage.ImagePath : null,
+            });
+
+        if (listings.Count == 0)
+        {
+            return Array.Empty<ListingPerformanceDto>();
+        }
+
+        var listingIds = listings.Select(l => l.Id).ToList();
+
+        // Two small scalar-projected queries (not full entity loads) rather than one
+        // join — SavedListing and Order don't share a queryable root with Listing that
+        // GroupBy could reach cleanly, and at one seller's own listing-count scale, two
+        // round trips plus an in-memory group-by is simpler and just as fast as forcing
+        // both into a single translated query.
+        var savedCounts = (await _unitOfWork.Repository<SavedListing>()
+                .FindProjectedAsync(s => listingIds.Contains(s.ListingId), q => q.OrderBy(s => s.Id), MaximumListings * 100, s => s.ListingId))
+            .GroupBy(id => id)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var completedOrderCounts = (await _unitOfWork.Repository<Order>()
+                .FindProjectedAsync(o => listingIds.Contains(o.ListingId) && o.Status == OrderStatus.Completed, q => q.OrderBy(o => o.Id), MaximumListings * 100, o => o.ListingId))
+            .GroupBy(id => id)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return listings
+            .Select(l =>
+            {
+                var completed = completedOrderCounts.GetValueOrDefault(l.Id);
+                return new ListingPerformanceDto
+                {
+                    ListingId = l.Id,
+                    Title = l.Title,
+                    ThumbnailImagePath = l.ThumbnailImagePath,
+                    Status = l.Status,
+                    StatusDisplay = l.Status.GetDisplayName(),
+                    ViewCount = l.ViewCount,
+                    SavedCount = savedCounts.GetValueOrDefault(l.Id),
+                    CompletedOrderCount = completed,
+                    ConversionRatePercent = l.ViewCount > 0 ? Math.Round(completed * 100.0 / l.ViewCount, 1) : 0,
+                };
+            })
+            .ToList();
     }
 
     private static IQueryable<Listing> IncludeListingDetails(IQueryable<Listing> query) => query

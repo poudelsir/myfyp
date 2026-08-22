@@ -30,12 +30,21 @@ public class Order : BaseEntity
     public string ReferenceNumber { get; set; } = string.Empty;
 
     /// <summary>
-    /// Schema preparation for a future payment module — set once at creation
-    /// (<see cref="Enums.PaymentMethod.CashOnPickup"/> for a sale,
-    /// <see cref="Enums.PaymentMethod.Unknown"/> for a donation) and not otherwise
-    /// read or written anywhere yet. No processing/gateway logic exists in this phase.
+    /// Set once at creation from the buyer's choice — <see cref="Enums.PaymentMethod.CashOnPickup"/>
+    /// by default, <see cref="Enums.PaymentMethod.Unknown"/> for a donation, or
+    /// <see cref="Enums.PaymentMethod.ESewa"/>/<see cref="Enums.PaymentMethod.Khalti"/> if the
+    /// buyer opts into the simulated online-payment flow. Never changed after creation.
     /// </summary>
     public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Unknown;
+
+    /// <summary>Independent of <see cref="Status"/> — see <see cref="Enums.PaymentStatus"/>'s remarks for why payment and pickup progress are tracked separately.</summary>
+    public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.NotApplicable;
+
+    /// <summary>Simulated gateway's fake reference (e.g. "SIM-ESEWA-A1B2C3D4"), set only once <see cref="PaymentStatus"/> reaches <see cref="Enums.PaymentStatus.Completed"/>.</summary>
+    [StringLength(64)]
+    public string? PaymentTransactionId { get; set; }
+
+    public DateTime? PaymentCompletedAtUtc { get; set; }
 
     [Required]
     public string BuyerId { get; set; } = string.Empty;
