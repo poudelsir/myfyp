@@ -16,6 +16,7 @@
 
     var isOwnListing = User.GetUserId() == listing.SellerId;
     var isStudent = User.IsInRole(Roles.Student);
+    var isAdmin = User.IsInRole(Roles.Admin);
 }
 
 <nav aria-label="breadcrumb">
@@ -66,9 +67,9 @@
             }
         </div>
 
-        <div class="d-flex justify-content-between align-items-start gap-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <h1 class="h4 fw-bold mb-2">@listing.Title</h1>
-            <div class="d-flex gap-2 flex-shrink-0">
+            <div class="d-flex gap-2 flex-wrap">
                 <form asp-area="Student" asp-controller="SavedListings" asp-action="Toggle" method="post">
                     <input type="hidden" name="listingId" value="@listing.Id" />
                     <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
@@ -87,6 +88,16 @@
             </div>
         </div>
         <p class="marketplace-price mb-3">@listing.FormattedPrice</p>
+
+        @if (isAdmin)
+        {
+            <a asp-area="Admin" asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id"
+               class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 mb-3 text-decoration-none">
+                <i data-lucide="shield" class="flex-shrink-0"></i>
+                <span class="small fw-semibold">Viewing as Admin — open in Moderation Queue</span>
+                <i data-lucide="arrow-right" class="flex-shrink-0 ms-auto"></i>
+            </a>
+        }
 
         @if (listing.Status == ListingStatus.Active && !isOwnListing)
         {

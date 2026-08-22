@@ -24,8 +24,8 @@
         var keywordsEl = document.getElementById("aiKeywordsHint");
         var titleInput = document.getElementById("Title");
         var descriptionInput = document.getElementById("Description");
-        var categorySelect = document.getElementById("CategoryId");
-        var subjectSelect = document.getElementById("SubjectId");
+        var categorySelect = document.getElementById("subcategorySelect");
+        var subjectSelect = document.getElementById("subjectIdInput");
         var conditionSelect = document.getElementById("Condition");
         var priceInput = document.getElementById("priceInput");
         var donationToggle = document.getElementById("isDonationInput");
@@ -87,8 +87,8 @@
         var applyBtn = document.getElementById("aiApplyPriceBtn");
         var titleInput = document.getElementById("Title");
         var descriptionInput = document.getElementById("Description");
-        var categorySelect = document.getElementById("CategoryId");
-        var subjectSelect = document.getElementById("SubjectId");
+        var categorySelect = document.getElementById("subcategorySelect");
+        var subjectSelect = document.getElementById("subjectIdInput");
         var conditionSelect = document.getElementById("Condition");
         var priceInput = document.getElementById("priceInput");
         var donationToggle = document.getElementById("isDonationInput");

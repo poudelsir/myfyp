@@ -1,0 +1,134 @@
+@using Microsoft.Extensions.Options
+@using SajhaSikshya.Configurations
+@inject IOptions<ApplicationSettings> AppSettings
+@{
+    Layout = "_MarketplaceLayout";
+    ViewData["Title"] = "Help Center";
+    ViewData["MetaDescription"] = "Answers to common questions about buying, selling, and donating on SajhaSikshya.";
+    var supportEmail = AppSettings.Value.SupportEmail;
+}
+
+<section class="home-hero">
+    <div class="home-hero-inner text-center fade-in-up">
+        <span class="status-chip status-chip-primary mb-3">
+            <i data-lucide="life-buoy"></i> Help Center
+        </span>
+        <h1 class="home-hero-title">
+            How can we <span class="text-gradient">help</span>?
+        </h1>
+        <p class="home-hero-subtitle">
+            Answers to the most common questions about buying, selling, donating, and staying safe on SajhaSikshya.
+        </p>
+    </div>
+</section>
+
+<section class="mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="accordion" id="helpCenterAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#help-1">
+                            How do I become a seller?
+                        </button>
+                    </h2>
+                    <div id="help-1" class="accordion-collapse collapse show" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            Create a student account, then submit a Seller Verification request with your student ID
+                            from the <a asp-area="Student" asp-controller="Verification" asp-action="Submit">Become a Seller</a>
+                            page. An admin reviews it, and once approved you can list items for sale or donation.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-2">
+                            How does AI-assisted pricing and description work?
+                        </button>
+                    </h2>
+                    <div id="help-2" class="accordion-collapse collapse" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            When creating a listing, you can ask the AI to suggest a fair price based on comparable
+                            listings and generate a description from a few details you provide (title, condition,
+                            subject). You can always edit the suggestion before publishing.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-3">
+                            How do I contact a seller or buyer?
+                        </button>
+                    </h2>
+                    <div id="help-3" class="accordion-collapse collapse" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            Use the "Message Seller" button on any listing's details page to open a direct chat. All
+                            messages and any pickup arrangements stay inside SajhaSikshya's Messages panel.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-4">
+                            How do book donations work?
+                        </button>
+                    </h2>
+                    <div id="help-4" class="accordion-collapse collapse" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            Verified sellers can mark a listing as a donation instead of setting a price. Browse
+                            everything currently available to donate from the
+                            <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true">Donations</a> filter
+                            on the marketplace.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-5">
+                            Is it safe to meet a buyer or seller?
+                        </button>
+                    </h2>
+                    <div id="help-5" class="accordion-collapse collapse" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            Only verified students can list items for sale, and every exchange is arranged directly
+                            between the two of you in chat. Agree on a public, on-campus meeting spot, inspect the
+                            item before paying, and leave a review afterward to help other students.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#help-6">
+                            Something's wrong with my account or a listing — who do I contact?
+                        </button>
+                    </h2>
+                    <div id="help-6" class="accordion-collapse collapse" data-bs-parent="#helpCenterAccordion">
+                        <div class="accordion-body">
+                            @if (!string.IsNullOrWhiteSpace(supportEmail))
+                            {
+                                <text>Email our support team at <a href="mailto:@supportEmail">@supportEmail</a> and we'll get back to you.</text>
+                            }
+                            else
+                            {
+                                <text>Reach out through your account settings' support link, or ask the AI Assistant for guidance.</text>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4">
+    <div class="donation-banner fade-in-up">
+        <div class="donation-banner-content">
+            <span class="status-chip status-chip-warning mb-2"><i data-lucide="sparkles"></i> Still stuck?</span>
+            <h2 class="h4 fw-bold mb-2">Ask the AI Assistant</h2>
+            <p class="mb-3">Describe your question in plain language and get matched to an answer, a listing, or pricing guidance.</p>
+            <a asp-controller="Assistant" asp-action="Index" class="btn btn-primary">
+                <i data-lucide="sparkles" class="me-1"></i>Ask the AI Assistant
+            </a>
+        </div>
+    </div>
+</section>

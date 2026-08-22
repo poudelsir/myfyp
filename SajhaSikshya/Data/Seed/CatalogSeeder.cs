@@ -99,7 +99,9 @@ public static class CatalogSeeder
             return;
         }
 
+        var plusTwo = levels.First(l => l.Code == "PLUS2");
         var bachelor = levels.First(l => l.Code == "BACHELOR");
+        var master = levels.First(l => l.Code == "MASTER");
         var tu = universities.First(u => u.Code == "TU");
         var ku = universities.First(u => u.Code == "KU");
 
@@ -109,6 +111,15 @@ public static class CatalogSeeder
             new() { Name = "Database Management Systems", Code = "CSC205", AcademicLevel = bachelor, University = tu, IsActive = true },
             new() { Name = "Computer Networks", Code = "CSC301", AcademicLevel = bachelor, University = ku, IsActive = true },
             new() { Name = "Calculus I", Code = "MTH101", AcademicLevel = bachelor, University = null, IsActive = true },
+
+            // Universal fallback so non-academic listings (donations, lab equipment, campus
+            // essentials, stationery — anything without a real "subject") always have a
+            // Subject they can legitimately pick, one per Academic Level since Subject
+            // requires that FK. Without this, a required-field validation error was the only
+            // option for anyone listing something that isn't tied to a specific course.
+            new() { Name = "General / Other", Code = null, AcademicLevel = plusTwo, University = null, IsActive = true },
+            new() { Name = "General / Other", Code = null, AcademicLevel = bachelor, University = null, IsActive = true },
+            new() { Name = "General / Other", Code = null, AcademicLevel = master, University = null, IsActive = true },
         };
 
         context.Subjects.AddRange(subjects);

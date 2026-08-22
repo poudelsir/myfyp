@@ -45,12 +45,12 @@
                     <thead>
                         <tr>
                             <th>User</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Role</th>
-                            <th>Seller Status</th>
+                            <th class="d-none d-lg-table-cell">Email</th>
+                            <th class="d-none d-lg-table-cell">Phone</th>
+                            <th class="d-none d-md-table-cell">Role</th>
+                            <th class="d-none d-md-table-cell">Seller Status</th>
                             <th>Account Status</th>
-                            <th>Joined</th>
+                            <th class="d-none d-lg-table-cell">Joined</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -64,10 +64,10 @@
                                         <span>@item.FullName</span>
                                     </div>
                                 </td>
-                                <td>@item.Email</td>
-                                <td>@(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "—" : item.PhoneNumber)</td>
-                                <td>@item.Role</td>
-                                <td>
+                                <td class="d-none d-lg-table-cell">@item.Email</td>
+                                <td class="d-none d-lg-table-cell">@(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "—" : item.PhoneNumber)</td>
+                                <td class="d-none d-md-table-cell">@item.Role</td>
+                                <td class="d-none d-md-table-cell">
                                     @if (item.IsVerifiedSeller)
                                     {
                                         <span class="badge text-bg-success">Verified Seller</span>
@@ -91,7 +91,7 @@
                                         <span class="badge text-bg-danger">Suspended</span>
                                     }
                                 </td>
-                                <td>@item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="d-none d-lg-table-cell">@item.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
                                 <td class="text-end">
                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">View</a>
                                 </td>

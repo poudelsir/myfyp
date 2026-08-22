@@ -69,4 +69,18 @@ public class SavedListingService : ISavedListingService
 
         return saved.Select(s => s.ListingId).ToHashSet();
     }
+
+    public async Task<IReadOnlyList<int>> GetSavedCategoryIdsAsync(string userId)
+    {
+        var saved = await _unitOfWork.Repository<SavedListing>().FindAsync(s => s.UserId == userId);
+        if (saved.Count == 0)
+        {
+            return Array.Empty<int>();
+        }
+
+        var listingIds = saved.Select(s => s.ListingId).ToList();
+        var listings = await _unitOfWork.Repository<Listing>().FindAsync(l => listingIds.Contains(l.Id));
+
+        return listings.Select(l => l.CategoryId).Distinct().ToList();
+    }
 }

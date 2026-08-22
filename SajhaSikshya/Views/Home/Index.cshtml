@@ -27,6 +27,10 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isStudent = User.IsInRole(Roles.Student);
     var isVerifiedSeller = isAuthenticated && isStudent && await VerificationQueryService.IsUserVerifiedAsync(User.GetUserId()!);
+
+    var recommendedExcludeIds = featured.Select(l => l.Id).Concat(recent.Select(l => l.Id)).ToList();
+    var recommended = await ListingQueryService.GetRecommendedListingsAsync(
+        isAuthenticated ? User.GetUserId() : null, 8, recommendedExcludeIds);
 }
 
 <section class="home-hero">
@@ -93,20 +97,32 @@
 
             <div class="home-hero-stats">
                 <div class="home-hero-stat">
-                    <p class="home-hero-stat-value">@stats.ActiveListings</p>
-                    <p class="home-hero-stat-label">Active Listings</p>
+                    <span class="home-hero-stat-icon bg-primary-subtle text-primary"><i data-lucide="book-open"></i></span>
+                    <span class="home-hero-stat-body">
+                        <span class="home-hero-stat-value">@stats.ActiveListings</span>
+                        <span class="home-hero-stat-label">Active Listings</span>
+                    </span>
                 </div>
                 <div class="home-hero-stat">
-                    <p class="home-hero-stat-value">@stats.ApprovedVerifications</p>
-                    <p class="home-hero-stat-label">Verified Students</p>
+                    <span class="home-hero-stat-icon bg-success-subtle text-success"><i data-lucide="badge-check"></i></span>
+                    <span class="home-hero-stat-body">
+                        <span class="home-hero-stat-value">@stats.ApprovedVerifications</span>
+                        <span class="home-hero-stat-label">Verified Students</span>
+                    </span>
                 </div>
                 <div class="home-hero-stat">
-                    <p class="home-hero-stat-value">@stats.TotalReviews</p>
-                    <p class="home-hero-stat-label">Student Reviews</p>
+                    <span class="home-hero-stat-icon bg-warning-subtle text-warning"><i data-lucide="star"></i></span>
+                    <span class="home-hero-stat-body">
+                        <span class="home-hero-stat-value">@stats.TotalReviews</span>
+                        <span class="home-hero-stat-label">Student Reviews</span>
+                    </span>
                 </div>
                 <div class="home-hero-stat">
-                    <p class="home-hero-stat-value">@stats.DonationListings</p>
-                    <p class="home-hero-stat-label">Books Donated</p>
+                    <span class="home-hero-stat-icon bg-info-subtle text-info"><i data-lucide="heart-handshake"></i></span>
+                    <span class="home-hero-stat-body">
+                        <span class="home-hero-stat-value">@stats.DonationListings</span>
+                        <span class="home-hero-stat-label">Books Donated</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -136,19 +152,26 @@
             <h2 class="h4 fw-bold mb-0">Browse by Category</h2>
             <a asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">View All</a>
         </div>
-        <div class="home-category-grid">
-            @foreach (var department in departments)
-            {
-                <a asp-controller="Marketplace" asp-action="Index" asp-route-category="@department.Id" class="home-category-card hover-lift">
-                    <span class="home-category-icon"><i data-lucide="@(department.IconName ?? "shapes")"></i></span>
-                    <span class="home-category-name">@department.Name</span>
-                    <span class="home-category-count">@department.ListingCount item@(department.ListingCount == 1 ? "" : "s")</span>
-                    @if (!string.IsNullOrWhiteSpace(department.Description))
-                    {
-                        <span class="home-category-description">@department.Description</span>
-                    }
-                </a>
-            }
+        <div class="home-category-scroll-wrap">
+            <div class="home-category-scroll" id="homeCategoryScroll">
+                @{
+                    var categoryColorClasses = new[] { "cat-color-1", "cat-color-2", "cat-color-3", "cat-color-4", "cat-color-5", "cat-color-6" };
+                    var categoryColorIndex = 0;
+                }
+                @foreach (var department in departments)
+                {
+                    var categoryColorClass = categoryColorClasses[categoryColorIndex % categoryColorClasses.Length];
+                    categoryColorIndex++;
+                    <a asp-controller="Marketplace" asp-action="Index" asp-route-category="@department.Id" class="home-category-card hover-lift">
+                        <span class="home-category-icon @categoryColorClass"><i data-lucide="@(department.IconName ?? "shapes")"></i></span>
+                        <span class="home-category-name">@department.Name</span>
+                        <span class="home-category-count">@department.ListingCount item@(department.ListingCount == 1 ? "" : "s")</span>
+                    </a>
+                }
+            </div>
+            <button type="button" class="home-category-scroll-arrow" data-scroll-target="homeCategoryScroll" aria-label="Scroll categories right">
+                <i data-lucide="chevron-right"></i>
+            </button>
         </div>
     </section>
 }
@@ -161,6 +184,19 @@
             <a asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">Browse Marketplace</a>
         </div>
         <partial name="_ListingCardGrid" model="featured" />
+    </section>
+}
+
+@if (recommended.Any())
+{
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 fw-bold mb-0">
+                <i data-lucide="sparkles" class="text-primary me-1"></i>Recommended For You
+            </h2>
+            <a asp-controller="Marketplace" asp-action="Index" class="small text-decoration-none">See All</a>
+        </div>
+        <partial name="_ListingCardGrid" model="recommended" />
     </section>
 }
 

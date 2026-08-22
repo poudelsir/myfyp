@@ -20,12 +20,14 @@ public class ListingQueryService : IListingQueryService
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICategoryService _categoryService;
+    private readonly ISavedListingService _savedListingService;
 
-    public ListingQueryService(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ICategoryService categoryService)
+    public ListingQueryService(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ICategoryService categoryService, ISavedListingService savedListingService)
     {
         _unitOfWork = unitOfWork;
         _userManager = userManager;
         _categoryService = categoryService;
+        _savedListingService = savedListingService;
     }
 
     public async Task<PagedResult<ListingDto>> GetMyListingsAsync(string sellerId, string? searchTerm, ListingStatus? status, int? categoryId, int pageNumber, int pageSize)
@@ -91,6 +93,42 @@ public class ListingQueryService : IListingQueryService
 
         ListingMappings.ApplyDisplayFields(items);
         return items;
+    }
+
+    public async Task<IReadOnlyList<ListingSummaryDto>> GetRecommendedListingsAsync(string? userId, int count, IReadOnlyCollection<int> excludeIds)
+    {
+        var repository = _unitOfWork.Repository<Listing>();
+        var excluded = excludeIds.ToList();
+
+        var preferredCategoryIds = string.IsNullOrEmpty(userId)
+            ? Array.Empty<int>()
+            : (await _savedListingService.GetSavedCategoryIdsAsync(userId)).ToArray();
+
+        var results = new List<ListingSummaryDto>();
+
+        if (preferredCategoryIds.Length > 0)
+        {
+            var byCategory = await repository.FindProjectedAsync(
+                filter: l => l.Status == ListingStatus.Active && preferredCategoryIds.Contains(l.CategoryId) && !excluded.Contains(l.Id),
+                orderBy: q => q.OrderByDescending(l => l.ViewCount),
+                take: count,
+                selector: ListingMappings.ToSummaryProjection);
+            results.AddRange(byCategory);
+        }
+
+        if (results.Count < count)
+        {
+            var alreadyExcluded = excluded.Concat(results.Select(r => r.Id)).ToList();
+            var fallback = await repository.FindProjectedAsync(
+                filter: l => l.Status == ListingStatus.Active && !alreadyExcluded.Contains(l.Id),
+                orderBy: q => q.OrderByDescending(l => l.ViewCount),
+                take: count - results.Count,
+                selector: ListingMappings.ToSummaryProjection);
+            results.AddRange(fallback);
+        }
+
+        ListingMappings.ApplyDisplayFields(results);
+        return results;
     }
 
     public async Task<ListingDto?> GetPublicDetailsBySlugAsync(string slug)

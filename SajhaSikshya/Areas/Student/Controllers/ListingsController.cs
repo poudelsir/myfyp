@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Authorization;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
@@ -321,6 +322,7 @@ public class ListingsController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("ai")]
     public async Task<IActionResult> GenerateDescription(string? title, BookCondition condition, int categoryId, int subjectId, decimal priceAmount, bool isDonation)
     {
         var category = await _categoryService.GetByIdAsync(categoryId);
@@ -347,6 +349,7 @@ public class ListingsController : Controller
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("ai")]
     public async Task<IActionResult> RecommendPrice(int id, string title, string description, BookCondition condition, int categoryId, int subjectId, bool isDonation)
     {
         var category = await _categoryService.GetByIdAsync(categoryId);

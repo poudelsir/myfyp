@@ -54,10 +54,10 @@
                     <thead>
                         <tr>
                             <th>Listing</th>
-                            <th>@(isSelling ? "Buyer" : "Seller")</th>
+                            <th class="d-none d-md-table-cell">@(isSelling ? "Buyer" : "Seller")</th>
                             <th>Price</th>
                             <th>Status</th>
-                            <th>Requested</th>
+                            <th class="d-none d-md-table-cell">Requested</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -74,7 +74,7 @@
                                         <span>@order.ListingTitle</span>
                                     </div>
                                 </td>
-                                <td>@(isSelling ? order.BuyerName : order.SellerName)</td>
+                                <td class="d-none d-md-table-cell">@(isSelling ? order.BuyerName : order.SellerName)</td>
                                 <td>
                                     @if (order.IsDonation)
                                     {
@@ -86,7 +86,7 @@
                                     }
                                 </td>
                                 <td><partial name="_OrderStatusBadge" model="order.Status" /></td>
-                                <td>@order.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
+                                <td class="d-none d-md-table-cell">@order.CreatedAtUtc.ToLocalTime().ToString("MMM d, yyyy")</td>
                                 <td class="text-end">
                                     <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-secondary">View</a>
                                 </td>

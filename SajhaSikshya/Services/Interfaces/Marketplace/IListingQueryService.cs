@@ -26,6 +26,16 @@ public interface IListingQueryService
     /// <summary>The most recently created Active listings, for the marketplace homepage's "Recent" rail.</summary>
     Task<IReadOnlyList<ListingSummaryDto>> GetRecentListingsAsync(int count);
 
+    /// <summary>
+    /// The homepage "Recommended For You" rail. For a signed-in student with saved
+    /// listings, biases toward the most-viewed Active listings in their saved
+    /// categories; falls back to (and tops up with) the next most-viewed Active
+    /// listings otherwise, so guests and students with no wishlist activity still get a
+    /// full rail. <paramref name="excludeIds"/> keeps it from repeating anything already
+    /// shown in the Featured/Recent rails on the same page.
+    /// </summary>
+    Task<IReadOnlyList<ListingSummaryDto>> GetRecommendedListingsAsync(string? userId, int count, IReadOnlyCollection<int> excludeIds);
+
     /// <summary>Full detail lookup for the public details page. Only returns a result if the listing is Active — Draft/PendingApproval/Rejected/Archived listings are never publicly visible, even by direct slug.</summary>
     Task<ListingDto?> GetPublicDetailsBySlugAsync(string slug);
 

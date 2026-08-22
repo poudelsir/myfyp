@@ -603,3 +603,34 @@
     justify-content: center;
   }
 }
+
+/* ---------------------------------------------------------------------- */
+/* Data table scroll affordance (Admin Users/Listings, My Listings/Orders,  */
+/* etc.) — Bootstrap's .table-responsive already makes a wide table        */
+/* scrollable on narrow screens, but with no visible scrollbar and no other */
+/* hint, columns like Status or row actions can end up completely          */
+/* undiscoverable off-screen. site.js toggles .has-more-columns only when   */
+/* there genuinely is more to see (and removes it once scrolled to the      */
+/* end), so this never shows a false hint on a table that already fits.     */
+/* ---------------------------------------------------------------------- */
+.table-responsive {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sajha-primary) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--sajha-primary-rgb), 0.45);
+  border-radius: 999px;
+}
+
+.table-responsive.has-more-columns {
+  /* Fades the last ~32px of visible table content so the cut-off edge itself
+     reads as "more here, swipe" rather than looking like the table just ends. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent 100%);
+}
+

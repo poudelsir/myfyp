@@ -29,4 +29,12 @@ public interface ISavedListingService
     /// across a whole page of cards without checking each one individually (avoids N+1).
     /// </summary>
     Task<IReadOnlySet<int>> GetSavedListingIdsAsync(string userId, IEnumerable<int> listingIds);
+
+    /// <summary>
+    /// Distinct CategoryIds across everything <paramref name="userId"/> currently has
+    /// saved — used by the homepage "Recommended For You" rail to bias toward
+    /// categories a student has already shown interest in via their wishlist. Empty if
+    /// they have no saved listings.
+    /// </summary>
+    Task<IReadOnlyList<int>> GetSavedCategoryIdsAsync(string userId);
 }

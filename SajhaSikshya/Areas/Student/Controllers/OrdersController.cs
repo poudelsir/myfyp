@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Authorization;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
@@ -62,6 +63,7 @@ public class OrdersController : Controller
     [HttpPost]
     [Authorize(Policy = AuthorizationPolicies.VerifiedStudent)]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("write-actions")]
     public async Task<IActionResult> Create(int listingId, string? returnUrl)
     {
         var buyerId = User.GetUserId()!;

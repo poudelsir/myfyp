@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Hubs;
@@ -49,6 +51,34 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+// ---------------------------------------------------------------------------
+// Rate limiting — no throttle existed anywhere before this (login brute-force is
+// covered separately by Identity's own account lockout). Partitioned per signed-in
+// user (falling back to remote IP for the rare anonymous case, e.g. the AI
+// Assistant) so one abusive account can't exhaust the limit for everyone else.
+// ---------------------------------------------------------------------------
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    string PartitionKey(HttpContext context) =>
+        context.User.Identity?.IsAuthenticated == true
+            ? $"user:{context.User.Identity.Name}"
+            : $"ip:{context.Connection.RemoteIpAddress}";
+
+    // The AI Assistant and listing-AI features call out to the paid Gemini API —
+    // tightest limit of the set, since each request has a real dollar cost.
+    options.AddPolicy("ai", context => RateLimitPartition.GetFixedWindowLimiter(
+        PartitionKey(context),
+        _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(1), PermitLimit = 8, QueueLimit = 0 }));
+
+    // Chat sends, order placement, and review submission — cheap individually but
+    // still worth capping so a script can't flood a seller's inbox or spam orders/reviews.
+    options.AddPolicy("write-actions", context => RateLimitPartition.GetFixedWindowLimiter(
+        PartitionKey(context),
+        _ => new FixedWindowRateLimiterOptions { Window = TimeSpan.FromMinutes(1), PermitLimit = 30, QueueLimit = 0 }));
+});
+
 var app = builder.Build();
 
 // ---------------------------------------------------------------------------
@@ -83,6 +113,7 @@ app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllerRoute(
         name: "areas",

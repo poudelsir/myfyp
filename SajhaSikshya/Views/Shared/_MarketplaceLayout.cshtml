@@ -13,6 +13,7 @@
 @inject ICompareService CompareService
 @inject IVerificationQueryService VerificationQueryService
 @inject IUniversityService UniversityService
+@inject ICategoryService CategoryService
 @inject IChatQueryService ChatQueryService
 @inject INotificationQueryService NotificationQueryService
 @inject UserManager<ApplicationUser> UserManager
@@ -63,6 +64,7 @@
     }
 
     var universities = await UniversityService.GetAllActiveAsync();
+    var navCategories = await CategoryService.GetTopLevelCategoriesWithListingCountsAsync();
 
     string IconFor(NotificationType type) => type switch
     {
@@ -106,15 +108,31 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body data-authenticated="@(isAuthenticated ? "true" : "false")">
-    <div class="announcement-bar" id="announcementBar">
-        <div class="container-fluid d-flex align-items-center justify-content-center gap-2 flex-wrap">
-            <i data-lucide="sparkles"></i>
-            <span>Nepal's AI-powered academic marketplace — buy, sell, and donate books with fellow students.</span>
-            <a asp-controller="Marketplace" asp-action="Index" class="announcement-bar-link">Explore the marketplace</a>
+    <div class="utility-bar">
+        <div class="container-fluid d-flex align-items-center justify-content-between gap-2 flex-wrap">
+            <span class="utility-bar-message">
+                <i data-lucide="sparkles"></i>
+                Welcome to SajhaSikshya! Verified students. Trusted resources. Better learning.
+            </span>
+            <div class="utility-bar-links">
+                <a asp-controller="Home" asp-action="HelpCenter" class="utility-bar-link">Help Center</a>
+                @if (isStudent && isCurrentUserVerified)
+                {
+                    <a asp-area="Student" asp-controller="Dashboard" asp-action="Index" class="utility-bar-link">Seller Dashboard</a>
+                }
+                else if (isStudent && isSellerApplicationPending)
+                {
+                    <a asp-area="Student" asp-controller="Verification" asp-action="Index" class="utility-bar-link">Seller Application Pending</a>
+                }
+                else if (!isAuthenticated || isStudent)
+                {
+                    <a asp-area="Student" asp-controller="Verification" asp-action="Submit" class="utility-bar-link">Become a Seller</a>
+                }
+                <span class="utility-bar-lang" title="More languages coming soon">
+                    <i data-lucide="globe"></i> English
+                </span>
+            </div>
         </div>
-        <button type="button" class="announcement-bar-close" id="announcementBarClose" aria-label="Dismiss announcement">
-            <i data-lucide="x"></i>
-        </button>
     </div>
     @if (isAuthenticated)
     {
@@ -124,43 +142,19 @@
         <div class="container-fluid d-flex align-items-center gap-2 gap-lg-3">
             <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none flex-shrink-0">
                 <span class="brand-mark">S</span>
-                <span class="brand-text d-none d-sm-inline">SajhaSikshya</span>
+                <span class="brand-text-group d-none d-sm-flex">
+                    <span class="brand-text">SajhaSikshya</span>
+                    <span class="brand-tagline">Learn &middot; Share &middot; Grow</span>
+                </span>
             </a>
 
             <button type="button" class="btn-icon d-lg-none flex-shrink-0" data-bs-toggle="collapse" data-bs-target="#marketplaceNavLinks" aria-controls="marketplaceNavLinks" aria-expanded="false" aria-label="Toggle navigation">
                 <i data-lucide="menu"></i>
             </button>
 
-            <nav class="marketplace-nav-links d-none d-lg-flex align-items-center gap-1">
-                <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
-                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
-                <div class="dropdown">
-                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        Universities <i data-lucide="chevron-down"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        @foreach (var university in universities)
-                        {
-                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-university="@university.Id">@university.Name</a></li>
-                        }
-                        @if (!universities.Any())
-                        {
-                            <li><span class="dropdown-item-text text-secondary small">No universities yet</span></li>
-                        }
-                    </ul>
-                </div>
-                <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link d-flex align-items-center gap-1">
-                    <i data-lucide="sparkles"></i> AI Assistant
-                </a>
-                <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="marketplace-nav-link d-flex align-items-center gap-1">
-                    <i data-lucide="heart-handshake"></i> Donate
-                </a>
-                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About</a>
-            </nav>
-
-            <form class="navbar-search d-none d-md-flex ms-lg-2" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
+            <form class="navbar-search d-none d-md-flex" role="search" aria-label="Site search" method="get" asp-controller="Marketplace" asp-action="Index">
                 <i data-lucide="search" class="navbar-search-icon"></i>
-                <input type="search" name="search" class="form-control" placeholder="Search the marketplace…" aria-label="Search"
+                <input type="search" name="search" class="form-control" placeholder="Search books, notes, subjects…" aria-label="Search"
                        value="@Context.Request.Query["search"]" />
             </form>
 
@@ -246,7 +240,7 @@
                         @if (isAdmin)
                         {
                             <li><a class="dropdown-item" asp-area="Admin" asp-controller="Profile" asp-action="Index"><i data-lucide="user" class="me-2"></i>My Profile</a></li>
-                            <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Admin Dashboard</a></li>
+                            <li><a class="dropdown-item fw-semibold" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i data-lucide="layout-dashboard" class="me-2"></i>Admin Panel</a></li>
                         }
                         else
                         {
@@ -295,13 +289,60 @@
             }
         </div>
 
+        <nav class="marketplace-nav-links-row d-none d-lg-flex align-items-center gap-1">
+            <div class="container-fluid d-flex align-items-center gap-1">
+                <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
+                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
+                <div class="dropdown">
+                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Categories <i data-lucide="chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var category in navCategories)
+                        {
+                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-category="@category.Id">@category.Name</a></li>
+                        }
+                        @if (!navCategories.Any())
+                        {
+                            <li><span class="dropdown-item-text text-secondary small">No categories yet</span></li>
+                        }
+                    </ul>
+                </div>
+                <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link d-flex align-items-center gap-1">
+                    <i data-lucide="sparkles"></i> AI Assistant
+                </a>
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="marketplace-nav-link d-flex align-items-center gap-1">
+                    <i data-lucide="heart-handshake"></i> Donate
+                </a>
+                <div class="dropdown">
+                    <button type="button" class="marketplace-nav-link marketplace-nav-link-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Universities <i data-lucide="chevron-down"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @foreach (var university in universities)
+                        {
+                            <li><a class="dropdown-item" asp-controller="Marketplace" asp-action="Index" asp-route-university="@university.Id">@university.Name</a></li>
+                        }
+                        @if (!universities.Any())
+                        {
+                            <li><span class="dropdown-item-text text-secondary small">No universities yet</span></li>
+                        }
+                    </ul>
+                </div>
+                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About Us</a>
+            </div>
+        </nav>
+
         <div class="collapse d-lg-none marketplace-nav-links-mobile" id="marketplaceNavLinks">
             <div class="container-fluid d-flex flex-column gap-1 py-2">
                 <a asp-controller="Home" asp-action="Index" class="marketplace-nav-link">Home</a>
                 <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Marketplace</a>
+                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Categories</a>
                 <a asp-controller="Assistant" asp-action="Index" class="marketplace-nav-link">AI Assistant</a>
                 <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="marketplace-nav-link">Donate</a>
-                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About</a>
+                <a asp-controller="Marketplace" asp-action="Index" class="marketplace-nav-link">Universities</a>
+                <a asp-controller="Home" asp-action="About" class="marketplace-nav-link">About Us</a>
+                <a asp-controller="Home" asp-action="HelpCenter" class="marketplace-nav-link">Help Center</a>
                 @if (isStudent)
                 {
                     <a asp-area="Student" asp-controller="SavedListings" asp-action="Index" class="marketplace-nav-link">Wishlist</a>
@@ -335,9 +376,9 @@
 
     @if (compareCount > 0)
     {
-        <a asp-controller="Compare" asp-action="Index" class="marketplace-compare-fab">
+        <a asp-controller="Compare" asp-action="Index" class="marketplace-compare-fab" aria-label="Compare (@compareCount saved)">
             <i data-lucide="git-compare"></i>
-            Compare
+            <span class="marketplace-compare-fab-label">Compare</span>
             <span class="marketplace-compare-fab-count">@compareCount</span>
         </a>
     }
@@ -347,7 +388,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/dark-mode.js" asp-append-version="true"></script>
-    <script src="~/js/announcement-bar.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

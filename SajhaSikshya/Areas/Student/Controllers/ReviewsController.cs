@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Data.Enums;
@@ -84,6 +85,7 @@ public class ReviewsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("write-actions")]
     public async Task<IActionResult> Write(WriteReviewViewModel model)
     {
         if (!ModelState.IsValid)

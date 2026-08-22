@@ -80,7 +80,11 @@ public class ProfileController : Controller
 
             if (!saveResult.Succeeded)
             {
-                ModelState.AddModelError(nameof(PersonalInfoViewModel.ProfilePhoto), saveResult.Errors.FirstOrDefault() ?? "The photo could not be uploaded.");
+                // Keyed with the "PersonalInfo." prefix to match the field name the
+                // <partial name="_PersonalInfoForm" for="PersonalInfo" /> tag helper actually
+                // generates (PersonalInfo.ProfilePhoto) — the bare property name never matched
+                // the rendered asp-validation-for span, so this error was silently invisible.
+                ModelState.AddModelError("PersonalInfo.ProfilePhoto", saveResult.Errors.FirstOrDefault() ?? "The photo could not be uploaded.");
                 return View(nameof(Index), BuildViewModel(user, personalInfoOverride: model));
             }
 

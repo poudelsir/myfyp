@@ -76,94 +76,125 @@ public class GeminiAIService : IAIService
             return ServiceResult<AIGenerationResult>.Failure("AI features are not available right now.");
         }
 
-        try
+        var url = $"{_settings.BaseUrl.TrimEnd('/')}/models/{_settings.Model}:generateContent?key={_settings.ApiKey}";
+        var wireRequest = new GeminiGenerateContentRequest
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
-            var url = $"{_settings.BaseUrl.TrimEnd('/')}/models/{_settings.Model}:generateContent?key={_settings.ApiKey}";
-
-            var wireRequest = new GeminiGenerateContentRequest
+            Contents = new List<GeminiContent> { new() { Parts = new List<GeminiPart> { new() { Text = request.Prompt } } } },
+            GenerationConfig = new GeminiGenerationConfig
             {
-                Contents = new List<GeminiContent> { new() { Parts = new List<GeminiPart> { new() { Text = request.Prompt } } } },
-                GenerationConfig = new GeminiGenerationConfig
+                Temperature = request.Temperature ?? AIConstants.DefaultTemperature,
+                MaxOutputTokens = request.MaxOutputTokens ?? AIConstants.DefaultMaxOutputTokens,
+                ResponseMimeType = request.ResponseSchema is null ? null : "application/json",
+                ResponseSchema = request.ResponseSchema,
+            },
+        };
+
+        // Gemini's free/shared capacity returns 429 (rate limited) and 503 ("model
+        // currently experiencing high demand") fairly often, and Google's own error
+        // message says these are "usually temporary" — so a couple of short-backoff
+        // retries clear most of them without the caller ever seeing a failure. Anything
+        // else (4xx other than 429, malformed response, timeout) is not retried since
+        // retrying won't change the outcome.
+        const int maxAttempts = 3;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
+                using var httpResponse = await _httpClient.PostAsJsonAsync(url, wireRequest, JsonOptions, cts.Token);
+
+                if (!httpResponse.IsSuccessStatusCode)
                 {
-                    Temperature = request.Temperature ?? AIConstants.DefaultTemperature,
-                    MaxOutputTokens = request.MaxOutputTokens ?? AIConstants.DefaultMaxOutputTokens,
-                    ResponseMimeType = request.ResponseSchema is null ? null : "application/json",
-                    ResponseSchema = request.ResponseSchema,
-                },
-            };
+                    var body = await httpResponse.Content.ReadAsStringAsync(cts.Token);
+                    _logger.LogError(
+                        "Gemini API returned {StatusCode} for feature {Feature} (attempt {Attempt}/{MaxAttempts}): {Body}",
+                        (int)httpResponse.StatusCode,
+                        request.Feature,
+                        attempt,
+                        maxAttempts,
+                        Truncate(body));
 
-            using var httpResponse = await _httpClient.PostAsJsonAsync(url, wireRequest, JsonOptions, cts.Token);
+                    var isTransient = httpResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+                    if (isTransient && attempt < maxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(attempt), CancellationToken.None);
+                        continue;
+                    }
 
-            if (!httpResponse.IsSuccessStatusCode)
-            {
-                var body = await httpResponse.Content.ReadAsStringAsync(cts.Token);
-                _logger.LogError(
-                    "Gemini API returned {StatusCode} for feature {Feature}: {Body}",
-                    (int)httpResponse.StatusCode,
-                    request.Feature,
-                    Truncate(body));
+                    stopwatch.Stop();
+                    await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: $"HTTP {(int)httpResponse.StatusCode}");
+                    return ServiceResult<AIGenerationResult>.Failure("AI service is temporarily unavailable. Please try again.");
+                }
+
+                var wireResponse = await httpResponse.Content.ReadFromJsonAsync<GeminiGenerateContentResponse>(JsonOptions, cts.Token);
+
+                // gemini-flash-latest is a "thinking" model — a longer structured-JSON answer
+                // can come back as more than one Part, so every Part's Text must be
+                // concatenated in order. Taking only the first Part risks silently truncating
+                // valid JSON into something that fails to parse downstream.
+                var parts = wireResponse?.Candidates?.FirstOrDefault()?.Content?.Parts;
+                var text = parts is null ? null : StripMarkdownCodeFence(string.Concat(parts.Select(p => p.Text)));
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    stopwatch.Stop();
+                    _logger.LogError("Gemini returned no usable content for feature {Feature}.", request.Feature);
+                    await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Empty response from Gemini.");
+                    return ServiceResult<AIGenerationResult>.Failure("AI service returned an unexpected response. Please try again.");
+                }
+
                 stopwatch.Stop();
-                await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: $"HTTP {(int)httpResponse.StatusCode}");
+                var tokenCount = wireResponse?.UsageMetadata?.TotalTokenCount;
+
+                if (request.CacheKey is not null)
+                {
+                    _cache.Set(request.CacheKey, new CachedAIResponse(text, tokenCount), TimeSpan.FromMinutes(AIConstants.DefaultCacheDurationMinutes));
+                }
+
+                await LogAsync(request, success: true, tokenCount: tokenCount, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: null);
+
+                return ServiceResult<AIGenerationResult>.Success(new AIGenerationResult
+                {
+                    Text = text,
+                    TokenCount = tokenCount,
+                    ResponseTimeMs = stopwatch.ElapsedMilliseconds,
+                    FromCache = false,
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                stopwatch.Stop();
+                _logger.LogError("Gemini API call timed out for feature {Feature}.", request.Feature);
+                await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Request timed out.");
+                return ServiceResult<AIGenerationResult>.Failure("AI service took too long to respond. Please try again.");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Gemini API call failed for feature {Feature} (attempt {Attempt}/{MaxAttempts}).", request.Feature, attempt, maxAttempts);
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(attempt), CancellationToken.None);
+                    continue;
+                }
+
+                stopwatch.Stop();
+                await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: Truncate(ex.Message));
                 return ServiceResult<AIGenerationResult>.Failure("AI service is temporarily unavailable. Please try again.");
             }
-
-            var wireResponse = await httpResponse.Content.ReadFromJsonAsync<GeminiGenerateContentResponse>(JsonOptions, cts.Token);
-
-            // gemini-flash-latest is a "thinking" model — a longer structured-JSON answer
-            // can come back as more than one Part, so every Part's Text must be
-            // concatenated in order. Taking only the first Part risks silently truncating
-            // valid JSON into something that fails to parse downstream.
-            var parts = wireResponse?.Candidates?.FirstOrDefault()?.Content?.Parts;
-            var text = parts is null ? null : StripMarkdownCodeFence(string.Concat(parts.Select(p => p.Text)));
-
-            if (string.IsNullOrWhiteSpace(text))
+            catch (JsonException ex)
             {
                 stopwatch.Stop();
-                _logger.LogError("Gemini returned no usable content for feature {Feature}.", request.Feature);
-                await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Empty response from Gemini.");
+                _logger.LogError(ex, "Failed to parse Gemini response for feature {Feature}.", request.Feature);
+                await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Malformed response.");
                 return ServiceResult<AIGenerationResult>.Failure("AI service returned an unexpected response. Please try again.");
             }
-
-            stopwatch.Stop();
-            var tokenCount = wireResponse?.UsageMetadata?.TotalTokenCount;
-
-            if (request.CacheKey is not null)
-            {
-                _cache.Set(request.CacheKey, new CachedAIResponse(text, tokenCount), TimeSpan.FromMinutes(AIConstants.DefaultCacheDurationMinutes));
-            }
-
-            await LogAsync(request, success: true, tokenCount: tokenCount, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: null);
-
-            return ServiceResult<AIGenerationResult>.Success(new AIGenerationResult
-            {
-                Text = text,
-                TokenCount = tokenCount,
-                ResponseTimeMs = stopwatch.ElapsedMilliseconds,
-                FromCache = false,
-            });
         }
-        catch (OperationCanceledException)
-        {
-            stopwatch.Stop();
-            _logger.LogError("Gemini API call timed out for feature {Feature}.", request.Feature);
-            await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Request timed out.");
-            return ServiceResult<AIGenerationResult>.Failure("AI service took too long to respond. Please try again.");
-        }
-        catch (HttpRequestException ex)
-        {
-            stopwatch.Stop();
-            _logger.LogError(ex, "Gemini API call failed for feature {Feature}.", request.Feature);
-            await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: Truncate(ex.Message));
-            return ServiceResult<AIGenerationResult>.Failure("AI service is temporarily unavailable. Please try again.");
-        }
-        catch (JsonException ex)
-        {
-            stopwatch.Stop();
-            _logger.LogError(ex, "Failed to parse Gemini response for feature {Feature}.", request.Feature);
-            await LogAsync(request, success: false, tokenCount: null, responseTimeMs: (int)stopwatch.ElapsedMilliseconds, fromCache: false, error: "Malformed response.");
-            return ServiceResult<AIGenerationResult>.Failure("AI service returned an unexpected response. Please try again.");
-        }
+
+        // Unreachable: every loop path above returns. Only here to satisfy the compiler's
+        // control-flow analysis, since the for-loop's exit condition isn't provably false.
+        throw new UnreachableException();
     }
 
     /// <summary>Never lets a logging failure surface as the AI call's own failure — this is an audit trail, not a critical path.</summary>

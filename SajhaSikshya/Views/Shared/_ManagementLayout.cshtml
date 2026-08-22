@@ -67,9 +67,9 @@
 
     @if (compareCount > 0)
     {
-        <a asp-controller="Compare" asp-action="Index" asp-area="" class="marketplace-compare-fab">
+        <a asp-controller="Compare" asp-action="Index" asp-area="" class="marketplace-compare-fab" aria-label="Compare (@compareCount saved)">
             <i data-lucide="git-compare"></i>
-            Compare
+            <span class="marketplace-compare-fab-label">Compare</span>
             <span class="marketplace-compare-fab-count">@compareCount</span>
         </a>
     }

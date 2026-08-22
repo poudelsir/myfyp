@@ -9,312 +9,244 @@
     ViewData["Title"] = hasSearchTerm ? $"Search: {Model.Criteria.SearchTerm}" : "Marketplace";
     ViewData["MetaDescription"] = "Browse secondhand books, notes, and study materials shared by students.";
 
+    var topCategories = Model.BrowseCategories.Take(8).ToList();
+    // Featured/Recent/Browse are already correctly bounded upstream (FeaturedCount/RecentCount/PageSize
+    // in MarketplaceController) — re-truncating here silently dropped real, matching listings below what
+    // the page's own "N results" heading and pagination control promised.
+    var featuredCards = Model.Featured;
+    var recommendationCards = Model.Recent;
+    var browseItems = Model.Browse.Items;
     var heading = hasSearchTerm
         ? $"Search results for “{Model.Criteria.SearchTerm}”"
         : Model.IsFiltered
             ? $"Browsing: {Model.CategoryName ?? Model.SubjectName ?? Model.UniversityName ?? Model.AcademicLevelName ?? "Filtered Listings"}"
             : "All Listings";
-
-    // Same ParentCategoryId grouping technique previously used for the top-nav mega
-    // menu, now presented as a vertical browse list inside the Marketplace sidebar.
-    var topLevelCategories = Model.BrowseCategories.Where(c => c.ParentCategoryId is null).ToList();
-    var childrenByParent = Model.BrowseCategories
-        .Where(c => c.ParentCategoryId is not null)
-        .GroupBy(c => c.ParentCategoryId!.Value)
-        .ToDictionary(g => g.Key, g => g.ToList());
-}
-@functions {
-    // Builds an "Index" URL carrying the current query string minus whichever keys are
-    // passed in (and always minus pageNumber, since removing a filter should land back
-    // on page 1) — used by the active-filter chips to link to "everything except this
-    // one filter" without duplicating query-building logic per chip.
-    private string RemoveFilterUrl(params string[] excludeKeys)
-    {
-        var routeValues = new Dictionary<string, string>();
-        foreach (var kvp in Context.Request.Query)
-        {
-            if (!excludeKeys.Contains(kvp.Key, StringComparer.OrdinalIgnoreCase)
-                && !string.Equals(kvp.Key, "pageNumber", StringComparison.OrdinalIgnoreCase))
-            {
-                routeValues[kvp.Key] = kvp.Value.ToString();
-            }
-        }
-
-        return Url.Action("Index", "Marketplace", routeValues) ?? Url.Action("Index", "Marketplace")!;
-    }
-
-    // Same idea as RemoveFilterUrl, but replaces (rather than just removes) the category
-    // filter — used by the category browse list, which navigates directly instead of
-    // going through the filter form's Apply button.
-    private string SetCategoryUrl(int? categoryId)
-    {
-        var routeValues = new Dictionary<string, string>();
-        foreach (var kvp in Context.Request.Query)
-        {
-            if (!string.Equals(kvp.Key, "category", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(kvp.Key, "pageNumber", StringComparison.OrdinalIgnoreCase))
-            {
-                routeValues[kvp.Key] = kvp.Value.ToString();
-            }
-        }
-
-        if (categoryId.HasValue)
-        {
-            routeValues["category"] = categoryId.Value.ToString();
-        }
-
-        return Url.Action("Index", "Marketplace", routeValues) ?? Url.Action("Index", "Marketplace")!;
-    }
 }
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        @if (Model.IsFiltered)
-        {
-            <li class="breadcrumb-item"><a asp-action="Index">Marketplace</a></li>
-            <li class="breadcrumb-item active" aria-current="page">@heading</li>
-        }
-        else
-        {
-            <li class="breadcrumb-item active" aria-current="page">Marketplace</li>
-        }
-    </ol>
-</nav>
+<section class="marketplace-landing">
+    <div class="marketplace-hero">
+        <div class="marketplace-hero-copy">
+            <span class="marketplace-pill">
+                <i data-lucide="sparkles"></i>
+                Verified Student Marketplace
+            </span>
 
-<form method="get" asp-action="Index" id="marketplaceSearchForm">
-    <div class="marketplace-search-hero mb-4">
-        <i data-lucide="search"></i>
-        <input type="search" name="search" value="@Model.Criteria.SearchTerm" class="form-control form-control-lg"
-               placeholder="Search by title, description, subject, university, or seller…"
-               maxlength="@SajhaSikshya.Constants.SearchConstants.MaximumSearchTermLength" aria-label="Search listings" />
-        <button type="submit" class="btn btn-primary">Search</button>
-    </div>
+            <h1>Student Marketplace</h1>
+            <p>
+                Buy, sell, or donate books, notes, and campus essentials with trusted students from your university.
+            </p>
 
-    <div class="row g-4">
-        <aside class="offcanvas-lg offcanvas-start col-lg-3" tabindex="-1" id="marketplaceFiltersOffcanvas" aria-labelledby="marketplaceFiltersLabel">
-            <div class="offcanvas-header d-lg-none">
-                <h2 class="offcanvas-title h6 fw-bold" id="marketplaceFiltersLabel">Filters</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#marketplaceFiltersOffcanvas" aria-label="Close"></button>
+            <form method="get" asp-action="Index" class="marketplace-hero-search">
+                <i data-lucide="search"></i>
+                <input type="search" name="search" value="@Model.Criteria.SearchTerm" class="form-control"
+                       placeholder="Search for books, notes, and subjects..." aria-label="Search the marketplace" />
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+
+            <div class="marketplace-hero-actions">
+                <a asp-controller="Marketplace" asp-action="Index" class="btn btn-primary">Browse Books</a>
+                <a asp-area="Student" asp-controller="Listings" asp-action="Create" class="btn btn-outline-secondary">Sell Your Book</a>
             </div>
-            <div class="offcanvas-body">
-                <div class="marketplace-facet-card">
-                    <h2 class="h6 fw-semibold mb-3 d-none d-lg-block">Filters</h2>
 
-                    <input type="hidden" name="category" value="@Model.Criteria.CategoryId" />
+            <div class="marketplace-hero-tags">
+                <span>Textbooks</span>
+                <span>Notes &amp; Papers</span>
+                <span>Lab Equipment</span>
+                <span>Stationery</span>
+            </div>
+        </div>
 
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold">Category</label>
-                        <div class="category-browse-list">
-                            <a href="@SetCategoryUrl(null)" class="category-browse-parent @(!Model.Criteria.CategoryId.HasValue ? "is-active" : "")">
-                                <span>All Categories</span>
-                            </a>
-                            @foreach (var parent in topLevelCategories)
-                            {
-                                var hasChildren = childrenByParent.TryGetValue(parent.Id, out var children) && children.Count > 0;
-                                <div class="category-browse-group">
-                                    <a href="@SetCategoryUrl(parent.Id)" class="category-browse-parent @(Model.Criteria.CategoryId == parent.Id ? "is-active" : "")">
-                                        <span>@parent.Name</span>
-                                        @if (hasChildren)
-                                        {
-                                            <i data-lucide="chevron-down"></i>
-                                        }
-                                    </a>
-                                    @if (hasChildren)
-                                    {
-                                        <ul class="category-browse-children">
-                                            @foreach (var child in children!)
-                                            {
-                                                <li>
-                                                    <a href="@SetCategoryUrl(child.Id)" class="category-browse-child @(Model.Criteria.CategoryId == child.Id ? "is-active" : "")">@child.Name</a>
-                                                </li>
-                                            }
-                                        </ul>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
+        <div class="marketplace-hero-aside">
+            <div class="marketplace-stack-card">
+                <div class="stack-book stack-book-large"></div>
+                <div class="stack-book stack-book-medium"></div>
+                <div class="stack-book stack-book-small"></div>
+                <div class="stack-plant"></div>
+            </div>
 
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold" for="filterUniversity">University</label>
-                        <select id="filterUniversity" name="university" class="form-select form-select-sm"
-                                asp-items='new SelectList(Model.BrowseUniversities, "Id", "Name", Model.Criteria.UniversityId)'>
-                            <option value="">All Universities</option>
-                        </select>
-                    </div>
-
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold" for="filterAcademicLevel">Academic Level</label>
-                        <select id="filterAcademicLevel" name="academicLevel" class="form-select form-select-sm"
-                                asp-items='new SelectList(Model.BrowseAcademicLevels, "Id", "Name", Model.Criteria.AcademicLevelId)'>
-                            <option value="">All Levels</option>
-                        </select>
-                    </div>
-
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold" for="filterSubject">Subject</label>
-                        <select id="filterSubject" name="subject" class="form-select form-select-sm"
-                                asp-items='new SelectList(Model.BrowseSubjects, "Id", "Name", Model.Criteria.SubjectId)'>
-                            <option value="">All Subjects</option>
-                        </select>
-                    </div>
-
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold" for="filterCondition">Condition</label>
-                        <select id="filterCondition" name="condition" class="form-select form-select-sm"
-                                asp-items="EnumExtensions.GetSelectList<BookCondition>(Model.Criteria.Condition)">
-                            <option value="">Any Condition</option>
-                        </select>
-                    </div>
-
-                    <div class="marketplace-filter-group">
-                        <label class="form-label small fw-semibold">Price Range (Rs.)</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="number" name="minPrice" value="@Model.Criteria.MinPrice" class="form-control form-control-sm"
-                                   placeholder="Min" min="0" step="1" aria-label="Minimum price" />
-                            <span class="text-secondary">–</span>
-                            <input type="number" name="maxPrice" value="@Model.Criteria.MaxPrice" class="form-control form-control-sm"
-                                   placeholder="Max" min="0" step="1" aria-label="Maximum price" />
-                        </div>
-                    </div>
-
-                    <div class="marketplace-filter-group">
-                        <div class="form-check">
-                            <input type="checkbox" name="donation" value="true" class="form-check-input" id="filterDonation"
-                                   checked="@Model.Criteria.DonationOnly" />
-                            <label class="form-check-label small" for="filterDonation">Donations Only</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" name="recent" value="true" class="form-check-input" id="filterRecent"
-                                   checked="@Model.Criteria.RecentlyAddedOnly" />
-                            <label class="form-check-label small" for="filterRecent">Recently Added</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" name="hasImages" value="true" class="form-check-input" id="filterHasImages"
-                                   checked="@Model.Criteria.OnlyWithImages" />
-                            <label class="form-check-label small" for="filterHasImages">Only With Photos</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" name="verifiedSeller" value="true" class="form-check-input" id="filterVerifiedSeller"
-                                   checked="@Model.Criteria.VerifiedSellerOnly" />
-                            <label class="form-check-label small" for="filterVerifiedSeller">Verified Sellers Only</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">Apply Filters</button>
-                    @if (Model.IsFiltered)
-                    {
-                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm w-100 mt-2">Clear All Filters</a>
-                    }
+            <div class="marketplace-mini-stats">
+                <div class="mini-stat">
+                    <strong>5,200+</strong>
+                    <span>Verified Students</span>
+                </div>
+                <div class="mini-stat">
+                    <strong>12,400+</strong>
+                    <span>Books Listed</span>
+                </div>
+                <div class="mini-stat">
+                    <strong>98%</strong>
+                    <span>Happy Students</span>
                 </div>
             </div>
-        </aside>
-
-        <div class="col-lg-9">
-            <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none mb-3" data-bs-toggle="offcanvas" data-bs-target="#marketplaceFiltersOffcanvas" aria-controls="marketplaceFiltersOffcanvas">
-                <i data-lucide="sliders-horizontal" class="me-1"></i>Filters
-                @if (Model.IsFiltered)
-                {
-                    <span class="badge text-bg-primary ms-1">On</span>
-                }
-            </button>
-
-            @if (Model.IsFiltered)
-            {
-                <div class="marketplace-filter-chips mb-3">
-                    @if (hasSearchTerm)
-                    {
-                        <a href="@RemoveFilterUrl("search")" class="marketplace-chip">Search: "@Model.Criteria.SearchTerm" <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.CategoryId.HasValue && Model.CategoryName is not null)
-                    {
-                        <a href="@RemoveFilterUrl("category")" class="marketplace-chip">Category: @Model.CategoryName <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.UniversityId.HasValue && Model.UniversityName is not null)
-                    {
-                        <a href="@RemoveFilterUrl("university")" class="marketplace-chip">University: @Model.UniversityName <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.AcademicLevelId.HasValue && Model.AcademicLevelName is not null)
-                    {
-                        <a href="@RemoveFilterUrl("academicLevel")" class="marketplace-chip">Level: @Model.AcademicLevelName <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.SubjectId.HasValue && Model.SubjectName is not null)
-                    {
-                        <a href="@RemoveFilterUrl("subject")" class="marketplace-chip">Subject: @Model.SubjectName <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.Condition.HasValue)
-                    {
-                        <a href="@RemoveFilterUrl("condition")" class="marketplace-chip">Condition: @Model.Criteria.Condition.Value.GetDisplayName() <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.MinPrice.HasValue || Model.Criteria.MaxPrice.HasValue)
-                    {
-                        <a href="@RemoveFilterUrl("minPrice", "maxPrice")" class="marketplace-chip">
-                            Price: @(Model.Criteria.MinPrice?.ToString("N0") ?? "0")–@(Model.Criteria.MaxPrice?.ToString("N0") ?? "Any") <i data-lucide="x"></i>
-                        </a>
-                    }
-                    @if (Model.Criteria.DonationOnly)
-                    {
-                        <a href="@RemoveFilterUrl("donation")" class="marketplace-chip">Donations Only <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.RecentlyAddedOnly)
-                    {
-                        <a href="@RemoveFilterUrl("recent")" class="marketplace-chip">Recently Added <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.OnlyWithImages)
-                    {
-                        <a href="@RemoveFilterUrl("hasImages")" class="marketplace-chip">With Photos <i data-lucide="x"></i></a>
-                    }
-                    @if (Model.Criteria.VerifiedSellerOnly)
-                    {
-                        <a href="@RemoveFilterUrl("verifiedSeller")" class="marketplace-chip">Verified Sellers Only <i data-lucide="x"></i></a>
-                    }
-                    <a asp-action="Index" class="marketplace-chip marketplace-chip-clear">Clear All <i data-lucide="x"></i></a>
-                </div>
-            }
-
-            @if (!Model.IsFiltered && Model.Featured.Any())
-            {
-                <section class="mb-5">
-                    <h2 class="h5 fw-bold mb-3">Featured</h2>
-                    <partial name="_ListingCardGrid" model="Model.Featured" />
-                </section>
-            }
-
-            @if (!Model.IsFiltered && Model.Recent.Any())
-            {
-                <section class="mb-5">
-                    <h2 class="h5 fw-bold mb-3">Recently Listed</h2>
-                    <partial name="_ListingCardGrid" model="Model.Recent" />
-                </section>
-            }
-
-            <section>
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                    <h2 class="h5 fw-bold mb-0">@heading</h2>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-secondary small">@Model.Browse.TotalCount result@(Model.Browse.TotalCount == 1 ? "" : "s")</span>
-                        <select name="sort" class="form-select form-select-sm marketplace-sort-select"
-                                asp-items="EnumExtensions.GetSelectList<ListingSortOption>(Model.Criteria.Sort)"
-                                onchange="this.form.submit()" aria-label="Sort by"
-                                disabled="@hasSearchTerm"
-                                title="@(hasSearchTerm ? "Search results are sorted by relevance" : "Sort by")">
-                        </select>
-                    </div>
-                </div>
-
-                <partial name="_ListingCardGrid" model="Model.Browse.Items"
-                         view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = Model.IsFiltered ? "No listings match your search or filters. Try broadening them." : "No listings yet." }' />
-                <partial name="_QueryPreservingPagination" model="Model.Browse" />
-            </section>
         </div>
     </div>
-</form>
 
-@section Scripts {
-    <script>
-        document.getElementById('marketplaceSearchForm')?.addEventListener('submit', function () {
-            document.querySelector('.marketplace-grid')?.classList.add('is-loading');
-        });
-    </script>
-}
+    <div class="marketplace-strip">
+        <div class="strip-item">
+            <i data-lucide="badge-check"></i>
+            <span>Verified Students</span>
+        </div>
+        <div class="strip-item">
+            <i data-lucide="shield-check"></i>
+            <span>Safe campus trading</span>
+        </div>
+        <div class="strip-item">
+            <i data-lucide="sparkles"></i>
+            <span>AI price guidance</span>
+        </div>
+        <div class="strip-item">
+            <i data-lucide="heart-handshake"></i>
+            <span>Book donations</span>
+        </div>
+    </div>
+
+    <section class="marketplace-section">
+        <div class="section-header">
+            <h2>Browse by Category</h2>
+            <a asp-controller="Marketplace" asp-action="Index">View All Categories</a>
+        </div>
+
+        <div class="marketplace-category-grid">
+            @if (topCategories.Any())
+            {
+                @foreach (var category in topCategories)
+                {
+                    <a asp-controller="Marketplace" asp-action="Index" asp-route-category="@category.Id" class="marketplace-category-card">
+                        <span class="marketplace-category-icon">
+                            <i data-lucide="@(string.IsNullOrWhiteSpace(category.IconName) ? "book-open" : category.IconName)"></i>
+                        </span>
+                        <span class="marketplace-category-name">@category.Name</span>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="marketplace-empty-state compact">
+                    <i data-lucide="package-search"></i>
+                    <p class="mb-0">Categories will appear here soon.</p>
+                </div>
+            }
+        </div>
+    </section>
+
+    @if (featuredCards.Any())
+    {
+        <section class="marketplace-section">
+            <div class="section-header">
+                <h2>Featured Listings</h2>
+                <a asp-controller="Marketplace" asp-action="Index">View All</a>
+            </div>
+            <partial name="_ListingCardGrid" model="featuredCards" />
+        </section>
+    }
+
+    <section class="marketplace-section">
+        <div class="marketplace-ai-banner">
+            <div class="marketplace-ai-icon">
+                <i data-lucide="sparkles"></i>
+            </div>
+            <div class="marketplace-ai-copy">
+                <h3>Need help finding the right book?</h3>
+                <p>Ask the AI assistant for recommendations based on your course, university, and budget.</p>
+            </div>
+            <a asp-controller="Assistant" asp-action="Index" class="btn btn-primary">Ask the AI Assistant</a>
+        </div>
+    </section>
+
+    @if (recommendationCards.Any())
+    {
+        <section class="marketplace-section">
+            <div class="section-header">
+                <h2>AI Recommendations</h2>
+                <a asp-controller="Marketplace" asp-action="Index">See More</a>
+            </div>
+            <partial name="_ListingCardGrid" model="recommendationCards" />
+        </section>
+    }
+
+    <section class="marketplace-section">
+        <div class="marketplace-donation-banner">
+            <div class="marketplace-donation-copy">
+                <h3>Have books to spare?</h3>
+                <p>Donate gently used textbooks and study materials to students who need them most.</p>
+                <a asp-controller="Marketplace" asp-action="Index" asp-route-donation="true" class="btn btn-primary">Donate Now</a>
+            </div>
+            <div class="marketplace-donation-illustration" aria-hidden="true">
+                <div class="donation-box"></div>
+                <div class="donation-book"></div>
+                <div class="donation-hand"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="marketplace-section">
+        <div class="section-header">
+            <h2>@heading</h2>
+            <div class="listing-meta">
+                <span>@Model.Browse.TotalCount result@(Model.Browse.TotalCount == 1 ? "" : "s")</span>
+                @if (Model.IsFiltered)
+                {
+                    <a asp-action="Index" class="small text-decoration-none">Clear Filters</a>
+                }
+            </div>
+        </div>
+
+        <div class="marketplace-results-toolbar">
+            <form method="get" asp-action="Index" class="marketplace-inline-filters">
+                <input type="text" name="search" value="@Model.Criteria.SearchTerm" placeholder="Search listings" class="form-control form-control-sm" />
+                @if (Model.Criteria.CategoryId.HasValue)
+                {
+                    <input type="hidden" name="category" value="@Model.Criteria.CategoryId" />
+                }
+                @if (Model.Criteria.UniversityId.HasValue)
+                {
+                    <input type="hidden" name="university" value="@Model.Criteria.UniversityId" />
+                }
+                @if (Model.Criteria.SubjectId.HasValue)
+                {
+                    <input type="hidden" name="subject" value="@Model.Criteria.SubjectId" />
+                }
+                @if (Model.Criteria.AcademicLevelId.HasValue)
+                {
+                    <input type="hidden" name="academicLevel" value="@Model.Criteria.AcademicLevelId" />
+                }
+                @if (Model.Criteria.Condition.HasValue)
+                {
+                    <input type="hidden" name="condition" value="@Model.Criteria.Condition" />
+                }
+                @if (Model.Criteria.MinPrice.HasValue)
+                {
+                    <input type="hidden" name="minPrice" value="@Model.Criteria.MinPrice" />
+                }
+                @if (Model.Criteria.MaxPrice.HasValue)
+                {
+                    <input type="hidden" name="maxPrice" value="@Model.Criteria.MaxPrice" />
+                }
+                @if (Model.Criteria.DonationOnly)
+                {
+                    <input type="hidden" name="donation" value="true" />
+                }
+                @if (Model.Criteria.RecentlyAddedOnly)
+                {
+                    <input type="hidden" name="recent" value="true" />
+                }
+                @if (Model.Criteria.OnlyWithImages)
+                {
+                    <input type="hidden" name="hasImages" value="true" />
+                }
+                @if (Model.Criteria.VerifiedSellerOnly)
+                {
+                    <input type="hidden" name="verifiedSeller" value="true" />
+                }
+                <select name="sort" class="form-select form-select-sm" asp-items="EnumExtensions.GetSelectList<ListingSortOption>(Model.Criteria.Sort)">
+                    <option value="">Sort by</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+            </form>
+        </div>
+
+        <partial name="_ListingCardGrid" model="browseItems"
+                 view-data='new ViewDataDictionary(ViewData) { ["EmptyMessage"] = Model.IsFiltered ? "No listings match your search or filters. Try broadening them." : "No listings yet." }' />
+        <partial name="_QueryPreservingPagination" model="Model.Browse" />
+    </section>
+</section>

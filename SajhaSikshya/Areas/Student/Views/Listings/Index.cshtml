@@ -49,9 +49,9 @@
                     <thead>
                         <tr>
                             <th>Title</th>
-                            <th>Category / Subject</th>
+                            <th class="d-none d-md-table-cell">Category / Subject</th>
                             <th>Price</th>
-                            <th>Condition</th>
+                            <th class="d-none d-md-table-cell">Condition</th>
                             <th>Stock</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
@@ -62,7 +62,7 @@
                         {
                             <tr>
                                 <td>@listing.Title</td>
-                                <td>
+                                <td class="d-none d-md-table-cell">
                                     <div>@listing.CategoryName</div>
                                     <div class="text-secondary small">@listing.SubjectName</div>
                                 </td>
@@ -76,7 +76,7 @@
                                         @listing.FormattedPrice
                                     }
                                 </td>
-                                <td><span class="badge marketplace-badge-condition">@listing.ConditionDisplay</span></td>
+                                <td class="d-none d-md-table-cell"><span class="badge marketplace-badge-condition">@listing.ConditionDisplay</span></td>
                                 <td>@listing.StockQuantity</td>
                                 <td><span class="badge @StatusBadgeClass(listing.Status)">@listing.StatusDisplay</span></td>
                                 <td class="text-end">

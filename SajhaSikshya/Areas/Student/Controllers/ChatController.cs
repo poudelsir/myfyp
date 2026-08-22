@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Authorization;
 using SajhaSikshya.Constants;
 using SajhaSikshya.Data.Constants;
@@ -115,6 +116,7 @@ public class ChatController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("write-actions")]
     public async Task<IActionResult> Send(int id, string text)
     {
         var result = await _chatService.SendMessageAsync(id, User.GetUserId()!, text);

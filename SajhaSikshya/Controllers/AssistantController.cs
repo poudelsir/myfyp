@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SajhaSikshya.Data.Constants;
 using SajhaSikshya.Extensions;
 using SajhaSikshya.Services.AI.Prompts;
@@ -47,6 +48,7 @@ public class AssistantController : Controller
 
     [HttpPost("ask")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("ai")]
     public async Task<IActionResult> Ask(string question)
     {
         var role = User.Identity?.IsAuthenticated != true
